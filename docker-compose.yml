@@ -2,7 +2,7 @@ version: "2.1"
 
 services:
   mateux-dot-dev:
-    image: nginx
+    image: nginx:stable-alpine
     container_name: mateux-dot-dev
     volumes:
     - ./public:/usr/share/nginx/html:ro
