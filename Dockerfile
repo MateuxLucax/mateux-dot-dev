@@ -1,13 +1,25 @@
-FROM node:18 AS build
+# Build image
+FROM node:tls AS build
 
 WORKDIR /app
 
 COPY package.json ./
+
 COPY package-lock.json ./
+
 RUN npm install
+
 COPY . ./
+
 RUN npm run build
 
-FROM nginx:1.19-alpine
+# Build deploy image
+FROM nginx:stable AS deploy
 
-COPY --from=build /app/.svelte-kit/output/server /usr/share/nginx/html
+WORKDIR /usr/share/nginx/html
+
+RUN rm -rf ./*
+
+COPY --from=build /app/build .
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
