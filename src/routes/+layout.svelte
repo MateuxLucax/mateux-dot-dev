@@ -8,7 +8,10 @@
 	</main>
 
 	<footer>
-		<p>Made with ❤️ by <a href="https://github.com/MateuxLucax" target="_blank">MateuxLucax</a> using <a href="https://svelte.dev">SvelteKit</a></p>
+		<p>
+			Made with ❤️ by <a href="https://github.com/MateuxLucax" target="_blank">MateuxLucax</a> using
+			<a href="https://svelte.dev">SvelteKit</a>
+		</p>
 	</footer>
 </div>
 

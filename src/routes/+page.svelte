@@ -134,7 +134,6 @@
 		opacity: 0.7;
 	}
 
-
 	@media (min-width: 480px) {
 		ul li a {
 			padding: 0.8rem 9.6rem;
