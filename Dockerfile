@@ -1,5 +1,5 @@
 # Build image
-FROM node:tls AS build
+FROM node:lts AS build
 
 WORKDIR /app
 
