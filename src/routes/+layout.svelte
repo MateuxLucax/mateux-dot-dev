@@ -38,17 +38,10 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		padding: 1.2rem;
 		text-align: center;
 	}
 
 	footer a {
 		font-weight: bold;
-	}
-
-	@media (min-width: 480px) {
-		footer {
-			padding: 1.2rem 0;
-		}
 	}
 </style>
