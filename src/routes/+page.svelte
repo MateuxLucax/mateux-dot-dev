@@ -1,6 +1,5 @@
 <script>
-	import Me from '$lib/images/profile/me.webp';
-	import Me_fallback from '$lib/images/profile/me.png';
+	import Me from '$lib/images/profile/me.png';
 </script>
 
 <svelte:head>
@@ -10,8 +9,7 @@
 
 <section>
 	<picture>
-		<source srcset={Me} type="image/webp" />
-		<img src={Me_fallback} alt="Mateus Lucas" />
+		<enhanced:img src="$lib/images/profile/me.png" alt="Mateus Lucas" />
 	</picture>
 
 	<h1>Hi there, I'm Mateus Lucas</h1>
