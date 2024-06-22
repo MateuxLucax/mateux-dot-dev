@@ -1,7 +1,3 @@
-<script>
-	import Me from '$lib/images/profile/me.png';
-</script>
-
 <svelte:head>
 	<title>MateuxLucax</title>
 	<meta name="description" content="MateuxLucax's lading page" />
@@ -15,9 +11,7 @@
 	<h1>Hi there, I'm Mateus Lucas</h1>
 
 	<p>
-		I'm a mobile developer (and fullstack, but my passion is Mobile Development 🤓), based in
-		Brazil. I am driven by building great user experiences as if I was the target user who really
-		enjoys a beautifully crafted experience.
+		I'm a Software Engineer (with a passion for problem-solving 🤓) based in Brazil. My drive is to build great user experiences as if I were the target user who really enjoys a beautifully crafted experience.
 	</p>
 
 	<ul class="profile-links">
@@ -41,28 +35,6 @@
 					/>
 				</svg>
 				<span>GitHub</span>
-			</a>
-		</li>
-		<li>
-			<a href="https://www.instagram.com/mateuxlucax/" target="_blank">
-				<svg width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path
-						d="M16.004 7.796A8.19 8.19 0 0 0 7.8 16a8.19 8.19 0 0 0 8.203 8.204A8.19 8.19 0 0 0 24.206 16a8.19 8.19 0 0 0-8.202-8.204Zm0 13.538A5.343 5.343 0 0 1 10.67 16a5.338 5.338 0 0 1 5.333-5.334A5.338 5.338 0 0 1 21.336 16a5.343 5.343 0 0 1-5.332 5.334ZM26.454 7.46a1.909 1.909 0 0 1-1.912 1.914 1.914 1.914 0 1 1 1.913-1.914Zm5.434 1.942c-.122-2.563-.707-4.834-2.585-6.705C27.433.827 25.163.241 22.6.112c-2.642-.15-10.559-.15-13.2 0C6.844.234 4.574.82 2.697 2.69.819 4.561.24 6.832.112 9.395c-.15 2.642-.15 10.56 0 13.203.122 2.563.707 4.834 2.585 6.705 1.877 1.87 4.14 2.456 6.703 2.584 2.641.15 10.559.15 13.2 0 2.563-.12 4.833-.706 6.703-2.584 1.87-1.871 2.456-4.142 2.585-6.705.15-2.642.15-10.554 0-13.196Zm-3.413 16.03a5.4 5.4 0 0 1-3.041 3.042c-2.106.836-7.103.643-9.43.643-2.328 0-7.332.186-9.43-.643a5.4 5.4 0 0 1-3.042-3.041c-.835-2.107-.643-7.105-.643-9.433 0-2.328-.185-7.333.643-9.433a5.4 5.4 0 0 1 3.041-3.041c2.106-.836 7.103-.643 9.43-.643 2.328 0 7.332-.186 9.431.643a5.4 5.4 0 0 1 3.041 3.041c.835 2.107.643 7.105.643 9.433 0 2.328.192 7.333-.643 9.433Z"
-						fill="var(--color-theme-1)"
-					/>
-				</svg>
-				<span>Instagram</span>
-			</a>
-		</li>
-		<li>
-			<a href="https://twitter.com/mateuxlucax/" target="_blank">
-				<svg width="32" height="26" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path
-						d="M28.71 6.48c.02.28.02.57.02.85 0 8.68-6.6 18.67-18.66 18.67C6.36 26 2.9 24.92 0 23.05a13.56 13.56 0 0 0 9.73-2.72 6.57 6.57 0 0 1-6.14-4.55 6.93 6.93 0 0 0 2.96-.12c-3-.6-5.25-3.25-5.25-6.44v-.08c.87.49 1.89.8 2.96.83A6.56 6.56 0 0 1 2.23 1.2a18.64 18.64 0 0 0 13.53 6.86 6.56 6.56 0 0 1 11.19-6A12.9 12.9 0 0 0 31.1.5a6.54 6.54 0 0 1-2.89 3.61c1.32-.14 2.6-.5 3.78-1.01a14.1 14.1 0 0 1-3.29 3.39Z"
-						fill="var(--color-theme-1)"
-					/>
-				</svg>
-				<span>Twitter</span>
 			</a>
 		</li>
 		<li>
@@ -91,7 +63,13 @@
 	picture source {
 		height: 100%;
 		width: 100%;
-		background-color: white;
+		background-color: #ccd0da;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		picture img, picture source {
+			background-color: #313244;
+		}
 	}
 
 	section {
