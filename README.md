@@ -1,22 +1,17 @@
-# create-svelte
+# [mateux.dev](https://mateux.dev)
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
-
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+This is the source code for my personal website. It is built with [SvelteKit](https://kit.svelte.dev/).
+Feel free to use this code as a template for your own website.
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+First, install the dependencies:
+
+```bash
+npm install
+```
+
+Then, start the server:
 
 ```bash
 npm run dev
@@ -27,12 +22,8 @@ npm run dev -- --open
 
 ## Building
 
-To create a production version of your app:
+This app uses the static adapter to generate a static version of the site. You can test this with `npm run preview` after running `npm run build`.
 
-```bash
-npm run build
-```
+## License
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+This project is open source and available under the [GPL-3.0 License](LICENSE)
