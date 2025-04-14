@@ -4,23 +4,23 @@
 	import Row from "./Row.svelte";
 
   /**
-   * @type {{ key: string, result: string, callback?: (event: KeyboardEvent) => void }[]}
+   * @type {{ key: string, result: () => string, callback?: (event: KeyboardEvent) => void }[]}
   */
   const commands = [
     {
       key: 'help',
-      result: 'This is a terminal simulation. Currently there are only a few commands available. But I am working on it.',
+      result: () =>'This is a terminal simulation. Currently there are only a few commands available. But I am working on it.',
     },
     {
       key: 'clear',
-      result: 'Clears the terminal screen.',
+      result: () => 'Clears the terminal screen.',
       callback: (_) => {
         typedCommands = typedCommands.slice(0, 0);
       }
     },
     {
       key: 'quote',
-      result: getRandomQuote(),
+      result: getRandomQuote,
     }
   ]
 
@@ -60,7 +60,7 @@
     >{cmd}</span>
   </Row>
   <Row>
-    { commands.find((command) => command.key === cmd)?.result || `burp: Command ${cmd} not found...` }
+    { commands.find((command) => command.key === cmd)?.result() || `burp: Command ${cmd} not found...` }
   </Row>
 {/each} 
 
