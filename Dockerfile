@@ -1,25 +1,23 @@
-# Build image
-FROM node:lts AS build
+FROM oven/bun AS builder
 
 WORKDIR /app
 
 COPY package.json ./
-
 COPY package-lock.json ./
+COPY bun.lockb ./
 
-RUN npm install
+RUN bun install
 
-COPY . ./
+COPY . .
 
-RUN npm run build
+RUN bun run build
 
-# Build deploy image
-FROM nginx:stable AS deploy
+FROM nginx:stable-alpine AS deploy
 
 WORKDIR /usr/share/nginx/html
 
 RUN rm -rf ./*
 
-COPY --from=build /app/build .
+COPY --from=builder /app/build .
 
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
