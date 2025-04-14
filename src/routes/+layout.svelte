@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	import '../app.css';
-	import TerminalHeader from '../components/TerminalHeader.svelte';
-	import ActivityBar from '../components/ActivityBar.svelte';
+	import TerminalHeader from '../lib/TerminalHeader.svelte';
+	import ActivityBar from '../lib/ActivityBar.svelte';
 
 	let { children } = $props();
 
@@ -29,8 +29,8 @@
 >
   {#if showXLImage}
 		<enhanced:img
-			src="/static/background.jpg?w=2560;w=1280" 
-			sizes="(min-width:1920px) 2560px, (min-width:1280px) 1280px, 100vw"
+			src="/static/background.jpg?blur=5" 
+			sizes="min(1280px, 100vw)"
 			alt="Forest with enormeous trees"
 			class="fixed inset-0 -z-10 w-full h-full object-cover"
 		/>
@@ -39,9 +39,17 @@
 		class="xl:relative w-full max-w-7xl xl:max-w-4xl shadow-md border-2xl xl:rounded-xl overflow-hidden"
 	>
 		<TerminalHeader />
-		<section class="p-4 xl:p-8 h-full bg-white dark:bg-gray-800 dark:text-white">
+		<section class="p-4 xl:p-8 h-full bg-white dark:bg-gray-800 dark:text-white terminal-body overflow-y-auto">
   		<ul class="list-none gap-2 flex flex-col">
 				{@render children()}
 			</ul>
 	</section>
 </main>
+
+<style>
+	@media (min-width: 1280px) {
+		.terminal-body {
+			max-height: var(--container-2xl);
+		}
+	}
+</style>
