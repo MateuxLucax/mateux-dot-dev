@@ -13,9 +13,4 @@
       opacity: 0;
     }
   }
-
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
 </style>
