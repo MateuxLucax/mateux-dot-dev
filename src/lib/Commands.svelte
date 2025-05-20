@@ -19,6 +19,10 @@
       }
     },
     {
+      key: 'll',
+      result: () =>'/',
+    },
+    {
       key: 'quote',
       result: getRandomQuote,
     }
