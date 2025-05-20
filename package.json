@@ -3,6 +3,7 @@
 	"private": true,
 	"version": "1.0.0",
 	"type": "module",
+	"description": "This is a SvelteKit application with Tailwind CSS. It is designed to be a simple and efficient profile page.",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
