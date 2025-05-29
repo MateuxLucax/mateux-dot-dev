@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	import '../app.css';
-	import TerminalHeader from '../lib/TerminalHeader.svelte';
-	import ActivityBar from '../lib/ActivityBar.svelte';
+	import TerminalHeader from '$lib/TerminalHeader.svelte';
+	import ActivityBar from '$lib/ActivityBar.svelte';
 
 	let { children } = $props();
 

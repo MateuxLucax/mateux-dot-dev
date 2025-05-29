@@ -12,6 +12,10 @@
     {
       url: 'https://github.com/mateuxlucax',
       result: 'Here you can find all my creations and projects. Hopefully, you will find something interesting.'
+    },
+    {
+      url: '/blog/posts',
+      result: 'Check out my blog where I write about software development, technology, and other topics that interest me.'
     }
   ];
 </script>   
