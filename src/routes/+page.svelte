@@ -1,8 +1,7 @@
 <script>
-	import Commands from "$lib/Commands.svelte";
+	import Commands from "$lib/commands/Commands.svelte";
 	import Prompt from "$lib/Prompt.svelte";
 	import Row from "$lib/Row.svelte";
-
 
   const contacts = [
     {
