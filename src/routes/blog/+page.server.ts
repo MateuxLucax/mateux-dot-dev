@@ -4,35 +4,29 @@ import path from 'path';
 
 export async function load() {
   try {
-    // Directory containing our markdown posts
     const postsDir = path.join(process.cwd(), 'src', 'posts');
-    
-    // Get all files from the posts directory
     const files = await fs.readdir(postsDir);
+
     const markdownFiles = files.filter(file => file.endsWith('.md'));
-    
-    // Load post metadata
+
     const posts = await Promise.all(
       markdownFiles.map(async (filename) => {
         const slug = filename.replace('.md', '');
         try {
-          const post = await import(`../../../posts/${filename}`);
+          const post = await import(`../../posts/${filename}`);
+          console.log(`Loaded post: ${slug}`, post);
           return {
             slug,
             ...post.metadata
-          };
+          }
         } catch (e) {
-          console.error(`Error importing ${filename}`, e);
-          return {
-            slug,
-            title: slug,
-            date: new Date().toISOString()
-          };
+          console.error(`Error loading post ${slug}:`, e);
+          throw error(500, `Could not load post ${slug}`);
         }
       })
     );
-    
-    // Sort posts by date (newest first)
+
+    console.log('Loaded posts:', posts);
     return {
       posts: posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     };

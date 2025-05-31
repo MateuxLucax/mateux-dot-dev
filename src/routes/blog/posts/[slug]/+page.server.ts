@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
+import type { PostData } from '../type';
 
-export async function load({ params }) {
+export async function load({ params }) : Promise<PostData> {
   try {
     const post = await import(`../../../../posts/${params.slug}.md`);
     return {

@@ -11,20 +11,10 @@ This is the *first* blog post. You can include **Markdown** content, code blocks
 
 ```mermaid
 graph TD;
-    A[Start] --> B{Is it working?};
+    A[Start] --> B[Is it working?];
     B -- Yes --> C[Great!];
     B -- No --> D[Fix it];
     D --> B;
-```
-
-## Code Example
-
-```javascript
-function greet(name) {
-    return `Hello, ${name}!`;
-}
-
-console.log(greet("World"));
 ```
 
 ## Image Example

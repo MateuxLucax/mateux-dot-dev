@@ -1,27 +1,42 @@
-<script>
-  import { goto } from '$app/navigation';
-  
-  // Redirect to /blog/posts
-  function redirectToPosts() {
-    goto('/blog/posts');
-  }
+<script lang="ts">
+  type Posts = {
+    posts: {
+      title: string;
+      slug: string;
+      date: string;
+      description?: string;
+      tags?: string[];
+    }[];
+  };
+
+  export let data: Posts;
 </script>
 
 <svelte:head>
-  <title>Blog</title>
+  <title>mateux@tars ~/Blog></title>
 </svelte:head>
 
-{#await redirectToPosts()}
-  <div class="container">
-    <h1>Redirecting to Blog Posts...</h1>
-  </div>
-{/await}
+<section>
+  <h1>Blog</h1>
 
-<style>
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1rem;
-    text-align: center;
-  }
-</style>
+  <ul>
+    {#each data.posts as post}
+      <li>
+        <a href="/blog/posts/{post.slug}">
+          <h2>{post.title}</h2>
+          <p>{new Date(post.date).toLocaleDateString()}</p>
+          {#if post.description}
+            <p>{post.description}</p>
+          {/if}
+          {#if post.tags}
+            <div>
+              {#each post.tags as tag}
+                <span>#{tag}</span>
+              {/each}
+            </div>
+          {/if}
+        </a>
+      </li>
+    {/each}
+  </ul>  
+</section>

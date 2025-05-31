@@ -6,21 +6,24 @@
   const contacts = [
     {
       url: 'https://www.linkedin.com/in/mateusbrandt',
-      result: 'If you wish to connect with me, this is the best place to do so. I am always open to new opportunities and connections.'
+      result: 'If you wish to connect with me, this is the best place to do so. I am always open to new opportunities and connections.',
+      target: '_blank'
     },
     {
       url: 'https://github.com/mateuxlucax',
-      result: 'Here you can find all my creations and projects. Hopefully, you will find something interesting.'
+      result: 'Here you can find all my creations and projects. Hopefully, you will find something interesting.',
+      target: '_blank'
     },
     {
-      url: '/blog/posts',
-      result: 'Check out my blog where I write about software development, technology, and other topics that interest me.'
+      url: '/blog',
+      result: 'Check out my blog where I write about software development, technology, and other topics that interest me.',
+      target: '_self'
     }
   ];
 </script>   
 
 <svelte:head>
-	<title>mateux@tars</title>
+	<title> </title>
 </svelte:head>
 
 <Row><Prompt /> cd <span class="text-yellow-500 dark:text-yellow-300">~/About</span></Row>
@@ -36,7 +39,7 @@
   <Row>
     <Prompt path="/Contacts" />
     curl <span class="text-teal-600 dark:text-teal-300">-I -X</span> <span class="text-pink-400 dark:text-pink-300">GET</span>
-    <a href="{contact.url}" target="_blank" class="break-all rounded text-pink-400 dark:text-pink-300 underline underline-offset-2 hover:bg-gray-200 active:bg-gray-300 focus:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600 dark:focus:bg-gray-600">
+    <a href="{contact.url}" target={contact.target} class="break-all rounded text-pink-400 dark:text-pink-300 underline underline-offset-2 hover:bg-gray-200 active:bg-gray-300 focus:bg-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600 dark:focus:bg-gray-600">
       {contact.url}
     </a>
   </Row>
