@@ -3,11 +3,11 @@ import { mdsvex } from 'mdsvex';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 
 const mdsvexOptions = {
-  extensions: ['.md'],
+  extensions: ['.svx'],
 };
 
 const config = {
-  extensions: ['.svelte', '.md'],
+  extensions: ['.svelte', '.svx'],
   preprocess: [vitePreprocess(), mdsvex(mdsvexOptions)],
   kit: {
     adapter: adapter(),

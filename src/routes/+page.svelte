@@ -3,7 +3,6 @@
 	import Prompt from "$lib/components/Prompt.svelte";
 	import Row from "$lib/components/Row.svelte";
 
-
   const contacts = [
     {
       url: 'https://www.linkedin.com/in/mateusbrandt',

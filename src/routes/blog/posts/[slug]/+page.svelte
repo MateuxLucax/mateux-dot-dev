@@ -11,18 +11,19 @@
 </svelte:head>
 
 <article>
-	<hgroup>
+	<header>
+		<a href="/blog" target="_self">Back to posts</a>
 		<h1>{data.meta.title}</h1>
 		<p>Published at {formatDate(data.meta.date)}</p>
-	</hgroup>
+	</header>
 
-	<div class="tags">
+	<div>
 		{#each data.meta.categories as category}
-			<span class="surface-4">&num;{category}</span>
+			<span>&num;{category}</span>
 		{/each}
 	</div>
 
-	<div class="prose">
+	<div class="prose max-w-prose">
 		<data.content />
 	</div>
 </article>

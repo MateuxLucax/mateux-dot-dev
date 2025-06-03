@@ -1,0 +1,54 @@
+---
+title: Your Post Title
+slug: first-post
+date: 2025-06-01
+description: A short description of the post
+tags: [svelte, sveltekit, markdown]
+---
+
+<script>
+    import Mermaid from '$lib/components/Mermaid.svelte';
+</script>
+
+
+## Introduction
+
+This is the *first* blog post. You can include **Markdown** content, code blocks, images, etc.
+
+<Mermaid diagram={`
+        graph TD
+        A[Start] --> B{Is it working?}
+        B -- Yes --> C[Great!]
+        B -- No --> D[Try againAAA]
+        D --> B
+        C --> E[End]
+    `} />
+
+## Different language code block
+
+```python
+def hello_world():
+    print("Hello, world!")
+```
+
+```javascript
+function helloWorld() {
+    console.log("Hello, world!");
+}
+```
+
+```java
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, world!");
+    }
+}
+```
+
+```bash
+echo "Hello, world!"
+```
+
+## Conclusion
+
+This is a simple example of a blog post using Markdown. You can add more content, links, and other elements as needed.
