@@ -1,15 +1,7 @@
 <script lang="ts">
-  type Posts = {
-    posts: {
-      title: string;
-      slug: string;
-      date: string;
-      description?: string;
-      tags?: string[];
-    }[];
-  };
+	import { formatDate } from "$lib/utils";
 
-  export let data: Posts;
+	let { data } = $props();
 </script>
 
 <svelte:head>
@@ -17,26 +9,13 @@
 </svelte:head>
 
 <section>
-  <h1>Blog</h1>
-
-  <ul>
-    {#each data.posts as post}
-      <li>
-        <a href="/blog/posts/{post.slug}">
-          <h2>{post.title}</h2>
-          <p>{new Date(post.date).toLocaleDateString()}</p>
-          {#if post.description}
-            <p>{post.description}</p>
-          {/if}
-          {#if post.tags}
-            <div>
-              {#each post.tags as tag}
-                <span>#{tag}</span>
-              {/each}
-            </div>
-          {/if}
-        </a>
-      </li>
-    {/each}
-  </ul>  
+	<ul class="posts">
+		{#each data.posts as post}
+			<li class="post">
+				<a href="/blog/posts/{post.slug}" class="title">{post.title}</a>
+				<p class="date">{formatDate(post.date)}</p>
+				<p class="description">{post.description}</p>
+			</li>
+		{/each}
+	</ul>
 </section>

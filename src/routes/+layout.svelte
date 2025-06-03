@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import '../app.css';
-	import TerminalHeader from '$lib/TerminalHeader.svelte';
-	import ActivityBar from '$lib/ActivityBar.svelte';
 	import { tick } from "svelte";
+	import TerminalHeader from '$lib/components/TerminalHeader.svelte';
+	import ActivityBar from '$lib/components/ActivityBar.svelte';
 
 	let { children } = $props();
 

@@ -1,27 +1,28 @@
 <script lang="ts">
-  export let data;
-  const { title, date, tags } = data.meta;
+	import { formatDate } from '$lib/utils'
 
-  const headTitle = title.toLowerCase().replace(/\s+/g, '-');
+	let { data } = $props()
 </script>
 
 <svelte:head>
-  <title>mateux@tars ~/B/{headTitle}></title>
+	<title>{data.meta.title}</title>
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content={data.meta.title} />
 </svelte:head>
 
 <article>
-  <a href="/blog/">Back to Posts</a>
-  <h1>{title}</h1>
-  <p><em>{new Date(date).toLocaleDateString()}</em></p>
-  <section>
-    {#if tags}
-      {#each tags as tag}
-        <a href={`/blog/tag/${tag}`} class="tag">#{tag}</a>
-      {/each}
-    {/if}
-  </section>
+	<hgroup>
+		<h1>{data.meta.title}</h1>
+		<p>Published at {formatDate(data.meta.date)}</p>
+	</hgroup>
 
-  <section>
-    <data.content />
-  </section>
+	<div class="tags">
+		{#each data.meta.categories as category}
+			<span class="surface-4">&num;{category}</span>
+		{/each}
+	</div>
+
+	<div class="prose">
+		<data.content />
+	</div>
 </article>

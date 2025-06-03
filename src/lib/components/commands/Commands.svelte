@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { getRandomQuote } from "$lib/quotes";
-	import Prompt from "$lib/Prompt.svelte";
-	import Row from "$lib/Row.svelte";
+	import Prompt from "../Prompt.svelte";
+	import { getRandomQuote } from "../quotes";
+	import Row from "../Row.svelte";
 	import HelpCommand from "./HelpCommand.svelte";
 	import ListCommand from "./ListCommand.svelte";
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Row from "$lib/Row.svelte";
+	import Row from "../Row.svelte";
 
   const availableCommands = [
     '- help: Displays this help message.',

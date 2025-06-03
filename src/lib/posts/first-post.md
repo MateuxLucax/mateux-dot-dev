@@ -1,9 +1,9 @@
 ---
-title: "First Post"
-date: 2025-05-28
-tags:
-  - sveltekit
-  - frontend
+title: Your Post Title
+slug: first-post
+date: 2025-06-01
+description: A short description of the post
+tags: [svelte, sveltekit, markdown]
 ---
 ## Introduction
 
@@ -16,10 +16,6 @@ graph TD;
     B -- No --> D[Fix it];
     D --> B;
 ```
-
-## Image Example
-
-![Example Image](https://via.placeholder.com/150)
 
 ## Conclusion
 
