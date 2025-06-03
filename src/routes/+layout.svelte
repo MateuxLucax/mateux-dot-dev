@@ -7,22 +7,10 @@
 
 	let { children } = $props();
 
-  let showXLImage = $state(false);
   let terminalSection: HTMLElement | null = null;
 
   onMount(() => {
-    const media = window.matchMedia('(min-width: 768px)');
-    showXLImage = media.matches;
-
-    media.addEventListener('change', (event) => {
-			const willMatch = event.matches;
-
-			if (willMatch !== showXLImage) {
-				showXLImage = willMatch;
-			}
-		});
-
-		window.addEventListener('on-new-commmand', async (_) => {
+  	window.addEventListener('on-new-commmand', async (_) => {
 
 			await tick();
 
@@ -40,14 +28,11 @@
 <main
   class="min-h-screen bg-base text-text font-mono flex md:items-center md:justify-center w-full"
 >
-  {#if showXLImage}
-		<enhanced:img
-			src="/static/background.jpg?blur=5" 
-			sizes="min(768px, 100vw)"
-			alt="Forest with enormeous trees"
-			class="fixed inset-0 -z-10 w-full h-full object-cover container"
-		/>
-	{/if}	
+	<enhanced:img
+		src="/static/background.jpg?blur=5"
+		alt="Forest with enormeous trees"
+		class="fixed inset-0 -z-10 w-full h-full object-cover"
+	/>
 	<section
 		class="md:relative w-full max-w-7xl md:max-w-4xl shadow-md border-2xl md:rounded-xl overflow-hidden"
 	>

@@ -33,7 +33,8 @@ const mdsvexOptions = {
         langs: langs,
       })
       await highlighter.loadLanguage('javascript', 'typescript')
-      const html = escapeSvelte(highlighter.codeToHtml(code, { lang, themes: themes, defaultColor: 'light' }))
+      const html = escapeSvelte(highlighter.codeToHtml(code, { lang, themes: themes, defaultColor: 'light' }));
+
       highlighter.dispose();
       return `{@html \`${html}\` }`
     }

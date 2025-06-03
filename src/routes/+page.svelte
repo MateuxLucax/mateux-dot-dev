@@ -22,7 +22,7 @@
 
   async function getLatestBlogPosts() {
     try {
-      const response = await fetch('/blog/api/posts/latest', {
+      const response = await fetch('/blog/api/latest', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -33,9 +33,7 @@
         throw new Error('Failed to fetch blog posts');
       }
 
-      const data = await response.json();
-      console.log('Latest blog posts:', data);
-      latestPosts = data;
+      latestPosts = await response.json();
     } catch (error) {
       console.error('Error fetching latest blog posts:', error);
       latestPosts = [];
@@ -73,8 +71,8 @@
 {/each} 
 <Row><Prompt path="/Contacts"/> cd</Row>
 <Row><Prompt /> cd <a href="/blog" target="_self" class="text-yellow-500 dark:text-yellow-300"> ~/Blog</a></Row>
+<Row><Prompt path="/Blog" /> ls -1</Row>
 {#if latestPosts.length > 0}
-  <Row><Prompt path="/Blog" /> ls -1</Row>
   <Row>total {latestPosts.length}</Row>
   {#each latestPosts as post}
     <Row>
@@ -83,6 +81,6 @@
       </a>
     </Row>
   {/each}
+  <Row><Prompt path="/Blog"/> cd</Row>
+  <Commands />
 {/if}
-<Row><Prompt path="/Blog"/> cd</Row>
-<Commands />
