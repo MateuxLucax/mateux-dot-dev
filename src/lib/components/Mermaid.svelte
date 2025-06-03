@@ -1,15 +1,16 @@
 <script>
   import { onMount } from 'svelte';
   import mermaid from 'mermaid';
-	import { theme } from '$lib/theme';
+	import { isDarkMode } from '$lib/utils';
 
   export let diagram = '';
+
 
   onMount(() => {
     mermaid.initialize({
       startOnLoad: false,
       wrap: true,
-      theme: theme.isDark ? 'dark' : 'default',
+      theme: isDarkMode() ? 'dark' : 'default',
     });
     mermaid.run({
       nodes: document.querySelectorAll('.mermaid'),

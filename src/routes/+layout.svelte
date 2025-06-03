@@ -61,11 +61,11 @@
 			</ul>
 	</section>
 </main>
-
 <style>
 	@media (min-width: 768px) {
 		.terminal-body {
-			max-height: var(--container-2xl);
+			max-height: calc(100dvh - 196px);
+			transition: max-height 0.3s ease-in-out;
 		}
 	}
 </style>
