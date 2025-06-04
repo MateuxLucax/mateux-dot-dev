@@ -1,10 +1,9 @@
 <script>
-  import { page } from '$app/stores';
   let { children } = $props();
 </script>
 
 <svelte:head>
-  <title>Mateux's Blog</title>
+  <title>mateux@tars ~/Blog&gt;</title>
 </svelte:head>
 
 {@render children()}

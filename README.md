@@ -60,7 +60,7 @@ Then, navigate to the project directory and build the Docker image using the fol
 docker compose up -d
 ```
 
-This will build the Docker image and start the container. You can then access the website at `http://localhost:3000`.
+This will build the Docker image and start the container. You can then access the website at `http://localhost`.
 
 ## License
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
