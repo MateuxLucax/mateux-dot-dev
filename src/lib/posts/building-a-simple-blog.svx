@@ -2,39 +2,45 @@
 title: Building a Simple Blog using SvelteKit and Markdown files
 slug: building-a-simple-blog
 date: 2025-06-03
-description: A short description of the post
-tags: [svelte, sveltekit, markdown]
+description: How I built a simple, modern blog using SvelteKit, Markdown, and MDsveX, with Mermaid diagram and code block support.
+tags: [svelte, sveltekit, markdown, mdsvex, mermaid]
 ---
 
 <script>
     import Mermaid from '$lib/components/Mermaid.svelte';
 </script>
 
-Since 2020 I had the idea of building my first blog. I experimente with different technologies, but I never finished it. I went upon several CMS, like WordPress, Strapi and others, but I never liked the complexity of them. I wanted to build a simple blog, where I can write my posts in Markdown and have a nice layout my own way.
+## Introduction
 
-## My main requirements
+Since 2020, I wanted to build my first blog. I experimented with different technologies, but never finished it. I tried several CMSs, like WordPress and Strapi, but found them too complex. I wanted a simple blog where I could write posts in Markdown and have a custom layout.
 
-As of requirements, I wanted to have a simple blog with the following features:
+## My Main Requirements
+
+I wanted a simple blog with the following features:
 
 - Write posts in Markdown
 - Use SvelteKit for the frontend
-- Lack of a complex CMS/Backend
+- No complex CMS/Backend
 - Easy to deploy and maintain
 - Support for code blocks and syntax highlighting
 - Support for images and Mermaid diagrams
 
-## Special thanks to
+## Special Thanks
 
-But before I start, I want to give a special thanks to:
+Before I start, I want to give a special thanks to:
 
 - [Matia - Joy of Code](https://joyofcode.xyz/) for the initial setup on how to use Markdown files in SvelteKit.
 - [James A. Joy](https://jamesjoy.site/posts/2023-06-26-svelte-mermaidjs) for providing help on Mermaid integration with SvelteKit (even though I followed a different approach).
 - [Terris Linenbach](https://terrislinenbach.medium.com/dynamically-render-a-mermaid-diagram-with-sveltekit-and-very-little-code-d8130875cd68) for setting up Mermaid integration with string as input.
 - [MDsveX team](https://github.com/pngwn/MDsveX) for creating the MDsveX library that allows us to use Markdown files in SvelteKit without too much hassle.
 
-## Setting up the project
+## What is SvelteKit and MDsveX?
 
-I already had a SvelteKit project set up (this one you are reading right now [mateux.dev](https://mateux.dev). However, I came in blind on how could I implement my idea and requirements. After some roadblocks, Proof of Concept and some research, I found a way to implement my idea. And here we are, I am writing my first blog post using SvelteKit and Markdown files.
+[SvelteKit](https://kit.svelte.dev/) is a modern framework for building web apps with Svelte. [MDsveX](https://mdsvex.com/) is a preprocessor that lets you write Svelte components in Markdown, making it perfect for blogs.
+
+## Setting Up the Project
+
+I already had a SvelteKit project set up (this one you are reading right now: [mateux.dev](https://mateux.dev)). However, I came in blind on how I could implement my idea and requirements. After some roadblocks, proofs of concept, and research, I found a way to implement my idea. And here we are, I am writing my first blog post using SvelteKit and Markdown files.
 
 To get started, if you don't have a SvelteKit project yet, you can create one using the following command:
 
@@ -42,43 +48,25 @@ To get started, if you don't have a SvelteKit project yet, you can create one us
 bunx sv create my-blog
 ```
 
-Set it up with your preferred options. Once you have your SvelteKit project ready, we can start adding the necessary components to support Markdown files and Mermaid diagrams.
-
-
-<Mermaid diagram={`
-        graph TD
-        A[Start] --> B{Is it working?}
-        B -- Yes --> C[Great!]
-        B -- No --> D[Try againAAA]
-        D --> B
-        C --> E[End]
-    `} />
-
-## Different language code block
-
-```python
-def hello_world():
-    print("Hello, world!")
-```
-
-```javascript
-function helloWorld() {
-    console.log("Hello, world!");
-}
-```
-
-```java
-public class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello, world!");
-    }
-}
-```
+Set it up with your preferred options. Once you have your SvelteKit project ready, add MDsveX and the necessary dependencies:
 
 ```bash
-echo "Hello, world!"
+bun add -D @sveltejs/adapter-auto @sveltejs/kit mdsvex
 ```
 
-## Conclusion
+Then, configure MDsveX in your `svelte.config.js`:
 
-This is a simple example of a blog post using Markdown. You can add more content, links, and other elements as needed.
+```js
+import { mdsvex } from 'mdsvex';
+
+const config = {
+  extensions: ['.svelte', '.svx'],
+  preprocess: [mdsvex()],
+  // ...existing config...
+};
+export default config;
+```
+
+This is the end for now, I am still working on the blog and will update this post with more details as I progress.
+
+...(WIP)...

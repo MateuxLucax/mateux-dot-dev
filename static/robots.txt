@@ -1,4 +1,2 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://mateux.dev/sitemap.xml
