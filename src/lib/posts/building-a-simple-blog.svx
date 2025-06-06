@@ -69,4 +69,17 @@ export default config;
 
 This is the end for now, I am still working on the blog and will update this post with more details as I progress.
 
+Can also add a `mermaid` diagram:
+
+<Mermaid
+  diagram={`
+    graph TD;
+        A[Start] --> B{Is it working?};
+        B -- Yes --> C[Great!];
+        B -- No --> D[Fix it];
+        D --> B;
+        C --> E[End];
+  `}
+/>
+
 ...(WIP)...

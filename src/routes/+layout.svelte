@@ -53,4 +53,23 @@
 			transition: max-height 0.3s ease-in-out;
 		}
 	}
+	
+	/* Syntax highlighting theme switching */
+	:global(.shiki-dark) {
+		display: none;
+	}
+	
+	:global(.shiki-light) {
+		display: block;
+	}
+	
+	@media (prefers-color-scheme: dark) {
+		:global(.shiki-dark) {
+			display: block;
+		}
+		
+		:global(.shiki-light) {
+			display: none;
+		}
+	}
 </style>

@@ -40,4 +40,13 @@
 	.prose {
 		max-width: 100%;
 	}
+
+	@media (prefers-color-scheme: dark) {
+		* {
+			--tw-prose-body: var(--color-white);
+			--tw-prose-headings: var(--color-white);
+			--tw-prose-links: var(--color-blue-300);
+			--tw-prose-code: var(--color-gray-200);
+		}
+	}
 </style>

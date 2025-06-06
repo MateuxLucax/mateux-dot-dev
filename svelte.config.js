@@ -20,8 +20,8 @@ const langs = [
 ];
 
 const themes = {
-  light: 'catppuccin-latte',
   dark: 'catppuccin-mocha',
+  light: 'catppuccin-latte',
 }
 
 const mdsvexOptions = {
@@ -32,8 +32,11 @@ const mdsvexOptions = {
         themes: Object.values(themes),
         langs: langs,
       })
-      await highlighter.loadLanguage('javascript', 'typescript')
-      const html = escapeSvelte(highlighter.codeToHtml(code, { lang, themes: themes, defaultColor: 'light' }));
+      await highlighter.loadLanguage(...langs)
+      const html = escapeSvelte(
+        `<div class="shiki-light">${highlighter.codeToHtml(code, { lang, theme: themes.light })}</div>` +
+        `<div class="shiki-dark">${highlighter.codeToHtml(code, { lang, theme: themes.dark })}</div>`
+      );
 
       highlighter.dispose();
       return `{@html \`${html}\` }`
