@@ -3,7 +3,7 @@ title: Building a Simple Blog using SvelteKit and Markdown files
 slug: building-a-simple-blog
 date: 2025-06-03
 tags: [svelte, markdown, mdsvex, mermaid, blog]
-description: In this post, I share how I built a simple blog using SvelteKit and Markdown files with MDsveX, focusing on ease of use, deployment, and support for code blocks and diagrams. The main struggles I found were integrating markdown files into SvelteKit static renderer. It wasn't hard, but it took some time to figure out the best approach. I also added Mermaid diagrams and code blocks with syntax highlighting. Everything is open source, so you can check the code on my GitHub linked below.
+description: In this post, I share how I built a simple blog using SvelteKit and Markdown files with MDsveX, focusing on ease of use, deployment, and support for code blocks and diagrams. The main challenge I encountered was integrating Markdown files into SvelteKit's static renderer. It wasn't difficult, but it took some time to determine the optimal approach. I also implemented Mermaid diagrams and code blocks with syntax highlighting. Everything is open source, so you can check the code on my GitHub repository linked below.
 ---
 
 <script>
@@ -12,7 +12,7 @@ description: In this post, I share how I built a simple blog using SvelteKit and
 
 ## Introduction
 
-I've always wanted to build my own personal blog to share everything that could be useful for someone else during my journey as a dev. I've done some experiments with different technologies, but never finished it. I tried several CMSs, like WordPress and Strapi, but found them too complex. I just wanted a simple blog where I could write posts in Markdown and have a custom layout/components.
+I've always wanted to build my own personal blog to share insights that could benefit others during my journey as a developer. I've experimented with various technologies but never completed a project. I tried several CMSs, like WordPress and Strapi, but found them overly complex. I simply wanted a straightforward blog where I could write posts in Markdown and implement custom layouts and components.
 
 ## My Main Requirements
 
@@ -40,7 +40,7 @@ Before I start, I want to give a special thanks to:
 
 ## Setting Up the Project
 
-I already had a SvelteKit project set up (this one you are reading right now: [mateux.dev](https://mateux.dev)). However, I came in blind on how I could implement my idea and requirements. After some roadblocks, proofs of concept, and research, I found a way to implement my idea. And here we are, I am writing my first blog post using SvelteKit and Markdown files.
+I already had a SvelteKit project set up (the one you're reading right now: [mateux.dev](https://mateux.dev)). However, I initially had no clear direction on how to implement my vision and requirements. After encountering several roadblocks, creating proofs of concept, and conducting research, I discovered a viable implementation approach. Now, I'm writing my first blog post using SvelteKit and Markdown files.
 
 To get started, if you don't have a SvelteKit project yet, you can create one using the following command:
 
@@ -166,19 +166,19 @@ However, if we access this endpoint, we will not see anything rendered yet. We n
 </style>
 ```
 
-Now let's brake down the code above:
+Now let's break down the code above:
 
-- We import the `formatDate` utility function to format the post date. (It just transforms the date to a more readable format `const formatDate(date: string, dateStyle: DateStyle = 'medium') => new Date(date).toLocaleDateString('en-US', {dateStyle, timeZone: 'UTC'});`
+- We import the `formatDate` utility function to format the post date. (It simply transforms the date to a more readable format using `const formatDate(date: string, dateStyle: DateStyle = 'medium') => new Date(date).toLocaleDateString('en-US', {dateStyle, timeZone: 'UTC'});`)
 - We use the `$props()` function to access the data passed from the loader.
   - The `data` object contains the `content` and `metadata` of the post.
-  - `content` is the rendered Markdown content, and `metadata` contains the post's metadata like title, date, tags, etc that was defined between the `---` in the Markdown file.
+  - `content` is the rendered Markdown content, and `metadata` contains the post's metadata like title, date, tags, etc., defined between the `---` markers in the Markdown file.
 - We set the `<svelte:head>` to define the page title and Open Graph metadata for better SEO.
 - The `<article>` element contains the post's content, including the title, date, tags, and the rendered Markdown content.
 - The `prose` class is used to style the Markdown content, making it look nice and readable. We can use Tailwind CSS variables to customize some of the styles that MDsveX applies to the Markdown content.
 
-## Making the svelte static renderer happy 😀
+## Making the SvelteKit Static Renderer Happy 😀
 
-Now, after building the project, we will see that the static renderer is not happy with our setup. It will not be able to find and load the Markdown files.
+After building the project, you'll notice that the static renderer isn't compatible with our setup. It won't be able to locate and load the Markdown files.
 
 To fix this, we need to add a few extra steps to ensure that the Markdown files are included in the build process. We can do this by creating a `+page.server` file in the same directory (`src/routes/blog/[slug]`) and adding the following code:
 
@@ -197,7 +197,7 @@ export const entries: EntryGenerator = () => {
 export const prerender = true;
 ```
 
-Wherease `getSvxPosts` is a utility function that retrieves all the Markdown files from the `src/lib/posts` directory. You can implement it like this:
+Whereas `getSvxPosts` is a utility function that retrieves all the Markdown files from the `src/lib/posts` directory. You can implement it like this:
 
 ```typescript
 export type Post = {
@@ -241,9 +241,9 @@ export const trailingSlash = 'always';
 
 With this setup, the static renderer will be able to find and load the Markdown files during the build process, and we can access our blog posts at `/blog/posts/my-first-post` after building the project.
 
-## Adding support for Mermaid diagrams 🥰
+## Adding Support for Mermaid Diagrams 🥰
 
-> If you do not know what Mermaid is, it is a simple way to create diagrams and visualizations using text. It is perfect for blogs, as it allows you to create diagrams without using any external tools. You can learn more about Mermaid on their [official website](https://mermaid.js.org/).
+> If you're unfamiliar with Mermaid, it's a simple tool for creating diagrams and visualizations using text. It's ideal for blogs, as it enables you to create diagrams without external tools. Learn more about Mermaid on their [official website](https://mermaid.js.org/).
 
 To add support for Mermaid diagrams, we need to create a Svelte component that will render the Mermaid diagrams and that can be used in our Markdown files (`.svx` files). Create a new file in `src/lib/components/Mermaid.svelte` and add the following code:
 
@@ -300,12 +300,12 @@ To add support for Mermaid diagrams, we need to create a Svelte component that w
 ```
 
 Now let's break down the code above:
-- We import the `mermaid` library and the `isDarkMode` utility function to check if the user prefers dark mode.
+- We import the `mermaid` library and the `isDarkMode` utility function to detect the user's preference for dark mode.
 - We define a `diagram` prop that will contain the Mermaid diagram code.
 - We use the `onMount` lifecycle function to render the diagram when the component is mounted.
-- We define a `renderDiagram` function that initializes Mermaid and renders the diagram using the `diagramElement`.
-- We also listen for changes in the user's preferred color scheme and re-render the diagram when it changes.
-- The `diagramElement` is bound to the `<div>` element that will contain the Mermaid diagram.
+- We create a `renderDiagram` function that initializes Mermaid and renders the diagram using the `diagramElement`.
+- We also listen for changes in the user's preferred color scheme and re-render the diagram accordingly.
+- The `diagramElement` is bound to the `<div>` element that will contain the rendered Mermaid diagram.
 
 With this component, we can now use Mermaid diagrams in our Markdown files. To use it, simply add the following code in your `.svx` file:
 
@@ -321,9 +321,9 @@ With this component, we can now use Mermaid diagrams in our Markdown files. To u
   `}
 />
 ```
-This will render a Mermaid diagram in your blog post. You can customize the diagram code as needed.
+This will render a Mermaid diagram in your blog post. You can customize the diagram code according to your needs.
 
-Here is an Example of the sample diagram above but rendered in the blog post:
+Here is an example of the sample diagram above rendered in the blog post:
 
 <Mermaid
   diagram={`
@@ -336,7 +336,7 @@ Here is an Example of the sample diagram above but rendered in the blog post:
   `}
 />
 
-## Add syntax highlighting for code blocks
+## Adding Syntax Highlighting for Code Blocks
 
 To add syntax highlighting for code with MDsveX, we can use the `shiki` library. To do so, we first need to install the `shiki` library:
 
@@ -408,10 +408,10 @@ This configuration sets up `shiki` to use the `catppuccin` themes for syntax hig
 
 ## Conclusion
 
-Now, it's up to you to style your blog posts and layout as you wish. You can use Tailwind CSS or any other CSS framework to style your blog. You can also add more components, like a sidebar, a footer, or a navigation menu.
+Now, it's up to you to style your blog posts and layout according to your preferences. You can use Tailwind CSS or any other CSS framework to style your blog. You can also add additional components, such as a sidebar, footer, or navigation menu.
 
-I hope this post helps you get started with building a simple blog using SvelteKit and Markdown files. If you have any questions or suggestions, feel free to reach out to me with the contacts provided on my home page [mateux.dev](https://mateux.dev).
+I hope this post helps you get started with building a simple blog using SvelteKit and Markdown files. If you have any questions or suggestions, feel free to reach out to me through the contact information provided on my home page [mateux.dev](https://mateux.dev).
 
-You can find the source code for this blog post on my GitHub repository: [https://github.com/mateuxlucax/mateux-dot-dev](https://https://github.com/mateuxlucax/mateux-dot-dev). Feel free to contribute or open issues if you find any bugs or have suggestions for improvements.
+You can find the source code for this blog on my GitHub repository: [https://github.com/mateuxlucax/mateux-dot-dev](https://github.com/mateuxlucax/mateux-dot-dev). Feel free to contribute or open issues if you encounter any bugs or have suggestions for improvements.
 
 Happy coding! 🎉
