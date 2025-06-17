@@ -54,6 +54,7 @@
 			--tw-prose-headings: var(--color-red-200);
 			--tw-prose-links: var(--color-blue-200);
 			--tw-prose-code: var(--color-green-200);
+			--tw-prose-quotes: var(--color-gray-200);
 		}
 	}
 </style>
