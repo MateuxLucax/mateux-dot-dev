@@ -16,7 +16,8 @@ const langs = [
   'sql',
   'yaml',
   'markdown',
-  'svelte'
+  'svelte',
+  'mermaid'
 ];
 
 const themes = {

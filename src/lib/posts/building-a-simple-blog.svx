@@ -1,5 +1,5 @@
 ---
-title: 📝 Building a Simple Blog using SvelteKit and Markdown files
+title: 📝 Building a simple blog using SvelteKit and markdown files
 slug: building-a-simple-blog
 date: 2025-06-03
 tags: [svelte, markdown, mdsvex, mermaid, blog]
@@ -10,11 +10,9 @@ description: In this post, I show how I built a simple, developer-friendly blog 
   import Mermaid from '$lib/components/Mermaid.svelte';
 </script>
 
-## 📝 Introduction
-
 I’ve always wanted to create a personal blog — a place to share insights and lessons from my journey as a developer. Over time, I experimented with different technologies but never finished anything. Tools like WordPress and Strapi felt too heavy for what I wanted: a simple blog where I could write in Markdown and customize layouts with code.
 
-## 📋 My Main Requirements
+## 📋 My main requirements
 
 After some research, I defined a few core requirements:
 
@@ -25,7 +23,7 @@ After some research, I defined a few core requirements:
 - Support for code blocks and syntax highlighting (🖌️)
 - Support for images and Mermaid diagrams (🥰)
 
-### 🙏 Special Thanks
+### 🙏 Special thanks
 
 Before I start, I want to give a special thanks to:
 
@@ -38,10 +36,9 @@ Before I start, I want to give a special thanks to:
 
 [SvelteKit](https://kit.svelte.dev/) is a modern framework for building web apps with Svelte. [MDsveX](https://mdsvex.com/) is a preprocessor that lets you write Svelte components in Markdown, making it perfect for blogs.
 
-## Setting Up the Project
+## Setting up the project
 
-
-I already had a SvelteKit project up and running — the one you’re reading right now [mateux.dev](https://mateux.dev)). But early on, I lacked a clear path to turn my vision into reality. After hitting a few roadblocks and building multiple proofs of concept, I finally found a setup that worked.
+I already had a SvelteKit project up and running — the one you’re reading right now ([mateux.dev](https://mateux.dev)). But early on, I lacked a clear path to turn my vision into reality. After hitting a few roadblocks and building multiple proofs of concept, I finally found a setup that worked.
 
 To get started, if you don't have a SvelteKit project yet, you can create one using the following command:
 
@@ -70,7 +67,7 @@ export default config;
 
 Now we are almost ready to start seeing our markdown files rendered as blog posts 😃.
 
-## 📄 Basic Markdown File Structure
+## 📄 Basic markdown file ftructure
 
 Let's create a sample Markdown file in `src/lib/posts` called `my-first-post.svx`:
 
@@ -86,7 +83,7 @@ tags: [svelte, markdown, blog]
 This is my first post using SvelteKit and Markdown files.
 ```
 
-## 🔄 Rendering Markdown Files
+## 🔄 Rendering markdown files
 
 To render markdown files, we need to create a Svelte component that will fetch and display the Markdown content. But first, we need to set up a route to handle the blog posts. Create a new folder structure in `src/routes/blog/[slug]` and add a `+page.ts` file. It will serve as the loader for our blog posts, importing the Markdown files dynamically based on the slug. Below is an example of how to set up the loader:
 
@@ -177,7 +174,7 @@ Now let's break down the code above:
 - The `<article>` element contains the post's content, including the title, date, tags, and the rendered Markdown content.
 - The `prose` class is used to style the Markdown content, making it look nice and readable. We can use Tailwind CSS variables to customize some of the styles that MDsveX applies to the Markdown content.
 
-## 🎉 Making the SvelteKit Static Renderer Happy
+## 🎉 Making the SvelteKit static renderer happy
 
 After building the project, you'll notice that the static renderer isn't compatible with our setup. It won't be able to locate and load the Markdown files.
 
@@ -242,7 +239,7 @@ export const trailingSlash = 'always';
 
 With this setup, the static renderer will be able to find and load the Markdown files during the build process, and we can access our blog posts at `/blog/posts/my-first-post` after building the project.
 
-## 📊 Adding Support for Mermaid Diagrams
+## 📊 Adding support for Mermaid diagrams
 
 > If you're unfamiliar with Mermaid, it's a simple tool for creating diagrams and visualizations using text. It's ideal for blogs, as it enables you to create diagrams without external tools. Learn more about Mermaid on their [official website](https://mermaid.js.org/).
 
@@ -338,7 +335,7 @@ Here is an example of the sample diagram above rendered in the blog post:
   `}
 />
 
-## Adding Syntax Highlighting for Code Blocks
+## Adding syntax highlighting for code blocks
 
 For code syntax highlighting in your Markdown posts, we’ll use the excellent `shiki` library.
 
