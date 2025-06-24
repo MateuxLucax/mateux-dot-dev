@@ -46,6 +46,7 @@
 		--tw-prose-links: var(--color-blue-600);
 		--tw-prose-code: var(--color-green-600);
 		--tw-prose-headings: var(--color-red-800);
+		--tw-prose-bold: var(--color-gray-900);
 	}
 
 	@media (prefers-color-scheme: dark) {
@@ -55,6 +56,7 @@
 			--tw-prose-links: var(--color-blue-200);
 			--tw-prose-code: var(--color-green-200);
 			--tw-prose-quotes: var(--color-gray-200);
+			--tw-prose-bold: var(--color-gray-100);
 		}
 	}
 </style>
