@@ -1,16 +1,17 @@
 <b class="blinking">|</b>
 
 <style>
-  .blinking {
-    animation: blink 1s infinite;
-  }
+	.blinking {
+		animation: blink 1s infinite;
+	}
 
-  @keyframes blink {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0;
-    }
-  }
+	@keyframes blink {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0;
+		}
+	}
 </style>

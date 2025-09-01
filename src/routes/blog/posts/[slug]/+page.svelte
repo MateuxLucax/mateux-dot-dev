@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { formatDate } from '$lib/utils'
+	import { formatDate } from '$lib/utils';
 
-	let { data } = $props()
+	let { data } = $props();
 </script>
 
 <svelte:head>
@@ -13,13 +13,20 @@
 
 <article>
 	<header class="mb-8 flex flex-col gap-2">
-		<a href="/blog" target="_self" class="mb-6 underline text-blue-500 dark:text-blue-200 hover:text-blue-300 dark:hover:text-blue-100">&larr; Back to posts</a>
-		
-		<h1 class="text-3xl font-bold mb-2">{data.meta.title}</h1>
+		<a
+			href="/blog"
+			target="_self"
+			class="mb-6 text-blue-500 underline hover:text-blue-300 dark:text-blue-200 dark:hover:text-blue-100"
+			>&larr; Back to posts</a
+		>
+
+		<h1 class="mb-2 text-3xl font-bold">{data.meta.title}</h1>
 		<p>Published at {formatDate(data.meta.date)}</p>
 		<section>
 			{#each data.meta.tags as tag}
-				<span class="inline-block bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded mr-2 mb-2">
+				<span
+					class="mr-2 mb-2 inline-block rounded bg-gray-200 px-2 py-1 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+				>
 					{tag}
 				</span>
 			{/each}

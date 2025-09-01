@@ -1,9 +1,7 @@
 <script>
-  
 	let { children } = $props();
-
 </script>
 
-<li class="flex flex-row gap-2 flex-wrap w-full break-all">
-  {@render children()}
+<li class="flex w-full flex-row flex-wrap gap-2 break-all">
+	{@render children()}
 </li>

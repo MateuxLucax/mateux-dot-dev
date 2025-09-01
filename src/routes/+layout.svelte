@@ -1,17 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import '../app.css';
-	import { tick } from "svelte";
-	import TerminalHeader from '$lib/components/TerminalHeader.svelte';
+	import { tick } from 'svelte';
 	import ActivityBar from '$lib/components/ActivityBar.svelte';
+	import TerminalHeader from '$lib/components/TerminalHeader.svelte';
 
 	let { children } = $props();
 
-  let terminalSection: HTMLElement | null = null;
+	let terminalSection: HTMLElement | null = null;
 
-  onMount(() => {
-  	window.addEventListener('on-new-commmand', async (_) => {
-
+	onMount(() => {
+		window.addEventListener('on-new-commmand', async (_) => {
 			await tick();
 
 			if (!terminalSection) return;
@@ -19,33 +18,35 @@
 				top: terminalSection.scrollHeight * 2,
 				behavior: 'smooth'
 			});
-		})
-  });
+		});
+	});
 </script>
 
 <ActivityBar />
 
 <main
-  class="min-h-screen bg-base text-text font-mono flex md:items-center md:justify-center w-full"
+	class="bg-base text-text flex min-h-screen w-full font-mono md:items-center md:justify-center"
 >
 	<enhanced:img
 		src="/static/background.jpg?blur=5"
 		alt="Forest with enormeous trees"
-		class="fixed inset-0 -z-10 w-full h-full object-cover"
+		class="fixed inset-0 -z-10 h-full w-full object-cover"
 	/>
 	<section
-		class="md:relative w-full max-w-7xl md:max-w-4xl shadow-md border-2xl md:rounded-xl overflow-hidden"
+		class="border-2xl w-full max-w-7xl overflow-hidden shadow-md md:relative md:max-w-4xl md:rounded-xl"
 	>
 		<TerminalHeader />
 		<section
 			bind:this={terminalSection}
-			class="p-4 md:p-8 h-full bg-white dark:bg-gray-800 dark:text-white terminal-body overflow-y-auto"
+			class="terminal-body h-full overflow-y-auto bg-white p-4 md:p-8 dark:bg-gray-800 dark:text-white"
 		>
-  		<ul class="list-none gap-2 flex flex-col">
-				{@render children()}
+			<ul class="flex list-none flex-col gap-2">
+				{@render children?.()}
 			</ul>
+		</section>
 	</section>
 </main>
+
 <style>
 	@media (min-width: 768px) {
 		.terminal-body {
@@ -53,21 +54,21 @@
 			transition: max-height 0.3s ease-in-out;
 		}
 	}
-	
+
 	/* Syntax highlighting theme switching */
 	:global(.shiki-dark) {
 		display: none;
 	}
-	
+
 	:global(.shiki-light) {
 		display: block;
 	}
-	
+
 	@media (prefers-color-scheme: dark) {
 		:global(.shiki-dark) {
 			display: block;
 		}
-		
+
 		:global(.shiki-light) {
 			display: none;
 		}

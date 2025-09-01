@@ -1,9 +1,9 @@
 <script>
-  let { children } = $props();
+	let { children } = $props();
 </script>
 
 <svelte:head>
-  <title>mateux@tars ~/Blog&gt;</title>
+	<title>mateux@tars ~/Blog&gt;</title>
 </svelte:head>
 
 {@render children()}

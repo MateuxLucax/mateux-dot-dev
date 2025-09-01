@@ -5,7 +5,7 @@
 ![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%232496ED.svg?style=for-the-badge&logo=docker&logoColor=white)
 
-This repository contains the source code for [mateux.dev](https://mateux.dev), a personal website. 
+This repository contains the source code for [mateux.dev](https://mateux.dev), a personal website.
 My design goal was to replicate a terminal-like experience, I hope you enjoy it!
 
 ## Tools used to build this website:
@@ -63,4 +63,5 @@ docker compose up -d
 This will build the Docker image and start the container. You can then access the website at `http://localhost`.
 
 ## License
+
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.

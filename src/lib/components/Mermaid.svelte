@@ -1,49 +1,51 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
-  import mermaid from 'mermaid';
-  import { isDarkMode } from '$lib/utils';
+	import { onMount, tick } from 'svelte';
+	import mermaid from 'mermaid';
+	import { isDarkMode } from '$lib/utils';
 
-  export let diagram = '';
-  let diagramElement: HTMLElement;
-  let currentTheme: 'dark' | 'default' = isDarkMode() ? 'dark' : 'default';
+	let { diagram }: { diagram: string } = $props();
 
-  async function renderDiagram() {
-    if (!diagramElement) return;
+	let diagramElement: HTMLElement | null;
+	let currentTheme: 'dark' | 'default' = isDarkMode() ? 'dark' : 'default';
 
-    mermaid.initialize({
-      startOnLoad: false,
-      wrap: true,
-      theme: currentTheme,
-    });
+	async function renderDiagram() {
+		if (!diagramElement) return;
 
-    try {
-      await mermaid.run({
-        nodes: [diagramElement],
-        querySelector: '.mermaid',
-      });
-    } catch (error) {
-      console.error('Error rendering mermaid diagram:', error);
-    }
-  }
+		mermaid.initialize({
+			startOnLoad: false,
+			wrap: true,
+			theme: currentTheme
+		});
 
-  onMount(() => {
-    renderDiagram();
+		try {
+			await mermaid.run({
+				nodes: [diagramElement],
+				querySelector: '.mermaid'
+			});
+		} catch (error) {
+			console.error('Error rendering mermaid diagram:', error);
+		}
+	}
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+	onMount(() => {
+		renderDiagram();
 
-    const handleThemeChange = async (e: MediaQueryListEvent) => {
-      await tick();
-      currentTheme = e.matches ? 'dark' : 'default';
-      renderDiagram();
-    };
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-    mediaQuery.addEventListener('change', handleThemeChange);
+		const handleThemeChange = async (e: MediaQueryListEvent) => {
+			await tick();
+			currentTheme = e.matches ? 'dark' : 'default';
+			renderDiagram();
+		};
 
-    return () => {
+		mediaQuery.addEventListener('change', handleThemeChange);
 
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
-  });
+		return () => {
+			mediaQuery.removeEventListener('change', handleThemeChange);
+		};
+	});
 </script>
 
-<div bind:this={diagramElement} class="mermaid w-full grow flex justify-center items-center">{diagram}</div>
+<div bind:this={diagramElement} class="mermaid flex w-full grow items-center justify-center">
+	{diagram}
+</div>
