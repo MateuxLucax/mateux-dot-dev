@@ -179,7 +179,7 @@ This I cannot show you in code, but I removed the `DOCKERHUB_USERNAME` and `DOCK
 
 ### Step 3: Update deployment configurations
 
-I also needed to update my [docker-compose.yml](docker-compose.yml) to pull from the new registry:
+I also needed to update my `docker-compose.yml` to pull from the new registry:
 
 **Before:**
 ```yaml

@@ -1,7 +1,10 @@
 services:
   mateux-dot-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - '80:80'
+    image: ghcr.io/mateuxlucax/mateux-dot-dev:latest
+    container_name: mateux-dot-dev
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 64M
