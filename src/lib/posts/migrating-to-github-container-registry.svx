@@ -1,0 +1,243 @@
+---
+title: 🖥️ Migrating to GitHub Container Registry
+slug: migrating-to-github-container-registry
+date: 2025-10-07
+tags: [github, docker, container-registry, ci/cd]
+description: I've always used Docker's default Container Registry. However, recently I decided to migrate to GitHub Container Registry for better integration with my CI/CD workflows and to take advantage of GitHub's features like ease of use, fine-grained access control and improved visibility. In this post I will show how can you migrate your existing Docker images to GitHub Container Registry and update your workflows accordingly.
+---
+
+I've been using Docker Hub as my default container registry for years. It's reliable, well-established, and most importantly it gets the job done. However, I always felt that there were just so many configurations to manage, even for small personal projects. I need to setup separate credentials, deal with separate repositories etc.
+
+GitHub Container Registry always loomed around as a potential alternative, especially since I host all my code on GitHub. The tighter integration with GitHub Actions and the promise of simplified workflows was appealing. However I was dumb, and never took the time to explore it. I thought it was expensive because I was reading limits for private and paid accounts, and I never bothered to check the free tier for public repositories.
+
+This year I finally took the plunge and started to use GHCR for personal projects, and now is the time to migrate my blog as well.
+
+In this post, I'll walk you through the migration process, compare the two registries, and show you exactly how I updated my workflows.
+
+## 🐙 What is GitHub Container Registry (GHCR)?
+
+GitHub Container Registry is GitHub's native container registry service, launched as part of GitHub Packages in 2021 ([Introducing GitHub Container Registry](https://github.blog/news-insights/product-news/introducing-github-container-registry/)). It's designed to work seamlessly with GitHub repositories and provides enhanced security features, better integration with GitHub Actions, and more granular access controls.
+
+Key features:
+- **Native GitHub integration** - packages are tied to repositories
+- **Fine-grained permissions** - control access at the package level
+- **Anonymous public access** - no authentication needed for public packages
+- **GitHub Actions integration** - built-in support with `GITHUB_TOKEN`
+- **Multiple package types** - not just containers (npm, Maven, NuGet, etc.)
+
+## 🐳 What is Docker Container Registry (Docker Hub)?
+
+Docker Hub is Docker's official cloud-based registry service. It's the default registry when you run `docker pull` or `docker push` without specifying a registry URL.
+
+Key features:
+- **Industry standard** - most widely used container registry
+- **Mature ecosystem** - extensive tooling and community
+- **Docker Official Images** - curated base images
+- **Automated builds** - trigger builds from Git repositories
+- **Teams and organizations** - well established collaboration features
+
+## 🤔 Why migrate to GHCR?
+
+There's no one-size-fits-all answer here. Both registries have their strengths and weaknesses. However, I find GitHub Container Registry better suited for my needs, especially for public repositories on my personal GitHub profile. Here's a simple comparison on both free tiers:
+
+### 📊 Comparison table
+
+| Feature | Docker Hub | GitHub Container Registry |
+|---------|------------|---------------------------|
+| ** Unlimited public repositories** | ✅ (Free) | ✅ (Free) |
+| ** Unlimited private repositories** | ❌ (1 free private repo, then paid) | ✅ (500MB free, then pay-as-you-go) |
+| ** Unlimited pulls for public packages** | ✅ (authenticated), 200 pulls/6h per IP (anonymous) | ✅, completely free (storage + bandwidth) |
+| ** Simple authentication** | ❌ Requires Docker credentials | ✅ Uses GitHub tokens (PAT or GITHUB_TOKEN) |
+| ** GitHub integration** | ❌ External service | ✅ Native integration |
+| ** Permissions** | ❌ Repository-level | ✅ Fine-grained, package-level |
+| ** Package visibility** | ✅ Public/Private | ✅ Public/Private/Internal |
+| ** CI/CD integration** | ✅ (Authentication required) | ✅ (Built-in with `GITHUB_TOKEN`) |
+
+### 💰 Understanding GHCR billing
+
+It's crucial to understand how GitHub Container Registry billing works, especially for private packages:
+
+**Public packages**: Completely free - no storage or bandwidth costs
+**Private packages**: 
+- Free tier includes 500MB storage and 1GB data transfer per month
+- Usage is calculated hourly for storage (GB-hours per month)
+- Data transfer resets monthly, storage does not
+- GitHub Actions downloads using `GITHUB_TOKEN` don't count against transfer limits
+
+> You can check the up-to-date pricing details on the [GitHub Packages billing page](https://docs.github.com/en/billing/concepts/product-billing/github-packages)
+
+## 🚀 Migrating this blog to GHCR
+
+Now let's get some work done. In this post I've chose to show how I migrated my blog's container workflow. Here's the migration flow:
+
+### Step 1: Update the GitHub Actions workflow
+
+My original workflow in [.github/workflows/build.yml](https://github.com/MateuxLucax/mateux-dot-dev/blob/main/.github/workflows/build.yml) was pushing to Docker Hub. Here's how I updated it to use GHCR:
+
+**Before (Docker Hub):**
+```yaml
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: mateuxlucax/mateux-dot-dev:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+```
+
+> You can see that I had `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` stored in GitHub Secrets for authentication. This was always a hassle to manage.
+
+**After (GHCR):**
+```yaml
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+```
+
+### Step 2: Remove secrets
+
+This I cannot show you in code, but I removed the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets from my GitHub repository settings. GHCR uses the built-in `GITHUB_TOKEN`, so no additional secrets are needed 🎉🎉🎉.
+
+### Step 3: Update deployment configurations
+
+I also needed to update my [docker-compose.yml](docker-compose.yml) to pull from the new registry:
+
+**Before:**
+```yaml
+services:
+  mateux-dot-dev:
+    image: mateuxlucax/mateux-dot-dev:latest
+    # ... rest of config
+```
+
+**After:**
+```yaml
+services:
+  mateux-dot-dev:
+    image: ghcr.io/mateuxlucax/mateux-dot-dev:latest
+    # ... rest of config
+```
+
+### Step 4: Clean up Docker Hub (optional)
+
+After verifying the migration worked, I:
+- Removed the old Docker Hub repository
+- Deleted the Docker Hub credentials from GitHub Secrets
+- Updated any documentation or deployment scripts
+
+## 🔧 Key differences in the migration
+
+### Authentication changes
+- **Docker Hub**: Required storing `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` in GitHub Secrets
+- **GHCR**: Uses built-in `GITHUB_TOKEN` - no additional secrets needed
+
+### Registry URL format
+- **Docker Hub**: `username/repository:tag`
+- **GHCR**: `ghcr.io/username/repository:tag`
+
+### Permissions
+- **Docker Hub**: Repository-level access control
+- **GHCR**: Package-level permissions that can be different from repository permissions
+
+## ⚠️ Things to consider before migrating
+
+### Potential drawbacks of GHCR:
+- **Less mature**: Docker Hub has been around longer
+- **GitHub dependency**: If GitHub goes down, your registry is also down
+- **Learning curve**: Different permission model and UI
+- **Ecosystem**: Some tools are still primarily designed for Docker Hub
+
+## 🏁 Conclusion
+
+Migrating from Docker Hub to GitHub Container Registry was straightforward and brought immediate benefits to my workflow. I no longer need to manage separate credentials, and the integration with GitHub Actions is seamless. I still don't have to worry about rate limiting for public packages, however I do plan to increase my usage of packages in the future, and not having to worry about costs is a big plus.
+
+However, the decision isn't black and white. Docker Hub remains a solid choice, especially for teams with existing workflows or those needing Docker Official Images.
+
+For my use case (a personal blog with a simple CI/CD pipeline), GHCR provides everything I need with better integration and fewer limitations.
+
+## 🔗 Useful resources
+
+- [GitHub Container Registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+- [Migrating from Docker Hub to GHCR guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#migrating-to-the-container-registry-from-the-docker-registry)
+- [GitHub Actions docker/build-push-action](https://github.com/docker/build-push-action)
+
+The complete updated workflow for this blog is available in my [GitHub repository](https://github.com/mateuxlucax/mateux-dot-dev). Feel free to use it as a reference for your own migration!
