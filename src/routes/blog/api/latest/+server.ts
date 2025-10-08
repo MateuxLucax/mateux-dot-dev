@@ -5,7 +5,6 @@ export const prerender = true;
 
 export function GET() {
 	const posts = getSvxPosts();
-	posts.slice(0, 3);
 
-	return json(posts);
+	return json(posts.slice(0, 3));
 }
