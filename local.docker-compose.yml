@@ -1,0 +1,13 @@
+
+services:
+  mateux-dot-dev:
+    build: .
+    container_name: mateux-dot-dev
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 64M

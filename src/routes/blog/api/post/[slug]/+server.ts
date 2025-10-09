@@ -1,4 +1,14 @@
 import { error, type RequestHandler } from '@sveltejs/kit';
+import type { EntryGenerator } from './$types';
+import { getSvxPosts } from '$lib/utils';
+
+export const entries: EntryGenerator = () => {
+  const posts = getSvxPosts();
+
+  return posts.map((post) => ({
+    slug: post.slug
+  }));
+};
 
 export const prerender = true;
 

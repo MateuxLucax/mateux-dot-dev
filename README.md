@@ -57,7 +57,7 @@ If you want to run the project in a Docker container, you can use the provided `
 Then, navigate to the project directory and build the Docker image using the following command:
 
 ```bash
-docker compose up -d
+docker compose up -f local.docker-compose.yml -d
 ```
 
 This will build the Docker image and start the container. You can then access the website at `http://localhost`.
