@@ -1,0 +1,177 @@
+---
+title: 🤖 Automate Your JavaScript Testing with Bun + Integrate It In Your CI/CD
+date: 2025-10-08
+tags: [automated testing, bun, testing frameworks, javascript, typescript]
+description: I've been an early adopter of Bun, and one of its most useful built-in tools is its testing framework. In this post, I will show you how to set up simple automated tests using Bun and how to integrate them into your CI/CD pipeline using GitHub Actions.
+---
+
+I've been an early adopter of [Bun](https://bun.sh/). From the beginning, I was impressed by its speed and ease of use. However, what made me stick with it was its growing ecosystem of built-in tools. DHH recently talked about this at [Rails World 2025 Opening Keynote](https://www.youtube.com/watch?v=gcwzWzC7gUA), discussing how in recent years we as developers have lost the joy of shipping things due to having to find and integrate multiple libraries and tooling.
+
+One of the most useful built-in tools in Bun is its testing framework. In this post, I will show you how to set up simple automated tests using Bun.
+
+## How to set up Bun for testing
+
+First (obviously), you need to have Bun installed. You can follow the instructions on the [Bun website](https://bun.sh/) to get it set up. (I recommend using [mise-en-place](https://mise.jdx.dev/), as it makes managing multiple Bun versions a breeze).
+
+I will be using one of my personal projects as an example: [rslp-checker](https://github.com/mateuxlucax/rslp-checker). It's a simple CLI tool that checks if a word is correctly stemmed using the RSLP (Removedor de Sufixos da Lingua Portuguesa) algorithm. It's written in TypeScript, with Bun as its runtime.
+
+## Creating tests with Bun
+
+Recently, I've been using my RSLP project to explore some tooling, as I also pointed out in my [post about migrating from DockerHub to GHCR](https://mateux.dev/blog/posts/migrating-to-github-container-registry). One of the things that would be very useful in its context is a set of automated tests to ensure that all stemmed words are correct and being properly handled by the algorithm. So let's add some tests to it using Bun.
+
+Bun inherits a lot of concepts from other testing frameworks, like Jest. So if you're familiar with those, you'll feel right at home. If not, don't worry I'll guide you through the basics.
+
+### Checking if a string is correctly stemmed
+
+First, let's create a new file called `rslp.test.ts` in the `tests` directory of the project. This is where we will write our tests.
+
+> I will be using the AAA (Arrange, Act, Assert) pattern for writing tests, as it helps to keep them organized and easy to read. You can learn more about it [here](https://medium.com/@pjbgf/title-testing-code-ocd-and-the-aaa-pattern-df453975ab80)
+
+Before we can start writing our tests, we need to set up the stemmer instance. To help with that, we can use the `beforeAll` hook to run some code before all tests are executed. In this case, we will parse the RSLP rules and create a new instance of the `RSLPStemmer` class. There are also `beforeEach`, `afterAll`, and `afterEach` hooks available if you need to run some code before or after each test.
+
+```typescript
+import { expect, test, describe, beforeAll } from "bun:test";
+import { join } from 'path';
+import { parseRSLPRules } from '../src/parser';
+import RSLPStemmer from '../src/stemmer';
+
+let stemmer: RSLPStemmer;
+
+beforeAll(async () => {
+  const rslpFilePath = join(process.cwd(), 'assets', 'portuguese.rslp');
+  const steps = await parseRSLPRules(rslpFilePath);
+  stemmer = new RSLPStemmer(steps);
+});
+```
+
+With this out of the way, we can start writing our tests. Let's begin with a simple test that checks if a word is correctly stemmed.
+
+```typescript
+describe('RSLP Stemmer', () => {
+  test('should correctly stem a word', () => {
+    // Arrange
+    const word = 'caminhando';
+    const expectedStem = 'caminh';
+
+    // Act
+    const stem = stemmer.stem(word);
+
+    // Assert
+    expect(stem).toBe(expectedStem);
+  });
+});
+```
+
+Let's break down what's happening here:
+
+1. `describe`: This function is used to group related tests together. In this case, we're grouping all tests related to the `RSLP Stemmer`. This helps to keep our tests organized and makes it easier to understand what we're testing.
+2. `test`: This function is used to define a single test case. It takes two arguments: a string that describes the test, and a function that contains the actual test code.
+3. Inside the test function, we follow the AAA pattern:
+   - **Arrange**: We set up the initial conditions for the test. In this case, we're defining the word we want to stem and the expected result.
+   - **Act**: We perform the action we want to test. Here, we're calling the `stem` method of the `RSLPStemmer` instance with the word we want to stem.
+   - **Assert**: We check if the result of the action is what we expected. We're using the `expect` function to assert that the stemmed word is equal to the expected stem.
+
+### Running the tests
+
+Now that we have our test written, we can run it using Bun. To do this, simply run the following command in your terminal:
+
+```bash
+bun test
+```
+
+The output should look something like this:
+
+```bash
+bun test v1.2.13 (64ed68c9)
+
+tests/stemmer.test.ts:
+
+tests/rslp.test.ts:
+✓ RSLP Stemmer > should correctly stem a word
+
+ 1 pass
+ 0 fail
+ 1 expect() calls
+Ran 1 tests across 2 files. [14.00ms]
+```
+
+And that's it! You've successfully written and run your first test using Bun.
+
+We can improve our testing suite by adding more test cases. For example, we can add tests for edge cases, such as words that are already stemmed, words that are too short to be stemmed, and words with special characters.
+
+## Integrating Bun tests in your CI/CD pipeline
+
+Once you have your tests set up, it's a good practice to integrate them into your CI/CD pipeline. This way, you can ensure that your code is always tested before being deployed.
+
+To do that, we can use the [bun test step](https://bun.com/guides/runtime/cicd) for GitHub Actions workflows.
+
+I will use this opportunity to also automate the test workflow on my RSLP project. So let's create a new file called `test-backend.yml` in the `.github/workflows` directory of the project. This is where we will define our workflow.
+
+```yaml
+name: Test Backend
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "backend/**"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "backend/**"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          bun install
+
+      - name: Run tests
+        run: |
+          cd backend
+          bun test
+```
+
+Pay attention to the `paths` key under the `push` and `pull_request` events. This ensures that the workflow only runs when there are changes in the `backend` directory. This is useful if you have a monorepo setup, like I do with my RSLP project.
+
+With this workflow in place, every time you push changes to the `main` branch or create a pull request targeting the `main` branch, the tests will run automatically. If any test fails, the workflow will fail, and you'll be notified.
+
+I also updated my backend build workflow to depend on the successful completion of this test workflow. This way, the backend will only be built if all tests pass.
+
+```yaml
+name: Build and Push Backend Image
+
+on:
+  workflow_run:
+    workflows: ["Test Backend"]
+    types:
+      - completed
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}-backend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+#...
+```
+
+## Conclusion
+
+In this post, we explored how to set up automated tests using Bun's built-in testing framework. We covered the basics of writing tests, running them, and integrating them into a CI/CD pipeline using GitHub Actions.
