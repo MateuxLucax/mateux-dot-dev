@@ -1,0 +1,349 @@
+---
+title: ⚡ Simplified Load Tests with Grafana k6
+date: 2025-10-09
+tags: [automated testing, load testing, grafana k6, performance testing]
+description: Learn how to write simple yet powerful load tests using Grafana k6 and JavaScript, from basic setup to CI/CD integration for bulletproof performance testing.
+---
+
+Load testing is something that only shows its value when you need it, that Monday morning when all your services are throwing warnings and errors on your Slack and monitoring dashboards due to a sudden spike of traffic. So, how can we prevent or at least be prepared for these situations? The answer is simple: load testing.
+
+We've had several tools and services to help us with load testing over the years, however none of them really stood out as a simple and effective solution for me. JMeter is a great tool, don't get me wrong, however it can be a hassle to configure and share the configuration. I just want a simple way to write load tests, and if it can be done in code and versioned in Git, even better.
+
+Enter [Grafana k6](https://k6.io/), an open-source load testing tool that allows you to write load tests in JavaScript. It's simple, effective and can be integrated with any CI/CD pipeline.
+
+## Getting Started with k6
+
+As most of my projects, I like to use [mise-en-place](https://mise.jdx.dev/) to install dependencies. So, to install k6, you can run:
+
+```bash
+mise use -g k6
+```
+
+And that's it! You now have k6 installed and ready to use. As a bonus, with mise-en-place you can easily manage multiple versions of k6 if needed and share the same version across your team on your projects repositories.
+
+## How to Write Load Tests with k6
+
+One service I recently built and wanted to check its performance and capabilities was my [RSLP project](https://github.com/mateuxlucax/rslp-checker). Its backend is an [Elysia](https://elysiajs.com/) server that exposes a single API endpoint to stem any word using the RSLP algorithm. So, let's write a simple load test to check how it performs under load.
+
+First, we need to create a file (anywhere, but for this example I will store it under `tests/performance`) called `load-test.js`:
+
+```javascript
+import http from 'k6/http';
+import { check } from 'k6';
+import { Rate, Trend } from 'k6/metrics';
+
+const errorRate = new Rate('errors');
+const stemTrend = new Trend('stem_duration', true);
+
+export const options = {
+  stages: [
+    { duration: '30s', target: 1000 },
+    { duration: '1m', target: 5000 },
+    { duration: '30s', target: 1000 },
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<500'],
+    http_req_failed: ['rate<0.1'],
+    errors: ['rate<0.1'],
+  },
+};
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
+```
+
+Let's break down what this code does:
+
+1. We need to import the essential modules from k6: [http](https://grafana.com/docs/k6/latest/javascript-api/k6-http/) to make HTTP requests, [check](https://grafana.com/docs/k6/latest/using-k6/checks/) to validate responses, and [`Rate`](https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/trend/) and [Trend](https://grafana.com/docs/k6/latest/javascript-api/k6-metrics/rate/) to create custom metrics.
+2. Define our custom metric for `errorRate` to track failed HTTP requests later on
+3. Define our custom metric for `stemTrend` to track the duration of the stemming operation
+4. Define how our load test will behave using the [`options`](https://grafana.com/docs/k6/latest/using-k6/k6-options/how-to/) object. This is where we define the stages of our load tests and the thresholds for our metrics.
+5. Define the `BASE_URL` variable to point to our service. We can override it through an environment variable when running the test. This is useful to run the test against different environments (local, staging, production, etc).
+
+In this configuration, we will have three stages:
+
+- Ramp up to 1000 virtual users over 30 seconds
+- Ramp up to 5000 virtual users over 1 minute
+- Ramp down to 1000 virtual users over 30 seconds
+
+This ensures that our service can handle a sudden spike in traffic and then gracefully scale down.
+
+### Writing our First Load Test
+
+Now that we have our setup ready, let's begin writing our first load test. To do so, we need some data to test against. For this example, I will use a simple array of words to be stemmed:
+
+```javascript
+const testTexts = [
+  'casa casas casinha casarão',
+  'trabalho trabalhador trabalhando trabalhos',
+  'estudar estudo estudante estudando estudos',
+  'desenvolvimento desenvolvedor desenvolvendo desenvolve',
+  'aplicação aplicações aplicar aplicando aplicado',
+  'sistema sistemas sistemático sistematicamente',
+  'programa programação programador programando',
+  'computação computador computacional computando',
+  'tecnologia tecnológico tecnologias tecnólogo',
+  'inovação inovador inovando inovações inovativo',
+  'empresa empresarial empresário empresas',
+  'mercado mercados mercadoria mercadológico',
+  'produto produtos produção produzir produtivo',
+  'serviço serviços servir servindo servidor',
+  'cliente clientes clientela',
+  'venda vendas vender vendedor vendendo',
+  'compra compras comprar comprador comprando',
+  'negócio negócios negociar negociação negociante',
+  'gestão gestor gestores gerenciar gerenciamento',
+  'administração administrativo administrador administrar',
+];
+
+function getRandomText() {
+  return testTexts[Math.floor(Math.random() * testTexts.length)];
+}
+```
+
+There is also a helper function to get a random text from the array. This will help us to simulate different requests during the load test.
+
+With that out of the way, we can now write our load test:
+
+```javascript
+export default function (data) {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  const text = getRandomText();
+  const payload = JSON.stringify({ text });
+
+  const response = http.post(`${data.baseUrl}/stem`, payload, { headers });
+
+  stemTrend.add(response.timings.duration);
+
+  const isSuccess = check(response, {
+    'status is 200': (r) => r.status === 200,
+    'response has original text': (r) => {
+      try {
+        const body = JSON.parse(r.body);
+        return body.original === text;
+      } catch (e) {
+        return false;
+      }
+    },
+    'response has stemmed text': (r) => {
+      try {
+        const body = JSON.parse(r.body);
+        return typeof body.stemmed === 'string' && body.stemmed.length > 0;
+      } catch (e) {
+        return false;
+      }
+    },
+    'response time < 1000ms': (r) => r.timings.duration < 1000,
+  });
+  
+  errorRate.add(!isSuccess);
+}
+```
+
+Here's a breakdown of what this code does:
+
+1. We define the default function that will be executed for each virtual user during the load test.
+2. We set the request headers to indicate that we are sending JSON data.
+3. We get a random text from our `testTexts` array and create the payload to be sent in the request body.
+4. We make a POST request to the `/stem` endpoint of our service with the payload and headers.
+5. We record the duration of the request using our custom `stemTrend` metric.
+6. We use the `check` function to validate the response. We check if the status is 200, if the response contains the original text, if it contains the stemmed text, and if the response time is less than 1000ms.
+7. We update our `errorRate` metric based on whether the checks passed or failed.
+
+### Bonus: Running Code Before and After the Test
+
+K6 also provides hooks to run code before and after the test. This is useful for setting up and tearing down any resources needed for the test. For example, we can use the `setup` function to return the `BASE_URL` to be used in the test after ensuring the service is healthy:
+
+```javascript
+export function setup() {
+  console.log('Starting RSLP Stemmer Load Test');
+  console.log(`Base URL: ${BASE_URL}`);
+
+  const healthResponse = http.get(`${BASE_URL}/health`);
+  if (healthResponse.status !== 200) {
+    throw new Error(`Health check failed: ${healthResponse.status}`);
+  }
+
+  console.log('Health check passed');
+  return { baseUrl: BASE_URL };
+}
+```
+
+We can also use the `teardown` function to log a message after the test is complete and check if the service is still healthy:
+
+```javascript
+export function teardown(data) {
+  console.log('Load test completed');
+
+  const healthResponse = http.get(`${data.baseUrl}/health`);
+  if (healthResponse.status === 200) {
+    console.log('Final health check passed');
+  } else {
+    console.log(`Final health check failed: ${healthResponse.status}`);
+  }
+}
+```
+
+### Running the Load Test
+
+Now that we have our load test written, we can run it using the following command:
+
+```bash
+k6 run tests/performance/load-test.js --env BASE_URL=http://localhost:3000
+```
+
+This command will execute the load test against our local RSLP service. You can change the `BASE_URL` environment variable to point to different environments (staging, production, etc).
+
+After the test is complete, k6 will provide a summary of the results, including the number of requests made, the number of errors, and the response times.
+
+Here's the output of a sample run:
+
+```bash
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: load.test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 5000 max VUs, 2m30s max duration (incl. graceful stop):
+              * default: Up to 5000 looping VUs for 2m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+INFO[0000] Starting RSLP Stemmer Load Test               source=console
+INFO[0000] Base URL: http://localhost:3000               source=console
+INFO[0000] Health check passed                           source=console
+INFO[0120] Load test completed                           source=console
+INFO[0120] Final health check passed                     source=console
+
+
+  █ THRESHOLDS 
+
+    errors
+    ✓ 'rate<0.1' rate=0.00%
+
+    http_req_duration
+    ✓ 'p(95)<500' p(95)=239.48ms
+
+    http_req_failed
+    ✓ 'rate<0.1' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 9595160 79930.636359/s
+    checks_succeeded...: 100.00% 9595160 out of 9595160
+    checks_failed......: 0.00%   0 out of 9595160
+
+    ✓ status is 200
+    ✓ response has original text
+    ✓ response has stemmed text
+    ✓ response time < 1000ms
+
+    CUSTOM
+    errors.........................: 0.00%   0 out of 2398790
+    stem_duration..................: avg=118.41ms min=52.55µs med=115.09ms max=566.73ms p(90)=227.42ms p(95)=239.48ms
+
+    HTTP
+    http_req_duration..............: avg=118.41ms min=52.55µs med=115.09ms max=566.73ms p(90)=227.42ms p(95)=239.48ms
+      { expected_response:true }...: avg=118.41ms min=52.55µs med=115.09ms max=566.73ms p(90)=227.42ms p(95)=239.48ms
+    http_req_failed................: 0.00%   0 out of 2398792
+    http_reqs......................: 2398792 19982.67575/s
+
+    EXECUTION
+    iteration_duration.............: avg=118.91ms min=95.21µs med=115.52ms max=567.08ms p(90)=228.13ms p(95)=240.2ms 
+    iterations.....................: 2398790 19982.65909/s
+    vus............................: 1031    min=26           max=4984
+    vus_max........................: 5000    min=5000         max=5000
+
+    NETWORK
+    data_received..................: 503 MB  4.2 MB/s
+    data_sent......................: 437 MB  3.6 MB/s
+
+
+
+
+running (2m00.0s), 0000/5000 VUs, 2398790 complete and 0 interrupted iterations
+default ✓ [======================================] 0000/5000 VUs  2m0s
+```
+
+As you can see, the test ran for 2 minutes with a maximum of 5000 virtual users and completed 2,398,790 iterations. The average response time was 118.41ms, with 95% of requests completing in under 239.48ms. There were no errors during the test.
+
+## CI/CD Integration
+
+K6 is a tool that runs as an Integration Testing Pipeline step. This isn't as straightforward as unit tests due to the fact that we need to have a service running to be able to run the load tests against it. However, if you have a staging environment or a way to spin up your service in a test environment, you can easily integrate k6 into your CI/CD pipeline.
+
+In this example, I'll be using GitHub Actions to spin up a container locally using Docker with the RSLP service and then run the load tests against it.
+
+Thankfully, the Grafana team provides a [run-k6-action](https://github.com/grafana/run-k6-action) for us to use in our workflows.
+
+```yaml
+name: Test Backend
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "backend/**"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "backend/**"
+  workflow_dispatch:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and start services
+        run: docker compose -f local.docker-compose.yml up -d --build
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for services to start..."
+          sleep 15
+          
+          echo "Checking if HAProxy is responding..."
+          curl --retry 20 --retry-delay 3 --retry-connrefused --fail http://localhost:3000
+          
+          echo "Testing API health endpoint..."
+          curl --retry 15 --retry-delay 3 --retry-connrefused --fail http://localhost:3000/api/health
+          
+          echo "Services are ready!"
+
+      - uses: grafana/setup-k6-action@v1
+      - uses: grafana/run-k6-action@v1
+        env:
+          BASE_URL: http://localhost:3000/api
+        with:
+          path: |
+            ./backend/tests/performance/*.js
+
+      - name: Clean up
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "failure" ]; then
+            echo "=== Service logs ==="
+            docker compose -f local.docker-compose.yml logs
+          fi
+          docker compose -f local.docker-compose.yml down
+```
+
+This will spin up the RSLP service using Docker Compose, wait for it to be ready, run the load tests using k6, and then clean up the containers.
+
+If everything goes well, the load tests will run and you'll see the results in the GitHub Actions logs. If any of the thresholds defined in the load test are not met, the action will fail, and you'll be notified.
+
+## Conclusion
+
+That's it! You now have a simple and effective way to write and run load tests using Grafana k6. You can easily integrate it into your CI/CD pipeline to ensure that your services can handle the expected load.
+
+If you want to learn more about k6 and its capabilities, I highly recommend checking out the [official documentation](https://k6.io/docs/). It has a lot of great examples and guides to help you get started.
+
+There's also my [rslp-checker](https://github.com/mateuxlucax/rslp-checker) project where you can see the load test and GitHub workflows in action and use it as a reference for your own projects.
