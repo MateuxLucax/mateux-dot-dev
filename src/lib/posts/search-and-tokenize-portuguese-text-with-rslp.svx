@@ -1,0 +1,377 @@
+---
+title: 🔎 Search and Tokenize Portuguese Text with RSLP
+date: 2025-10-10
+tags: [portuguese, rslp, nlp, full-text-search, text-processing, tokenization, llm]
+description: Learn how to implement the RSLP stemming algorithm for Portuguese text processing in TypeScript, enabling better search capabilities and natural language processing.
+---
+
+<script>
+  import Mermaid from '$lib/components/Mermaid.svelte';
+
+  const rslpFlow = `
+  flowchart TD
+    Start([Begin]) --> wordEndsInPlural{Word ends in &quot;s&quot;?}
+    wordEndsInPlural -- Yes --> pluralReduction[Plural Reduction]
+    wordEndsInPlural -- No --> wordEndsInFeminine{Word ends in &quot;a&quot;?}
+    pluralReduction --> wordEndsInFeminine
+    wordEndsInFeminine -- Yes --> feminineReduction[Feminine Reduction]
+    wordEndsInFeminine -- No --> augmentativeDiminutive{Word ends in &quot;ão&quot; or &quot;inho&quot;?}
+    feminineReduction --> augmentativeDiminutive
+    augmentativeDiminutive --> adverbReduction[Adverb Reduction]
+    adverbReduction --> nounSuffixReduction[Noun Reduction]
+    nounSuffixReduction --> isSuffixRemoved{Suffix removed}
+    isSuffixRemoved -- Yes --> removeAccents[Remove Accent]
+    isSuffixRemoved -- No --> verbSuffixReduction[Verb Reduction]
+    verbSuffixReduction --> isSuffixRemoved2{Suffix removed}
+    isSuffixRemoved2 -- Yes --> removeAccents
+    isSuffixRemoved2 -- No --> removeVowel[Remove Vowel]
+    removeVowel --> removeAccents
+    removeAccents --> final([End])
+`
+</script>
+
+Brazilian Portuguese is obviously the best and worst language in the world. Almost 270 million people speak it! So it's very important in our modern world to be able to search and tokenize text written in Portuguese, which allows us to interact with it using modern tools like Full Text Search and Natural Language Processing.
+
+<img src="/assets/brazil-mentioned.webp" alt="Brazil mentioned" style="width: 50%; height: auto; margin: 0 auto; display: block;" />
+
+In this post, I will show how you can implement a basic algorithm in vanilla TypeScript based on this 2001 article: [A Stemming Algorithm for the Portuguese Language](https://www.researchgate.net/publication/3940125_A_Stemming_Algorithmm_for_the_Portuguese_Language) from Viviane Moreira and C. Huyck.
+
+## What is Stemming?
+
+Stemming is a text normalization technique that reduces different word variations to their fundamental base form, known as the stem. This approach primarily involves stripping away endings and suffixes from terms. The method is extensively employed in search systems to boost retrieval effectiveness. To illustrate, consider the terms: running, runner, and ran. Through stemming, these variations are condensed to their root form, "run". This consolidation enables search engines to recognize and retrieve all related forms of a word when a user searches for any one of them.
+
+### Where is Stemming Used?
+
+Nowadays, stemming is used in almost every modern search engine, NLP pipeline, and even your everyday LLM. Tools like Elasticsearch and MongoDB derive from Apache Lucene, which uses stemming algorithms to improve its search capabilities. LLMs also use stemming to better understand the context of a word and its meaning before tokenizing it (although there is a lot more involved).
+
+## RSLP - The Portuguese Stemming Algorithm
+
+RSLP stands for "Removedor de Sufixos da Língua Portuguesa" or "Portuguese Language Suffix Remover". It is a rule-based stemming algorithm specifically designed for the Portuguese language. I did not trace back to who originally created it, but it is widely used in applications where Portuguese text processing is required.
+
+### How does RSLP work?
+
+RSLP operates through a series of defined steps in a flow that systematically reduces words to their stems by removing common suffixes. This can be easily visualized in the flowchart below:
+
+<Mermaid diagram={rslpFlow} />
+
+### Defining a Suffix Rule
+
+We can define a suffix rule in RSLP as a basic text string with 4 properties: Suffix to be removed, Minimum word length, Replacement suffix and a list of exceptions.
+
+```ts
+interface SuffixRule {
+  suffix: string; // The suffix to be removed
+  minStemLength: number; // Minimum length of the word to apply this rule
+  replacement: string; // Optional replacement suffix
+  exceptions: string[]; // List of exceptions where the rule should not be applied
+}
+```
+
+If we were to write it in plain text, it could be also something like this:
+
+```plaintext
+"ao", 3, "", ["pão", "mão", "cão"]
+```
+
+This would convert words ending in "ao" to "", but only if the word is at least 3 characters long and is not one of the exceptions ("pão", "mão", "cão"). For example, "coração" would become "coraç", but "pão" would remain unchanged.
+
+## Implementing RSLP in TypeScript
+
+First and foremost, we need to create a parser that reads a file with the specified RSLP rules and converts them into a list of `SuffixRule` objects. You can find a list of suffix rules right [here](https://raw.githubusercontent.com/MateuxLucax/rslp-checker/refs/heads/main/backend/assets/portuguese.rslp).
+
+### Necessary Types
+
+To begin with the actual code, let's first define our types. We basically need a `SuffixRule` and a `Step`, which is just a list of `SuffixRule`s for each step of the algorithm flow.
+
+```ts
+type SuffixRule = {
+  suffix: string;
+  minStemLength: number;
+  replacement: string;
+  exceptions: string[];
+};
+
+export type Step = {
+    name: string;
+    minWordLength: number;
+    isWholeWordMatch?: boolean;
+    conditions: string[];
+    rules: SuffixRule[];
+}
+```
+
+We can see that a `Step` also has a `minWordLength` property, which is the minimum length of the word to apply any rule in this step. It also has an optional `isWholeWordMatch` property which, if true, will only apply the rules if the whole word matches one of the conditions. The `conditions` property is a list of strings that define specific conditions for applying the rules in this step.
+
+The step is defined as: 
+
+```plaintext
+"Plural", 3, 1, {"s"},
+```
+
+If we analyze it, we can see that the step is called "Plural", has a minimum word length of 3, does require a whole word match (1 = true), and has one condition: the word must end in "s".
+
+### Rule Parser
+
+Now that we have our types defined, let's create a function that parses the RSLP rules from a text file and converts them into a list of `SuffixRule` objects.
+
+```ts
+export async function parseRSLPRules(ruleLines: string[]): Step[] {
+    const steps: Step[] = [];
+    let currentStep: Step | undefined;
+
+      for (const line of ruleLines) { // Iterate through each line in the file
+        const trimmedLine = line.trim();
+
+        if (trimmedLine.length === 0) continue; // Skip empty lines
+        if (trimmedLine.startsWith('#')) continue; // Skip comments
+
+        if (!currentStep) {
+            currentStep = parseStep(trimmedLine); // Start a new step
+
+            continue;
+        }
+
+        if (trimmedLine.endsWith(';')) { // End of current step
+            const finalRule = parseRule(trimmedLine.slice(0, -1));
+
+            currentStep.rules.push(finalRule)
+            steps.push(currentStep);
+            currentStep = undefined;
+            continue;
+        }
+
+        const rule = parseRule(trimmedLine); // Parse the rule
+
+        if (!currentStep) {
+            console.error("Rule found without a current step:", trimmedLine);
+            throw new Error("Rule found without a current step");
+        }
+
+        currentStep.rules.push(rule); // Add the rule to the current step
+    }
+
+    return steps;
+}
+```
+
+This function reads each line of the file, skipping empty lines and comments. It starts a new step when it encounters a line that doesn't belong to a rule and adds rules to the current step until it reaches the end of the step (indicated by a line ending with a semicolon).
+
+We also need to implement the `parseStep`:
+
+```ts
+function parseStep(line: string): Step {
+    const stepMatch = line.match(/{[\s]*"([^"]+)"[\s]*,[\s]*(\d+)[\s]*,[\s]*(\d+)[\s]*,[\s]*(.+)/); // Regex to match the step format
+
+    if (!stepMatch) throw new Error(`Invalid step format: ${line}`);
+
+    const name = stepMatch[1]?.replace(/"/g, ''); // The name of the step
+    if (!name) {
+        console.error("Invalid step name:", stepMatch[1]);
+        throw new Error("Invalid step name");
+    }
+
+    const minWordLength = parseInt(stepMatch[2] || 'error', 10); // Minimum length of the word to apply any rule in this step
+    if (isNaN(minWordLength)) {
+        console.error("Invalid minimum word length:", stepMatch[2]);
+        throw new Error("Invalid minimum word length");
+    }
+
+    const isWholeWordMatch = (stepMatch[3] || '0') === '1'; // Convert to boolean
+
+    const conditionsStr = stepMatch[4]?.trim() || '';
+    const conditionsRegex = /"([^"]+)"/g;
+    const conditions: string[] = []; // List to hold the extracted conditions
+
+    let match;
+    while ((match = conditionsRegex.exec(conditionsStr)) !== null) { // Extract conditions from the matched group
+        if (match[1]) {
+            conditions.push(match[1].trim());
+        }
+    }
+
+    return {
+        name,
+        minWordLength,
+        isWholeWordMatch,
+        conditions,
+        rules: []
+    };
+}
+```
+
+And also the `parseRule` function:
+
+```ts
+function parseRule(line: string): SuffixRule {
+    const ruleMatch = line.match(/\{[\s]*"([^"]*)"[\s]*,[\s]*(\d+)(?:[\s]*,[\s]*"([^"]*)")?(?:[\s]*,[\s]*\{([^\}]*)\})?[\s]*\}/); // Regex to match the rule format
+
+    if (!ruleMatch) {
+        throw new Error(`Invalid rule format: ${line}`);
+    }
+
+    const suffix = ruleMatch[1]?.replace(/"/g, ''); // The suffix to be removed
+    if (suffix === undefined) {
+        console.error("Invalid rule suffix:", ruleMatch[1]);
+        throw new Error("Invalid rule suffix");
+    }
+
+    const minStemLength = parseInt(ruleMatch[2] || 'error', 10); // Minimum length of the word to apply this rule
+    if (isNaN(minStemLength) || minStemLength < 0) {
+        console.error("Invalid minimum stem length:", ruleMatch[2]);
+        throw new Error("Invalid minimum stem length");
+    }
+
+    const replacement = ruleMatch[3] !== undefined ? ruleMatch[3].replace(/"/g, '') : ''; // Optional replacement suffix
+    
+    const exceptionStr = ruleMatch[4]?.trim() || ''; 
+    const exceptionRegex = /"([^"]+)"/g;
+
+    const exceptions: string[] = [];
+    let match;
+
+    while ((match = exceptionRegex.exec(exceptionStr)) !== null) { // Extract exceptions from the matched group
+        if (match[1]) {
+            exceptions.push(match[1].trim());
+        }
+    }
+
+    return {
+        suffix,
+        minStemLength,
+        replacement,
+        exceptions
+    };
+}
+```
+
+With these functions, we can input a text file context with the RSLP rules and get a structured list of `Step` objects, each containing its respective `SuffixRule`s to be applied in the stemming process.
+
+### Stemmer
+
+With our set of rules, we can start to apply them to a given word. The main class of the stemmer will look something like this:
+
+```ts
+class RSLPStemmer {
+    private steps: Step[];
+
+    constructor(steps: Step[]) {
+        this.steps = steps;
+    }
+
+    /**
+     * Stems a word according to the RSLP algorithm
+     * @param word The word to stem
+     * @returns The stemmed word
+     */
+    public stem(word: string): string {
+        if (!word) return word;
+        
+        let stemmed = word.toLowerCase();
+        stemmed = this.stripSpecialCharacters(stemmed);
+
+        for (const step of this.steps) {
+            if (stemmed.length < step.minWordLength) {
+                continue;
+            }
+
+            if (step.conditions.length > 0) {
+                const matchesCondition = step.conditions.some(condition => 
+                    stemmed.endsWith(condition));
+                if (!matchesCondition) {
+                    continue;
+                }
+            }
+
+            for (const rule of step.rules) {
+                if (this.canApplyRule(stemmed, rule, step.isWholeWordMatch)) {
+                    stemmed = this.applyRule(stemmed, rule);
+                    break;
+                }
+            }
+        }
+        
+        return stemmed;
+    }
+
+    /**
+     * Strips special characters from a word (keeping only alphanumeric characters, including those with accents)
+     */
+    private stripSpecialCharacters(word: string): string {
+        return word.replace(/[^a-zA-ZÀ-ÖØ-öø-ÿ0-9]/g, '').trim();
+    }
+    
+    /**
+     * Checks if a rule can be applied to a word
+     */
+    private canApplyRule(word: string, rule: SuffixRule, isWholeWordMatch: boolean = false): boolean {
+        if (!word.endsWith(rule.suffix)) {
+            return false;
+        }
+        
+        if (rule.exceptions.length > 0) {
+            if (isWholeWordMatch) {
+                if (rule.exceptions.includes(word)) {
+                    return false;
+                }
+            } else {
+                for (const exception of rule.exceptions) {
+                    if (word.endsWith(exception)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        const stemLength = word.length - rule.suffix.length;
+        if (stemLength < rule.minStemLength) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Applies a rule to a word
+     */
+    private applyRule(word: string, rule: SuffixRule): string {
+        const stem = word.slice(0, word.length - rule.suffix.length);
+        return stem + rule.replacement;
+    }
+}
+```
+
+First, we initialize the stemmer with a list of `Step`s. The `stem` method processes a given word through each step, applying applicable rules based on the defined conditions and exceptions. The `stripSpecialCharacters` method cleans the word by removing any non-alphanumeric characters, while `canApplyRule` checks if a specific rule can be applied to the word. Finally, `applyRule` performs the actual suffix removal and replacement as defined by the rule. This basically covers the entire RSLP stemming algorithm in TypeScript!
+
+### Example Usage
+
+```ts
+const steps = await Bun.file('path/to/portuguese.rslp').text().then(text => {
+    const lines = text.split('\n');
+
+    return parseRSLPRules(lines);
+});
+
+const stemmer = new RSLPStemmer(steps);
+
+const words = ['corações', 'amigas', 'meninas', 'cão', 'pães', 'correndo', 'felizmente'];
+const expected = ['coraç', 'amig', 'menin', 'cão', 'pães', 'corr', 'feliz'];
+
+words.forEach((word, index) => {
+    const stemmed = stemmer.stem(word);
+    console.log(`Word: ${word} => Stemmed: ${stemmed} | Expected: ${expected[index]}`);
+});
+```
+
+This example reads the RSLP rules from a file, initializes the stemmer, and processes a list of words, printing the original word, the stemmed result, and the expected output for verification.
+
+## Conclusion
+
+In today's post, we explored the RSLP stemming algorithm for the Portuguese language and implemented it in TypeScript. Stemming is a crucial technique in text processing, enabling more effective search and analysis by reducing words to their base forms. The RSLP algorithm, with its rule-based approach, is particularly well-suited for handling the complexities of Portuguese morphology.
+
+You can check out the full code on my GitHub: [rslp-checker](https://github.com/MateuxLucax/rslp-checker).
+
+If you want to learn more about RSLP and stemming in general, check out these resources:
+
+- [RSLP: A New Algorithm for Stemming Portuguese Words](https://www.researchgate.net/publication/220724882_RSLP_A_New_Algorithm_for_Stemming_Portuguese_Words)
+- [RSLP Stemmer (Removedor de Sufixos da Lingua Portuguesa)](https://www.inf.ufrgs.br/~viviane/rslp/)
+- [github.com/dfalbel/rslp](https://github.com/dfalbel/rslp?tab=readme-ov-file)
