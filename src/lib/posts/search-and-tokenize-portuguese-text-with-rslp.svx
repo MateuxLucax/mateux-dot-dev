@@ -1,5 +1,5 @@
 ---
-title: 🔎 Search and Tokenize Portuguese Text with RSLP
+title: Search and Tokenize Portuguese Text with RSLP
 date: 2025-10-10
 tags: [portuguese, rslp, nlp, full-text-search, text-processing, tokenization, llm]
 description: Learn how to implement the RSLP stemming algorithm for Portuguese text processing in TypeScript, enabling better search capabilities and natural language processing.
@@ -30,11 +30,9 @@ description: Learn how to implement the RSLP stemming algorithm for Portuguese t
 `
 </script>
 
-Brazilian Portuguese is obviously the best and worst language in the world. Almost 270 million people speak it! So it's very important in our modern world to be able to search and tokenize text written in Portuguese, which allows us to interact with it using modern tools like Full Text Search and Natural Language Processing.
+Portuguese is spoken by nearly 270 million people, yet it presents unique challenges for search engines. To effectively tokenize and search Portuguese text, we need robust stemming tools.
 
-<img src="/assets/brazil-mentioned.webp" alt="Brazil mentioned" style="width: 50%; height: auto; margin: 0 auto; display: block;" />
-
-In this post, I will show how you can implement a basic algorithm in vanilla TypeScript based on this 2001 article: [A Stemming Algorithm for the Portuguese Language](https://www.researchgate.net/publication/3940125_A_Stemming_Algorithmm_for_the_Portuguese_Language) from Viviane Moreira and C. Huyck.
+I will implement the RSLP (Removedor de Sufixos da Língua Portuguesa) algorithm in vanilla TypeScript, based on the [seminal 2001 paper by Viviane Moreira and C. Huyck](https://www.researchgate.net/publication/3940125_A_Stemming_Algorithmm_for_the_Portuguese_Language).
 
 ## What is Stemming?
 

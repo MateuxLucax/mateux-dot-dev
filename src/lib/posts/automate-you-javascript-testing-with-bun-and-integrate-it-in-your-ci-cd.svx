@@ -1,13 +1,11 @@
 ---
-title: 🤖 Automate Your JavaScript Testing with Bun + Integrate It In Your CI/CD
+title: Automate Your JavaScript Testing with Bun + Integrate It In Your CI/CD
 date: 2025-10-08
 tags: [automated testing, bun, testing frameworks, javascript, typescript]
-description: I've been an early adopter of Bun, and one of its most useful built-in tools is its testing framework. In this post, I will show you how to set up simple automated tests using Bun and how to integrate them into your CI/CD pipeline using GitHub Actions.
+description: Set up automated tests using Bun's built-in testing framework and integrate them into your CI/CD pipeline using GitHub Actions.
 ---
 
-I've been an early adopter of [Bun](https://bun.sh/). From the beginning, I was impressed by its speed and ease of use. However, what made me stick with it was its growing ecosystem of built-in tools. DHH recently talked about this at [Rails World 2025 Opening Keynote](https://www.youtube.com/watch?v=gcwzWzC7gUA), discussing how in recent years we as developers have lost the joy of shipping things due to having to find and integrate multiple libraries and tooling.
-
-One of the most useful built-in tools in Bun is its testing framework. In this post, I will show you how to set up simple automated tests using Bun.
+Bun's built-in testing framework offers speed and simplicity without the configuration fatigue of other tools.
 
 ## How to set up Bun for testing
 
@@ -19,7 +17,7 @@ I will be using one of my personal projects as an example: [rslp-checker](https:
 
 Recently, I've been using my RSLP project to explore some tooling, as I also pointed out in my [post about migrating from DockerHub to GHCR](https://mateux.dev/blog/posts/migrating-to-github-container-registry). One of the things that would be very useful in its context is a set of automated tests to ensure that all stemmed words are correct and being properly handled by the algorithm. So let's add some tests to it using Bun.
 
-Bun inherits a lot of concepts from other testing frameworks, like Jest. So if you're familiar with those, you'll feel right at home. If not, don't worry I'll guide you through the basics.
+Bun inherits a lot of concepts from other testing frameworks like Jest, so if you're familiar with those, you'll feel right at home.
 
 ### Checking if a string is correctly stemmed
 
@@ -95,7 +93,7 @@ tests/rslp.test.ts:
 Ran 1 tests across 2 files. [14.00ms]
 ```
 
-And that's it! You've successfully written and run your first test using Bun.
+You've successfully written and run your first test using Bun.
 
 We can improve our testing suite by adding more test cases. For example, we can add tests for edge cases, such as words that are already stemmed, words that are too short to be stemmed, and words with special characters.
 
@@ -172,6 +170,6 @@ jobs:
 #...
 ```
 
-## Conclusion
+## Summary
 
-In this post, we explored how to set up automated tests using Bun's built-in testing framework. We covered the basics of writing tests, running them, and integrating them into a CI/CD pipeline using GitHub Actions.
+Bun's built-in testing framework simplifies the testing workflow by removing the need for external tools like Jest or Vitest. Integrating it into GitHub Actions ensures your code is tested on every push.

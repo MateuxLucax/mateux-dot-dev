@@ -1,5 +1,5 @@
 ---
-title: 🧠 Level up your software engineering skills with Mermaid diagrams 
+title: Level up your software engineering skills with Mermaid diagrams 
 slug: level-up-software-engineering-with-mermaid
 date: 2025-06-19
 tags: [mermaid, documentation, diagrams, software-engineering, markdown]
@@ -44,30 +44,22 @@ description: Learn how using Mermaid.js can improve your system design, document
   `;
 </script>
 
-I’ve always rejected the idea of adding diagrams to my documentation. They felt like extra work requiring external tools, fiddly UIs, exporting files, syncing changes… it just didn’t fit into my development workflow.
+I used to avoid diagrams in documentation—external tools, fiddly UIs, and version control issues made them feel like dead weight. That changed when I discovered **Mermaid**.
 
-Every time I updated my code, the diagrams would get out of sync. And worst of all, they weren’t versioned. It didn’t feel like part of the *codebase*, just a side artifact that quickly became outdated.
+Mermaid lets me write diagrams as text, commit them alongside code, and render them instantly. No more excuses.
 
-Worse than that: it made collaboration harder. When teammates or contributors jumped into the project, they had to trust diagrams that no longer matched reality or ask me for clarification. That created friction I didn’t want. If the docs aren't living with the code, they’re dead weight.
-
-That changed when I discovered **Mermaid**.
-
-Mermaid made everything click. Diagrams as text? In Markdown? Commit them alongside your code? Instant updates and zero graphical fiddling? That’s exactly what I needed.
-
-Now, I use Mermaid to sketch ideas, model system flows, document features, and even communicate architecture with others directly in any repo. No more excuses.
-
-## 💡 Why visual thinking makes you a better engineer
+## Why visual thinking makes you a better engineer
 
 As developers, we’re constantly juggling mental models of architecture, state flows, data relationships, and user interactions. But those ideas are often left undocumented or explained inconsistently across teams.
 
 That’s a missed opportunity. Visualizing systems helps you:
 
-* ✍️ Refine your **system design thinking**
-* 🤝 Communicate complex ideas more easily
-* 🧱 Spot architectural flaws earlier
-* 📄 Create better documentation that stays relevant
+* Refine your **system design thinking**
+* Communicate complex ideas more easily
+* Spot architectural flaws earlier
+* Create better documentation that stays relevant
 
-## 🌱 What is Mermaid?
+## What is Mermaid?
 
 **[Mermaid.js](https://mermaid.js.org/)** is a JavaScript-based tool that lets you create diagrams using plain text directly in Markdown files.
 
@@ -75,12 +67,12 @@ No dragging boxes or flow arrows. Just write your diagram like code, version it 
 
 Mermaid works with:
 
-* 🧾 Markdown
-* 🛠 VS Code (with preview plugins)
-* 💬 Notion, Obsidian
-* 📘 Docusaurus, GitHub, Gitlab, Jira and more
+* Markdown
+* VS Code (with preview plugins)
+* Notion, Obsidian
+* Docusaurus, GitHub, Gitlab, Jira and more
 
-## 🔧 Getting started with Mermaid
+## Getting started with Mermaid
 
 You can try Mermaid instantly in the [Live Editor](https://mermaid.live) - or install it locally in your blog, project, or docs.
 
@@ -110,11 +102,11 @@ flowchart TD
 
 That’s all it takes to get a rendered diagram on supported applications.
 
-## 🧩 Diagrams that sharpen your thinking
+## Diagrams that sharpen your thinking
 
 Here are some of the most useful Mermaid diagram types for software engineers:
 
-### ✅ Flowcharts (Control flow, system logic)
+### Flowcharts (Control flow, system logic)
 
 ```markdown
 flowchart LR
@@ -136,7 +128,7 @@ flowchart LR
 />
 
 
-### 🧵 Sequence Diagrams (Interactions over time)
+### Sequence Diagrams (Interactions over time)
 
 ```markdown
 sequenceDiagram
@@ -152,7 +144,7 @@ sequenceDiagram
 
 <Mermaid diagram={sequenceDiagram} />
 
-### 🧱 Class Diagrams (Object models)
+### Class Diagrams (Object models)
 
 ```markdown
 classDiagram
@@ -171,7 +163,7 @@ classDiagram
 ```
 <Mermaid diagram={classDiagram} />
 
-### ⏳ Gantt Charts (Timeline planning)
+### Gantt Charts (Timeline planning)
 
 ```markdown
   gantt
@@ -195,7 +187,7 @@ classDiagram
   `}
 />
 
-## 🧠 How Mermaid builds your engineering skills
+## How Mermaid builds your engineering skills
 
 Using Mermaid consistently trains you to:
 
@@ -206,45 +198,45 @@ Using Mermaid consistently trains you to:
 
 These are habits that differentiate strong developers from great engineers.
 
-## ✨ Best Practices
+## Best Practices
 
 * **Start small**: One flow or component at a time
 * **Keep diagrams focused**: Avoid overwhelming visuals
 * **Use titles and labels**: Don’t assume context
 * **Reuse snippets** for consistency across projects
 
-## ⚠️ Limitations to be aware of
+## Limitations to be aware of
 
 * Mermaid’s layout engine isn’t perfect (complex diagrams can look weird)
 * Whitespace matters - indentation errors can break rendering
 * Rendering varies slightly across platforms (e.g., Notion may lag on updates)
 * Large diagrams can be hard to visualize without zoom capabilities by the rendering tool
 
-## 🧰 Tooling and resources
+## Tooling and resources
 
-* 🌐 [Mermaid Live Editor](https://mermaid.live)
-* 📘 [Official Docs](https://mermaid.js.org/)
-* 🧪 [VS Code Plugin](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
-* 🐙 [GitHub Repo](https://github.com/mermaid-js/mermaid)
+* [Mermaid Live Editor](https://mermaid.live)
+* [Official Docs](https://mermaid.js.org/)
+* [VS Code Plugin](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
+* [GitHub Repo](https://github.com/mermaid-js/mermaid)
 
-## 🧩 Real-World use cases
+## Real-World use cases
 
-* 🧱 Architecture diagrams
-* 🚀 CI/CD pipelines
-* 📡 API request flows
-* 🧠 Decision trees
-* 📘 Database relationships (ERD)
+* Architecture diagrams
+* CI/CD pipelines
+* API request flows
+* Decision trees
+* Database relationships (ERD)
 
 Mermaid is ideal for fast-moving teams, internal documentation, solo devs, and remote work environments.
 
-## 🧭 Final thoughts
+## Final thoughts
 
 Learning Mermaid won’t just improve your documentation - it will make you a better systems thinker, a better communicator, and a more effective teammate.
 
 And you won’t go back to diagramming by hand ever again.
 
-## 🔗 Source code & extras
+## Source code & extras
 
-I’ve open-sourced my full Mermaid + MDsveX blog setup here:👉 [GitHub: mateux-dot-dev](https://github.com/mateuxlucax/mateux-dot-dev)
+I’ve open-sourced my full Mermaid + MDsveX blog setup here: [GitHub: mateux-dot-dev](https://github.com/mateuxlucax/mateux-dot-dev)
 
 Feel free to fork it, tweak it, or contribute!

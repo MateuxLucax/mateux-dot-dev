@@ -1,15 +1,11 @@
 ---
-title: ⚡ Simplified Load Tests with Grafana k6
+title: Simplified Load Tests with Grafana k6
 date: 2025-10-09
 tags: [automated testing, load testing, grafana k6, performance testing]
 description: Learn how to write simple yet powerful load tests using Grafana k6 and JavaScript, from basic setup to CI/CD integration for bulletproof performance testing.
 ---
 
-Load testing is something that only shows its value when you need it, that Monday morning when all your services are throwing warnings and errors on your Slack and monitoring dashboards due to a sudden spike of traffic. So, how can we prevent or at least be prepared for these situations? The answer is simple: load testing.
-
-We've had several tools and services to help us with load testing over the years, however none of them really stood out as a simple and effective solution for me. JMeter is a great tool, don't get me wrong, however it can be a hassle to configure and share the configuration. I just want a simple way to write load tests, and if it can be done in code and versioned in Git, even better.
-
-Enter [Grafana k6](https://k6.io/), an open-source load testing tool that allows you to write load tests in JavaScript. It's simple, effective and can be integrated with any CI/CD pipeline.
+Load testing often happens too late—after production outages. To prevent this, I needed a simple, version-controlled load testing solution. Enter [Grafana k6](https://k6.io/), an open-source tool that lets you write performant load tests in JavaScript.
 
 ## Getting Started with k6
 
@@ -19,7 +15,7 @@ As most of my projects, I like to use [mise-en-place](https://mise.jdx.dev/) to 
 mise use -g k6
 ```
 
-And that's it! You now have k6 installed and ready to use. As a bonus, with mise-en-place you can easily manage multiple versions of k6 if needed and share the same version across your team on your projects repositories.
+You now have k6 installed and ready to use. With mise-en-place you can easily manage multiple versions of k6 and share the same version across your team.
 
 ## How to Write Load Tests with k6
 
@@ -340,10 +336,8 @@ This will spin up the RSLP service using Docker Compose, wait for it to be ready
 
 If everything goes well, the load tests will run and you'll see the results in the GitHub Actions logs. If any of the thresholds defined in the load test are not met, the action will fail, and you'll be notified.
 
-## Conclusion
+## Summary
 
-That's it! You now have a simple and effective way to write and run load tests using Grafana k6. You can easily integrate it into your CI/CD pipeline to ensure that your services can handle the expected load.
+You now have a simple, effective way to write load tests using Grafana k6. Integrating this into your CI/CD pipeline ensures services can handle expected load before reaching production.
 
-If you want to learn more about k6 and its capabilities, I highly recommend checking out the [official documentation](https://k6.io/docs/). It has a lot of great examples and guides to help you get started.
-
-There's also my [rslp-checker](https://github.com/mateuxlucax/rslp-checker) project where you can see the load test and GitHub workflows in action and use it as a reference for your own projects.
+For more details, check the [official documentation](https://k6.io/docs/) or my [rslp-checker](https://github.com/mateuxlucax/rslp-checker) project.

@@ -6,7 +6,7 @@
 	"license": "GPL-3.0-only",
 	"homepage": "https://mateux.dev",
 	"displayName": "mateux.dev",
-	"version": "2.0.1",
+	"version": "2.0.2",
 	"type": "module",
 	"description": "This is a SvelteKit application with Tailwind CSS. It is designed to be a simple and efficient profile page with link to my web profiles.",
 	"scripts": {
