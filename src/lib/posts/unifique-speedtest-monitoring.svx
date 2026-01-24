@@ -1,0 +1,100 @@
+---
+title: Tracking ISP Performance with Playwright and Prometheus
+slug: unifique-speedtest-monitoring
+date: 2026-01-24
+tags: [nodejs, playwright, prometheus, networking, monitoring]
+description: How I built a custom Prometheus exporter to monitor Unifique ISP performance using Playwright automation.
+---
+
+<script>
+  import Mermaid from '$lib/components/Mermaid.svelte';
+</script>
+
+We've all been there: the internet feels slow, but when you call the ISP, they say "everything looks fine on our end."
+
+I wanted to monitor my connection speed consistently over time, not just when I felt a lag. My ISP, Unifique, provides a speed test page, but I wanted those numbers in Prometheus.
+
+## The Tool
+
+Since the speed test is a web application, I couldn't just `curl` an endpoint. I needed something that could interact with the page, click "Start", and read the results.
+
+Enter [Playwright](https://playwright.dev/).
+
+Playwright is fantastic for browser automation. I built a simple Node.js application that:
+
+1.  Launches a headless browser.
+2.  Navigates to the speed test page.
+3.  Clicks the start button.
+4.  Waits for the test to complete.
+5.  Scrapes the Download, Upload, and Ping results.
+
+## Architecture
+
+The [unifique-speedtest-exporter](https://github.com/MateuxLucax/unifique-speedtest-exporter) exposes a metrics endpoint. When scraped, it triggers the Playwright flow.
+
+<Mermaid
+  diagram={`
+    graph LR;
+        A[Prometheus] -- Scrape /metrics --> B[Exporter];
+        B -- Trigger Test --> C[Playwright];
+        C -- Open Browser --> D[Speedtest Site];
+        D -- Results --> C;
+        C -- Metrics --> B;
+        B -- Response --> A;
+  `}
+/>
+
+> **Note:** Because speed tests take time (30s+), you'll need to increase the scrape timeout in your Prometheus configuration.
+
+## Implementation Details
+
+Here is a snippet of the core logic using Playwright:
+
+```javascript
+await page.goto('https://speed.unifique.com.br');
+await page.click('#start-button');
+await page.waitForSelector('.result-finished');
+
+const download = await page.$eval('.download-speed', el => el.innerText);
+const upload = await page.$eval('.upload-speed', el => el.innerText);
+```
+
+*This isn't the exact code, but it gives you an idea of how simple the interaction is.*
+
+## Running it
+
+I packaged this as a Docker container to make it easy to deploy.
+
+```bash
+docker run -p 3000:3000 ghcr.io/mateuxlucax/unifique-speedtest-exporter:latest
+```
+
+It exposes metrics on port `3000`.
+
+### Prometheus Configuration
+
+This is the tricky part. Since the speed test takes a while to complete, you **must** increase the `scrape_timeout`.
+
+```yaml
+scrape_configs:
+  - job_name: 'unifique_speedtest'
+    scrape_interval: 1h # Don't run this too often!
+    scrape_timeout: 2m  # Give it plenty of time to finish
+    static_configs:
+      - targets: ['192.168.1.100:3000']
+```
+
+## Future Plans
+
+Currently, this is a Proof of Concept (PoC) written in Node.js. It works, but running a full headless browser is resource-intensive.
+
+In the future, I plan to:
+1.  Reverse engineer the WebSocket/API calls the speed test page uses.
+2.  Rewrite the exporter in **Go** or **Rust** to remove the browser dependency.
+3.  Add more robust error handling for network flakes.
+
+## Conclusion
+
+Now I have a graph that shows my internet speed every hour. If I ever need to call support, I have the data to back up my claims!
+
+Check out the repository: [MateuxLucax/unifique-speedtest-exporter](https://github.com/MateuxLucax/unifique-speedtest-exporter)

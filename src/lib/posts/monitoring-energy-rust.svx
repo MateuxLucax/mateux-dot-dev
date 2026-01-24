@@ -1,0 +1,107 @@
+---
+title: Monitoring Energy Consumption with Rust and Prometheus
+slug: monitoring-energy-rust
+date: 2026-01-20
+tags: [rust, prometheus, tapo, iot, monitoring]
+description: A deep dive into building a lightweight Prometheus exporter for TP-Link Tapo P110 smart plugs using Rust.
+---
+
+<script>
+  import Mermaid from '$lib/components/Mermaid.svelte';
+</script>
+
+I recently started building my smart home setup, and one of the first things I wanted to track was energy consumption. I picked up a few **TP-Link Tapo P110** smart plugs because they are affordable and have energy monitoring capabilities.
+
+However, I quickly realized that getting that data out of the Tapo app and into my own dashboard (Grafana) wasn't straightforward.
+
+## The Challenge
+
+The Tapo ecosystem is relatively closed. While the app is fine for checking if you left the iron on, it doesn't offer the historical data analysis or the "single pane of glass" experience I wanted with my other metrics.
+
+I looked around for existing solutions, but many were Python scripts that required heavy setups or didn't quite fit my needs for a simple, containerized exporter that I could drop into my K3s cluster.
+
+## The Solution
+
+I decided to build my own exporter. I wanted something **fast**, **lightweight**, and **reliable**.
+
+<Mermaid
+  diagram={`
+    graph LR;
+        A[Prometheus] -- Scrape /metrics --> B[Exporter];
+        B -- Get Status --> C[Tapo Plug 1];
+        B -- Get Status --> D[Tapo Plug 2];
+        C -- Return Data --> B;
+        D -- Return Data --> B;
+        B -- Metrics Format --> A;
+  `}
+/>
+
+I utilized the fantastic [tapo-rest](https://github.com/ClementNerma/tapo-rest) library (though an unofficial API) which made communicating with the plugs a breeze. 
+
+### Why Rust?
+
+I chose **Rust** for this project for a few reasons:
+
+1.  **Performance**: It effectively costs nothing to run. The binary is tiny, and memory usage is negligible.
+2.  **Safety**: Handling network requests and parsing responses is error-prone; Rust's type system helps catch these issues at compile time.
+3.  **Learning**: It was a great excuse to write more Rust!
+
+## How it works
+
+The [tapo-p110-prometheus-exporter](https://github.com/MateuxLucax/tapo-p110-prometheus-exporter) is designed to be a "pull-based" exporter.
+
+1.  Prometheus scrapes the `/metrics` endpoint.
+2.  The exporter receives the request.
+3.  It immediately queries the configured plugs (in parallel).
+4.  It formats the response into Prometheus text format.
+5.  It sends the response back.
+
+This "scrape on demand" model means there's no background polling loop wasting resources when you aren't looking at your dashboard.
+
+## Getting Started
+
+If you have some Tapo P110 plugs and want to try this out, the easiest way is with Docker Compose.
+
+Create a `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  tapo-exporter:
+    image: ghcr.io/mateuxlucax/tapo-p110-prometheus-exporter:latest
+    environment:
+      - TAPO_USERNAME=your-email@example.com
+      - TAPO_PASSWORD=your-password
+      - TAPO_DEVICES=192.168.1.10,192.168.1.11
+    ports:
+      - "9100:9100"
+```
+
+Then run `docker compose up -d`. Your metrics will be available at `http://localhost:9100/metrics`.
+
+### Prometheus Configuration
+
+To get Prometheus to scrape your new exporter, add the following job to your `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: 'tapo_p110'
+    static_configs:
+      - targets: ['192.168.1.100:9100'] # IP of your machine running the exporter
+```
+
+## Visualizing with Grafana
+
+Once you have Prometheus scraping the exporter, you can build beautiful dashboards in Grafana.
+
+I'm currently tracking:
+- **Current Power (W)**: Instantaneous power usage.
+- **Total Energy (kWh)**: Cumulative energy consumption.
+- **On/Off Status**: Visualization of when devices are active.
+
+## Conclusion
+
+This project was a fun weekend hack that solved a real problem for me. It's now running stable in my homelab, and I have much better visibility into my energy usage.
+
+Check out the code on GitHub: [MateuxLucax/tapo-p110-prometheus-exporter](https://github.com/MateuxLucax/tapo-p110-prometheus-exporter)
