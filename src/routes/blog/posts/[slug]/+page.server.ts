@@ -1,4 +1,4 @@
-import { getSvxPosts } from '$lib/utils';
+import { getSvxPosts } from '$lib/server/posts';
 import type { EntryGenerator } from './$types';
 
 export const entries: EntryGenerator = () => {
