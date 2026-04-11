@@ -17,7 +17,10 @@ const langs = [
 	'yaml',
 	'markdown',
 	'svelte',
-	'mermaid'
+	'kotlin',
+	'go',
+	'mermaid',
+	'dart'
 ];
 
 const themes = {
@@ -43,7 +46,7 @@ const mdsvexOptions = {
 			const highlighterInstance = await highlighterPromise;
 			const html = escapeSvelte(
 				`<div class="shiki-light">${highlighterInstance.codeToHtml(code, { lang, theme: themes.light })}</div>` +
-					`<div class="shiki-dark">${highlighterInstance.codeToHtml(code, { lang, theme: themes.dark })}</div>`
+				`<div class="shiki-dark">${highlighterInstance.codeToHtml(code, { lang, theme: themes.dark })}</div>`
 			);
 
 			return `{@html \`${html}\` }`;

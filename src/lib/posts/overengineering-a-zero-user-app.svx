@@ -1,0 +1,141 @@
+---
+title: "Overengineering a zero user app: distributed media processing with Quarkus, Go, and FFmpeg"
+slug: "overengineering-a-zero-user-app"
+date: "2026-04-12"
+tags: [architecture, go, quarkus, ffmpeg, distributed-systems, rabbitmq]
+description: "I built a fully distributed, asynchronous media processing pipeline using Quarkus, Kotlin, Go, and FFmpeg for a college project. Here is how and why I overengineered it."
+---
+
+<script>
+  import Mermaid from '$lib/components/Mermaid.svelte';
+</script>
+
+Back in 2024 I built [tiny-img](https://github.com/MateuxDotDev/tiny-img) for a college project. The premise was just an image optimizer. I could have thrown a Node.js monolith at it and called it a day, but I the requisites involved multiple services and I saw a chance to mess around with distributed systems, message queues, and async architectures.
+
+So, I built an "enterprise-grade" backend for an application that exactly zero ever used. Here's how that went.
+
+## Why split the architecture?
+
+Running CPU and IO heavy tasks (like FFmpeg compression) on the exact same server routing your HTTP requests is a bad idea. A big upload spike could choke any web server resources and kill the API.
+
+To fix this, I decoupled the processing:
+1. **Edge API:** Quarkus and Kotlin. Handles auth, validates uploads, saves the original file, and returns a 202 instantly.
+2. **Message Queue:** RabbitMQ sits in the middle.
+3. **Workers:** Asynchronous Go daemons subscribe to RabbitMQ, download the file, and run FFmpeg.
+4. **Notification:** Pings the user when it's done.
+
+Here is the exact flow I mapped out:
+
+<Mermaid diagram={`
+    sequenceDiagram
+        User->>TinyImg Service: send image
+        TinyImg Service->>TinyImg Service: validate image
+        TinyImg Service->>TinyImg Service: store image
+        TinyImg Service->>File Storage: store image
+        File Storage->>TinyImg Service: image stored
+        TinyImg Service->>Database: store image
+        Database->>TinyImg Service: image stored
+        TinyImg Service--)Message Queue: send image to be processed
+        TinyImg Service->>User: image processing started
+        Message Queue->>FFmpeg Service: message received
+        FFmpeg Service--)Message Queue: notify image received
+        Message Queue--)Notification Service: notify image received
+        Notification Service->>User: image processing started
+        FFmpeg Service->>FFmpeg Service: load image
+        FFmpeg Service->>Message Queue: notify image loaded
+        Message Queue--)Notification Service: notify image loaded
+        FFmpeg Service->>FFmpeg Service: process image
+        FFmpeg Service--)Message Queue: notify image processed
+        Message Queue--)Notification Service: notify image processed
+        Notification Service->>User: image processed
+        FFmpeg Service->>FFmpeg Service: store processed image
+        FFmpeg Service--)Message Queue: notify image stored
+        Message Queue--)Notification Service: notify image stored
+        Notification Service->>User: image stored and ready
+    `} />
+
+## The Quarkus Edge
+
+I went with Quarkus + Kotlin for the edge API. It boots extremely fast and keeping the DX close to Spring Boot is a nice plus. 
+
+Pushing jobs to RabbitMQ using MicroProfile Reactive Messaging looks like this:
+
+```kotlin
+package dev.mateux.adapters
+
+import dev.mateux.application.dto.QueuePayload
+import dev.mateux.ports.MessageQueue
+import jakarta.enterprise.context.ApplicationScoped
+import kotlinx.coroutines.future.await
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+
+@ApplicationScoped
+class MessageQueueImpl(
+    @Channel("optimize") private var emitter: Emitter<QueuePayload>
+) : MessageQueue {
+    override fun sendImage(payload: QueuePayload): Boolean {
+        val returnValue = emitter.send(payload).toCompletableFuture().join()
+        return true
+    }
+}
+```
+
+It's just fire and forget. The HTTP thread is freed up instantly.
+
+## Taming FFmpeg with Go
+
+For the actual heavy lifting, I wrote the workers in Go. Goroutines are lightweight enough to process a huge backlog of queue messages without eating all my RAM.
+
+Inside the worker, `os/exec` safely triggers FFmpeg as a subprocess. 
+
+```go
+func processMessage(body []byte) {
+	initTime := time.Now()
+
+	payload := getPayload(body)
+	if payload == nil {
+		return
+	}
+
+	log.Printf("Processing image %s for user %s", payload.ImageID, payload.User)
+	
+	// Ensure the output directory exists
+	outputFolder := getFolderFromPath(payload.OriginalImagePath)
+	if err := os.MkdirAll(outputFolder, 0755); err != nil {
+		log.Printf("Failed to create output folder: %v", err)
+		return
+	}
+
+	// Build the exact ffmpeg command string
+	ffmpegArgs := buildFfmpegOptions(payload)
+	cmd := exec.Command("ffmpeg", ffmpegArgs...)
+	
+	notifyQueue(fmt.Sprintf("FFmpeg processing image %s started", payload.ImageID), payload.User)
+	
+	err := cmd.Run() // Holds until FFmpeg is entirely done formatting the media
+	if err != nil {
+		log.Printf("Failed to process image %s: %v", payload.ImageID, err)
+	}
+
+	notifyQueue(fmt.Sprintf("Image %s processed", payload.ImageID), payload.User)
+	log.Printf("Image %s processed in %v ", payload.ImageID, time.Since(initTime))
+}
+
+func buildFfmpegOptions(payload *queuePayload.QueuePayload) []string {
+	return []string{
+		"-i", payload.OriginalImagePath,
+		"-q:v", strconv.Itoa(payload.Quality),
+		"-vf", fmt.Sprintf("scale=iw*%d/100:ih*%d/100", payload.Size, payload.Size),
+		getNewFilePath(payload), // The final resized and optimized output file
+	}
+}
+```
+
+Since this runs inside a Go routine pulling from a RabbitMQ channel, scaling is trivial. If an actual user base showed up and started uploading huge batches of images, I'd just spin up more Go containers while Quarkus happily keeps accepting HTTP traffic without dropping connections.
+
+## Worth it?
+
+Building a microservice network with message queues and sub-processing for a 0-user app sounds a bit ridiculous. But honestly, it's the best way to learn.
+
+You don't figure out distributed tracing, message poison-pills, or subprocess bottlenecks just by reading docs. You have to overengineer your side projects and break them to really get how these tools work in the real world.
