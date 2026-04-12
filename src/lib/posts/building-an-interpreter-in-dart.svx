@@ -1,0 +1,142 @@
+---
+title: "Rinha de Compiler: Building an interpreter in Dart"
+slug: "building-an-interpreter-in-dart"
+date: "2026-04-13"
+tags: [dart, compiler, interpreter, ast, software-engineering]
+description: "Why reinvent the wheel? A technical deep dive into building an interpreter from scratch in Dart, exploring ASTs, parsers, and language evaluation."
+---
+
+<script>
+  import Mermaid from '$lib/components/Mermaid.svelte';
+</script>
+
+Building an interpreter is one of those classic computer science projects that usually gets skipped outside of academic environments. We spend all day using programming languages, but rarely stop to think about how our lines of text are transformed into actual execution.
+
+When the "Compiler Rinha" (a popular Brazilian developer community challenge) popped up, it was the perfect excuse to learn and build an interpreter from scratch. I chose Dart (because, why not?). Here is a technical breakdown of my journey mapping an Abstract Syntax Tree (AST) and executing it dynamically.
+
+## The core philosophy: What exactly is an interpreter?
+
+When building an interpreter, the process usually involves two major steps:
+1. **Parsing:** Taking a raw string of code and converting it into a structured format (AST).
+2. **Evaluating:** Walking that tree and executing the logic assigned to each node.
+
+In the context of the *Rinha*, the challenge actually skipped the Lexer and AST generation part for us. We received the AST pre-parsed in JSON format, which meant my job was purely to read that JSON, map it to my own terms, and evaluate them recursively.
+
+<Mermaid diagram={`
+    flowchart TD
+        A[JSON AST] --> B(Tree Interpreter)
+        B --> C{Parse Expressions}
+        C --> D[Dart Term Classes]
+        D --> E((Evaluator))
+        E --> F[Execute Logic]
+`} />
+
+## Modeling the Abstract Syntax Tree (AST)
+
+To evaluate the tree, I needed to represent every single possible operation as a class in Dart. Dart's `sealed class` feature is perfect for this because it allows strict exhaustive checking in `switch` statements later.
+
+Here is what the base definitions look like in `lib/terms.dart`. Every concept in the language—numbers, strings, binary operations, print statements, variables—is just a `Term`.
+
+```dart
+sealed class Term {}
+
+final class IntTerm extends Term {
+  IntTerm(this.value);
+  final int value;
+}
+
+final class BinaryOpTerm extends Term {
+  BinaryOpTerm(this.op, this.left, this.right);
+
+  final String op;
+  final Term left;
+  final Term right;
+}
+
+final class IfTerm extends Term {
+  IfTerm(this.condition, this.thenBranch, this.elseBranch);
+
+  final Term condition;
+  final Term thenBranch;
+  final Term elseBranch;
+}
+
+final class PrintTerm extends Term {
+  PrintTerm(this.value);
+  final Term value;
+}
+```
+
+## Traversing the tree: The Interpreter
+
+With our nodes defined, the `TreeInterpreter` comes into play. It translates the incoming JSON AST structure into our predefined Dart `Term` objects. It is essentially a large `switch` expression.
+
+```dart
+Term parseExpression(final Ast ast) {
+    return switch (ast['kind']) {
+      'Int' => IntTerm(ast['value']),
+      'Str' => StrTerm(ast['value']),
+      'Binary' => BinaryOpTerm(ast['op'], parseExpression(ast['lhs']), parseExpression(ast['rhs'])),
+      'Print' => PrintTerm(parseExpression(ast['value'])),
+      'If' => IfTerm(parseExpression(ast['condition']), parseExpression(ast['then']), parseExpression(ast['otherwise'])),
+      // ... and so on
+      _ => throw Exception('Parse Error - Unknown term kind: ${ast['kind']}'),
+    };
+}
+```
+
+## The heart of the machine: The Evaluator
+
+This is where the actual interpretation happens. We need to walk through the parsed `Term` objects recursively and execute the logic. 
+
+Because we used a `sealed class` for `Term`, Dart's pattern matching shines here. The `call` method of the `Evaluator` determines how to run each specific term.
+
+```dart
+typedef Env = Map<String, dynamic>;
+
+class Evaluator {
+  dynamic call(final Term term, final Env environment) {
+    return switch (term) {
+      IntTerm() => term.value,
+      StrTerm() => term.value,
+      BinaryOpTerm() => evaluateBinaryOpTerm(term, environment),
+      IfTerm() => evaluateIfTerm(term, environment),
+      PrintTerm() => evaluatePrintTerm(term, environment),
+      VarTerm() => environment[term.name],
+      // Other terms...
+    };
+  }
+
+  dynamic evaluatePrintTerm(PrintTerm term, Env environment) {
+    final result = this(term.value, environment);
+    print(result);
+    return result;
+  }
+}
+```
+
+Notice the `Env environment` variable. The Environment is critical. It acts as a memory store (typically a hash map) that the interpreter uses to keep track of variable values and state as it traverses different scopes (like closures or `let` bindings).
+
+When executing an `IfTerm`, the evaluator first evaluates the condition, checks if it's true, and then recursively evaluates either the `thenBranch` or `elseBranch`.
+
+```dart
+dynamic evaluateIfTerm(IfTerm term, Env environment) {
+    final condition = this(term.condition, environment);
+    if (condition is bool) {
+      return condition ? this(term.thenBranch, environment) : this(term.elseBranch, environment);
+    }
+}
+```
+
+## Why reinvent the wheel?
+
+Creating an interpreter is a masterclass in understanding how programming languages actually function under the hood. You learn exactly how closures capture references, how variable state is maintained across nested calls, and about the heavy performance penalties of deep recursion without tail-call optimization.
+
+You don't need to write production compilers in your day-to-day job, but understanding ASTs and evaluation makes you fundamentally more comfortable dealing with static analysis tools, linters, and tricky language-specific bugs. If you ever have a free weekend, I highly recommend parsing and evaluating your own toy syntax!
+
+## Relevant material if you want to learn more
+
+- Compiladores. Princípios E Técnicas (Aho, Lam, Sethi, Ullman) - The classic "Dragon Book".
+- [Crafting Interpreters](https://craftinginterpreters.com/) (Robert Nystrom) - An incredible, accessible, and free online book that walks you through building an interpreter and compiler from scratch.
+- Writing An Interpreter In Go (Thorsten Ball) - A very hands-on approach to building a language.
+- Engineering a Compiler (Keith Cooper, Linda Torczon) - A great modern alternative to the Dragon Book.
