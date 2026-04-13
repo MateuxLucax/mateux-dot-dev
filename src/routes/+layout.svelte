@@ -4,6 +4,7 @@
 	import { tick } from 'svelte';
 	import ActivityBar from '$lib/components/ActivityBar.svelte';
 	import TerminalHeader from '$lib/components/TerminalHeader.svelte';
+	import ForestBackground from '$lib/components/ForestBackground.svelte';
 
 	let { children } = $props();
 
@@ -27,11 +28,7 @@
 <main
 	class="bg-base text-text flex min-h-screen w-full font-mono md:items-center md:justify-center"
 >
-	<enhanced:img
-		src="/static/background.jpg?blur=5"
-		alt="Forest with enormeous trees"
-		class="fixed inset-0 -z-10 h-full w-full object-cover"
-	/>
+	<ForestBackground />
 	<section
 		class="border-2xl w-full max-w-7xl overflow-hidden shadow-md md:relative md:max-w-4xl md:rounded-xl"
 	>
