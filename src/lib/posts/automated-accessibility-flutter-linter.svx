@@ -1,0 +1,98 @@
+---
+title: "Automated Accessibility: Building a Custom Linter for Flutter (Undergraduate Thesis)"
+slug: "automated-accessibility-flutter-linter"
+date: "2026-04-12"
+tags: [flutter, dart, accessibility, ast, linter, static-analysis]
+description: "A deep dive into my undergraduate thesis: How to analyze Flutter's AST to catch missing accessibility labels before compilation."
+---
+
+<script>
+  import Mermaid from '$lib/components/Mermaid.svelte';
+</script>
+
+The current state of mobile app accessibility is tricky. Very often, teams only think about fixing screen readers and color contrasts at the end of a sprint, or worse, after the app is already published. When developing my undergraduate thesis in Software Engineering at UDESC, my motivation was simple: accessibility shouldn't be an afterthought; it should be caught at compile-time.
+
+To solve this problem, I built a custom linter package for Flutter applications using Dart's static analysis tools. Available as `accessibility_lint` on pub.dev, it scans your codebase in real-time, pointing out missing semantic labels directly inside your IDE.
+
+## Accessibility in Flutter
+
+Flutter renders its own widgets on a canvas rather than relying on native OEM UI components. To communicate with iOS (VoiceOver) and Android (TalkBack) accessibility services, Flutter maintains a parallel tree called the **Semantics Tree**.
+
+Every time you use an `Image`, an `IconButton`, or a custom widget, Flutter tries to infer its meaning. But for purely visual elements, you usually need to provide explicit properties (like `semanticLabel`) so screen readers can describe the components to visually impaired users.
+
+<Mermaid diagram={`
+    flowchart TD
+        A["Flutter Widget Tree"] -->|Render| B["Canvas (Pixels)"]
+        A -->|Semantics| C["Semantics Tree"]
+        C --> D{"Accessibility Bridge"}
+        D --> E["iOS VoiceOver"]
+        D --> F["Android TalkBack"]
+`} />
+
+## How Linters Work
+
+To catch missing `semanticLabel`s before the app runs, we must look at the code as data. This means parsing Dart source code into an Abstract Syntax Tree (AST). By analyzing this tree, we can trigger warnings whenever a developer instantiates an image widget without a semantic description.
+
+The `custom_lint` package in Dart provides an incredible API to hook into the Dart Analyzer. Instead of writing Regex (which is fragile), we traverse `InstanceCreationExpression` nodes and inspect their arguments.
+
+## Building the Tool
+
+Let's take a hands-on look at one of the custom linter rules from my thesis: `AvoidImageWithoutSemanticLabelRule`.
+
+This rule visits every widget creation in your code. When it encounters an `Image`, it parses the argument list to see if `semanticLabel` is present. If it isn't, the linter emits a warning directly to the developer's IDE.
+
+```dart
+import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/error/error.dart';
+import 'package:analyzer/error/listener.dart';
+import 'package:custom_lint_builder/custom_lint_builder.dart';
+
+class AvoidImageWithoutSemanticLabelRule extends DartLintRule {
+  const AvoidImageWithoutSemanticLabelRule() : super(code: _code);
+
+  static const LintCode _code = LintCode(
+    name: 'avoid_image_without_semantic_label',
+    problemMessage: 'Avoid using images without a semantic label.',
+    correctionMessage: 'Specify a semantic label for the image widget.',
+    errorSeverity: ErrorSeverity.WARNING,
+  );
+
+  @override
+  void run(
+    final CustomLintResolver resolver,
+    final ErrorReporter reporter,
+    final CustomLintContext context,
+  ) {
+    // We register a callback that fires whenever Dart creates a class instance
+    context.registry.addInstanceCreationExpression((
+      final InstanceCreationExpression node,
+    ) {
+      final String constructorName = node.constructorName.type.toString();
+
+      // We only care about Image widgets
+      if (constructorName != 'Image') return;
+
+      // Check if `semanticLabel` was passed
+      final bool hasSemanticLabel = RuleUtils.hasArgument(
+        node.argumentList.arguments,
+        'semanticLabel',
+      );
+
+      if (hasSemanticLabel) return;
+
+      // If not, we report an error exactly at the AST node's location
+      reporter.atNode(node, _code);
+    });
+  }
+}
+```
+
+Notice how clean the API is. The `context.registry.addInstanceCreationExpression` intercepts exactly what we need, giving us access to the `node` (the code the developer wrote). 
+
+If a developer writes `Image.asset('logo.png')`, the rule immediately highlights it and displays our `problemMessage`. 
+
+## Conclusion
+
+Accessibility is a shared technical responsibility. Creating an app that works for everyone isn't just about good intentions—it requires tooling that enforces good practices systematically.
+
+By building custom static analysis tools and adopting them natively in your CI/CD pipelines, you guarantee that anti-patterns are blocked automatically. If you work with Flutter, try incorporating `accessibility_lint` or writing your own custom lint rules to enforce your team's specific requirements. Catching accessibility bugs while you type is infinitely better than discovering them in production!
