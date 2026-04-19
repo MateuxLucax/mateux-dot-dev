@@ -1,0 +1,276 @@
+---
+title: "Frontend for the backend brain: SvelteKit vs Vue vs Next.js"
+slug: "the-frontend-battle-sveltekit-vs-vue-vs-nextjs"
+date: "2026-04-18"
+tags: [sveltekit, vue, nextjs, react, dx, frontend, opinion]
+description: "An honest comparison of SvelteKit, Vue/Nuxt, and Next.js from someone who loves frontend tinkering but spends most of the workday on backend systems."
+---
+
+<script>
+  import Mermaid from '$lib/components/Mermaid.svelte';
+</script>
+
+*Framework versions and ecosystem observations current as of April 2026.*
+
+I've loved frontend development since I started programming. Building interfaces, experimenting with frameworks, watching things render on screen. That part has always been fun. But professionally, my work has been almost entirely backend: Quarkus with Kotlin, Go microservices, Rust CLI tools, distributed systems glued together by message queues.
+
+So when I needed to pick a meta-framework for my personal projects, I had a bit of both worlds: genuine frontend enthusiasm filtered through years of backend thinking. Everyone told me to just use Next.js. I didn't. Here's why.
+
+## Why meta-frameworks?
+
+The days of spinning up a plain React app with Create React App and gluing a router on top are over. Modern frontend development has converged on "meta-frameworks" that give you routing, server-side rendering, and a build pipeline out of the box.
+
+The main contenders in 2026: **Next.js** (React), **Nuxt** (Vue), and **SvelteKit** (Svelte).
+
+With most of my professional experience on the backend side, I didn't care much about which one had the flashiest landing page. I needed to understand three things:
+
+1. **How close is the mental model to how I already write code?**
+2. **How painful is the build/deploy story when I containerize it?**
+3. **How fast can I ship a side project without drowning in framework-specific abstractions?**
+
+## The Next.js / React experience
+
+I used Next.js when I built [open-gym](https://github.com/MateuxLucax/open-gym), a simple gym management app. The ecosystem size is undeniable. If you Google any UI problem, the first five results will have a React solution. That's a huge advantage when you're not a frontend specialist.
+
+But the developer experience left me conflicted.
+
+### The hooks problem
+
+React's reactivity model is built on hooks. Coming from backend code where state is just... state, hooks felt like learning a different paradigm entirely:
+
+```tsx
+'use client';
+import { useState, useCallback, useEffect } from 'react';
+
+export default function MemberList() {
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMembers = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch('/api/members');
+    setMembers(await res.json());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
+  return (
+    <ul>
+      {members.map(m => <li key={m.id}>{m.name}</li>)}
+    </ul>
+  );
+}
+```
+
+That's a lot of ceremony to fetch a list and display it. `useState`, `useCallback`, `useEffect`, dependency arrays, the `'use client'` directive to tell Next.js this component needs browser APIs. Every piece exists for a good architectural reason, but the cognitive overhead is real when your brain is wired for imperative backend code.
+
+### The server/client boundary
+
+Next.js 13+ introduced React Server Components, which split your code into server and client worlds. It's powerful, but the mental model is heavy:
+
+- Forget to add `'use client'`? Your event handler throws an error that might not immediately point you to the missing directive.
+- Need to pass data from a server component to a client component? Serialize it.
+- Want to use a React context? Client-only.
+
+For backend devs used to clear request/response cycles, this boundary can feel like an invisible wall you keep walking into.
+
+### The upside
+
+Let's be honest though, Next.js is the industry standard for a reason. The talent pool is massive, Vercel's deployment pipeline is excellent, and virtually every UI library (shadcn, Radix, MUI) ships React-first. If you're building a product with a team, Next.js is often the safest bet.
+
+## The Vue / Nuxt perspective
+
+I evaluated Vue and Nuxt seriously before making my pick. I never shipped a full project with it, but I spent enough time to form strong opinions.
+
+### Reactivity that makes sense
+
+Vue's Composition API immediately felt more natural than hooks:
+
+```vue
+<script setup>
+import { ref, onMounted } from 'vue';
+
+const members = ref([]);
+const loading = ref(true);
+
+onMounted(async () => {
+  loading.value = true;
+  const res = await fetch('/api/members');
+  members.value = await res.json();
+  loading.value = false;
+});
+</script>
+
+<template>
+  <ul>
+    <li v-for="m in members" :key="m.id">{{ m.name }}</li>
+  </ul>
+</template>
+```
+
+`ref()` creates reactive state. You read and write it with `.value` in script (templates auto-unwrap). That's it. No dependency arrays, no stale closure bugs, no rules-of-hooks to memorize. State is just a variable with a thin reactive wrapper.
+
+### Single-file components
+
+Vue's `.vue` files split cleanly into `<script setup>`, `<template>`, and `<style scoped>`. If you've ever worked with MVC backends, this feels familiar. Each concern has its section, and they're all in one file.
+
+### Where Vue lost me
+
+The ecosystem is mature, but it's smaller than React's. When I ran into niche requirements, the top search results were React solutions. Vue also carries some legacy weight: the Options API still shows up in older tutorials and Stack Overflow answers, even though the Composition API has been the default for years now. It's less of an issue than it used to be, but you'll still bump into it.
+
+Vue is genuinely excellent though. If I hadn't found Svelte, I'd be writing Vue today.
+
+## SvelteKit: my pick
+
+This is where I landed. My [personal blog](https://github.com/MateuxLucax/mateux-dot-dev) runs on SvelteKit, my [RSLP checker](https://github.com/MateuxLucax/rslp-checker) uses Svelte, and [Ristretto](https://github.com/MateuxLucax/ristretto) was built with it too.
+
+### Compiler-first, no virtual DOM
+
+React and Vue rely on a virtual DOM, a runtime abstraction that diffs a virtual tree against the real DOM on every state change. Svelte takes a different approach: it compiles your components into tight, imperative JavaScript at build time that updates the DOM directly. Svelte 5 does ship a small reactivity runtime for its signals system, but there's no virtual DOM layer sitting between your code and the browser.
+
+I love this tradeoff. There's no reconciliation layer to debug, no "why did this component re-render 47 times" investigation. What the compiler produces is close to what you'd write by hand.
+
+<Mermaid diagram={`
+    graph LR
+        subgraph "React / Vue"
+            A1[Component Code] --> B1[Virtual DOM Diff]
+            B1 --> C1[Real DOM Patch]
+        end
+        subgraph SvelteKit
+            A2[Component Code] --> B2["Compiled JS (build time)"]
+            B2 --> C2[Direct DOM Update]
+        end
+`} />
+
+### Reactivity as assignment
+
+Here's the same member list example in Svelte 5:
+
+```svelte
+<script>
+  import { onMount } from 'svelte';
+
+  let members = $state([]);
+  let loading = $state(true);
+
+  async function fetchMembers() {
+    loading = true;
+    const res = await fetch('/api/members');
+    members = await res.json();
+    loading = false;
+  }
+
+  onMount(() => {
+    fetchMembers();
+  });
+</script>
+
+<ul>
+  {#each members as member}
+    <li>{member.name}</li>
+  {/each}
+</ul>
+```
+
+`let members = $state([])`, that's it. You assign to it, and the UI updates. No `setState`, no `.value`, no dependency arrays. It feels closer to how you'd manage state in Go or Kotlin. Direct assignment, no ceremony. Svelte just makes it reactive.
+
+### File-based routing with clear boundaries
+
+SvelteKit's routing makes the server/client split explicit through file conventions:
+
+- `+page.svelte` is the UI component (client)
+- `+page.ts` is the universal load function (runs on both server and client)
+- `+page.server.ts` is the server-only load function (database calls, secrets, etc.)
+
+There's no guessing game. If it's in `+page.server.ts`, it never touches the browser. If it's in `+page.svelte`, it renders in the client. The boundary is a file, not a directive.
+
+### MDsveX: markdown meets components
+
+This blog runs on [MDsveX](https://mdsvex.com/), which lets me write posts in Markdown files (`.svx`) with full Svelte component support. I can drop a `<Mermaid>` component into a Markdown paragraph and it just works. Try doing that cleanly in Next.js MDX setup without three config files and a custom webpack loader.
+
+### The trade-off
+
+Svelte's ecosystem is the smallest of the three. If you need a highly specific, battle-tested component (rich-text editors, complex data grids), React has 10 options, Vue has 3, and Svelte might have 1. The Svelte 4 to Svelte 5 migration (introducing runes) was also a "relearn" moment that fragmented documentation temporarily.
+
+But for the kind of projects I build, those trade-offs are worth it.
+
+## Side-by-side comparison
+
+| Aspect | Next.js (React) | Nuxt (Vue) | SvelteKit |
+|---|---|---|---|
+| **Reactivity model** | Hooks (`useState`) | `ref()` / `reactive()` | Runes (`$state`) |
+| **Learning curve (backend devs)** | Steep | Moderate | Low |
+| **Ecosystem size** | Massive | Large | Growing |
+| **Bundle output** | Runtime + virtual DOM | Runtime + virtual DOM | Compiled, minimal runtime |
+| **Server/client boundary** | `'use client'` directive | `server/` dir + `useFetch` | `+page.ts` / `+page.server.ts` |
+| **Built-in styling** | CSS Modules / Tailwind | Scoped `<style>` | Scoped `<style>` |
+| **SSG support** | Yes (`generateStaticParams`) | Yes (`nuxi generate`) | Yes (`adapter-static`) |
+
+## Deployment realities
+
+This is where the backend experience kicks in. How does each framework behave when you `docker build` it?
+
+### SvelteKit with adapter-static
+
+My blog uses `@sveltejs/adapter-static`. The build output is pure HTML, CSS, and JS. No server runtime needed. The Dockerfile is trivial:
+
+```dockerfile
+FROM oven/bun:slim AS builder
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+COPY . .
+RUN bun run build
+
+FROM nginx:stable-alpine AS deploy
+WORKDIR /usr/share/nginx/html
+RUN rm -rf ./*
+COPY --from=builder /app/build .
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
+```
+
+The final image is roughly **30MB**. It's just nginx serving static files. CI builds are fast, deploys are instant, and scaling means throwing it behind a CDN.
+
+### Next.js standalone
+
+If you need SSR with Next.js, the typical approach uses the `standalone` output mode, which requires Node.js in the container:
+
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+The image lands around **150-200MB**. You're shipping a Node.js runtime, you need health checks, and horizontal scaling means running multiple Node processes. It's not bad, but it's a different operational complexity level.
+
+### Nuxt with Nitro
+
+Nuxt builds with Nitro, which gives you flexible output targets (Node, Deno, Cloudflare Workers, static). The SSR deployment is similar to Next.js, a Node runtime in a container. The static option (`nuxi generate`) gets you closer to SvelteKit's simplicity.
+
+### The deployment verdict
+
+If your app can be static, SvelteKit wins the deployment story. Smaller images, simpler CI, no Node.js process to babysit. For SSR workloads, Next.js and Nuxt are comparable, but you're paying the operational cost of running a Node server. That's fine, but it means you're back in the territory of health checks, process managers, and memory tuning, the backend problems you already know.
+
+## Pick what fits your brain
+
+There's no universally "best" framework. But if you're choosing a frontend stack for personal or small-team projects, consider this:
+
+- **Next.js**: pick it if ecosystem size and hiring pool matter most. Accept the React learning curve as an investment.
+- **Vue / Nuxt**: pick it if you want a balanced middle ground. The Composition API is clean, and the community is solid.
+- **SvelteKit**: pick it if you want your frontend code to feel as close to "normal programming" as possible. Compiled output, explicit boundaries, minimal boilerplate.
+
+I chose SvelteKit because it maps to how I already think about code. State is state. Files define boundaries. The compiler does the heavy lifting so I don't have to. Your side projects should teach you things, not drown you in boilerplate.

@@ -20,7 +20,10 @@ const langs = [
 	'kotlin',
 	'go',
 	'mermaid',
-	'dart'
+	'dart',
+	'tsx',
+	'vue',
+	'dockerfile'
 ];
 
 const themes = {

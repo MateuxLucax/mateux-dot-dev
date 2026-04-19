@@ -1,5 +1,6 @@
 ---
 title: Simplified Load Tests with Grafana k6
+slug: "simplified-load-tests-with-grafana-k6"
 date: 2025-10-09
 tags: [automated testing, load testing, grafana k6, performance testing]
 description: Learn how to write simple yet powerful load tests using Grafana k6 and JavaScript, from basic setup to CI/CD integration for bulletproof performance testing.
