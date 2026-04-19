@@ -20,11 +20,11 @@
 		}
 	];
 
-	let latestPosts: Post[] = $state([]);
+	let randomPosts: Post[] = $state([]);
 
-	async function getLatestBlogPosts() {
+	async function getRandomBlogPosts() {
 		try {
-			const response = await fetch('/blog/api/latest', {
+			const response = await fetch('/blog/api/posts', {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json'
@@ -35,15 +35,17 @@
 				throw new Error('Failed to fetch blog posts');
 			}
 
-			latestPosts = await response.json();
+			const allPosts = await response.json();
+			const shuffled = allPosts.sort(() => 0.5 - Math.random());
+			randomPosts = shuffled.slice(0, 3);
 		} catch (error) {
 			console.error('Error fetching latest blog posts:', error);
-			latestPosts = [];
+			randomPosts = [];
 		}
 	}
 
 	onMount(() => {
-		getLatestBlogPosts();
+		getRandomBlogPosts();
 	});
 </script>
 
@@ -86,9 +88,9 @@
 	<a href="/blog" target="_self" class="text-yellow-500 dark:text-yellow-300"> ~/Blog</a></Row
 >
 <Row><Prompt path="/Blog" /> ls -1</Row>
-{#if latestPosts.length > 0}
-	<Row>total {latestPosts.length}</Row>
-	{#each latestPosts as post}
+{#if randomPosts.length > 0}
+	<Row>total {randomPosts.length}</Row>
+	{#each randomPosts as post}
 		<Row>
 			<a
 				href={`/blog/posts/${post.slug}`}
