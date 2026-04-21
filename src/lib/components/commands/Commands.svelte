@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import Prompt from '../Prompt.svelte';
 	import { getRandomQuote } from '../quotes';
 	import Row from '../Row.svelte';
 	import HelpCommand from './HelpCommand.svelte';
 	import ListCommand from './ListCommand.svelte';
 
-	const commands = ['help', 'clear', 'll', 'quote'];
+	const commands = ['help', 'clear', 'll', 'quote', 'typetest'];
 
 	let typedCommands: string[] = $state([]);
 
@@ -19,6 +20,11 @@
 
 		if (input === 'clear') {
 			typedCommands = [];
+		}
+
+		if (input === 'typetest') {
+			goto('/typetest');
+			return;
 		}
 
 		window.dispatchEvent(new CustomEvent('on-new-commmand'));

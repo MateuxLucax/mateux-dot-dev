@@ -5,7 +5,8 @@
 		'- help: Displays this help message.',
 		'- clear: Clears the terminal screen.',
 		'- ll: Lists the contents of the root directory.',
-		'- quote: Fetches a random quote.'
+		'- quote: Fetches a random quote.',
+		'- typetest: Opens a WPM typing test.'
 	];
 </script>
 
