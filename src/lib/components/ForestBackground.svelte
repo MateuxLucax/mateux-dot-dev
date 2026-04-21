@@ -1,8 +1,41 @@
 <script lang="ts">
-	const layers = [
+	import { onMount } from 'svelte';
+
+	const lightPalette = {
+		sky: ['#fdfdfa', '#f2f6eb', '#e4ecdb'],
+		layers: ['#e2e9d8', '#d0dcc5', '#a8bc9d', '#7a967c', '#4e6b52', '#2d4f3b'],
+		ground: '#233d2d',
+		mist: '#f0f4e8',
+		finalMist: '#d4e1c9',
+		bg: '#fdfdfa'
+	};
+
+	const darkPalette = {
+		sky: ['#0b1120', '#111d35', '#162040'],
+		layers: ['#1a2a3a', '#172633', '#1a3328', '#163024', '#122a1e', '#0d2218'],
+		ground: '#081a12',
+		mist: '#0e1525',
+		finalMist: '#0f1e16',
+		bg: '#0b1120'
+	};
+
+	let dark = $state(false);
+
+	onMount(() => {
+		const mq = window.matchMedia('(prefers-color-scheme: dark)');
+		dark = mq.matches;
+		const handler = (e: MediaQueryListEvent) => {
+			dark = e.matches;
+		};
+		mq.addEventListener('change', handler);
+		return () => mq.removeEventListener('change', handler);
+	});
+
+	const palette = $derived(dark ? darkPalette : lightPalette);
+
+	const baseLayers = [
 		{
 			id: 'haze',
-			color: '#e2e9d8',
 			y: 200,
 			height: 200,
 			opacity: 0.3,
@@ -12,7 +45,6 @@
 		},
 		{
 			id: 'far',
-			color: '#d0dcc5',
 			y: 260,
 			height: 280,
 			opacity: 0.5,
@@ -22,7 +54,6 @@
 		},
 		{
 			id: 'distant',
-			color: '#a8bc9d',
 			y: 330,
 			height: 350,
 			opacity: 0.7,
@@ -32,7 +63,6 @@
 		},
 		{
 			id: 'mid',
-			color: '#7a967c',
 			y: 450,
 			height: 450,
 			opacity: 0.9,
@@ -42,7 +72,6 @@
 		},
 		{
 			id: 'near',
-			color: '#4e6b52',
 			y: 580,
 			height: 600,
 			opacity: 1,
@@ -52,7 +81,6 @@
 		},
 		{
 			id: 'foreground',
-			color: '#2d4f3b',
 			y: 750,
 			height: 850,
 			opacity: 1,
@@ -61,6 +89,13 @@
 			spacing: 250
 		}
 	];
+
+	const layers = $derived(
+		baseLayers.map((layer, i) => ({
+			...layer,
+			color: palette.layers[i]
+		}))
+	);
 
 	const seedRandom = (seed: number) => {
 		const x = Math.sin(seed) * 10000;
@@ -75,9 +110,17 @@
 		if (r < 0.8) return '#tree4';
 		return '#tree5';
 	};
+
+	// Generate deterministic star positions
+	const stars = Array.from({ length: 60 }, (_, i) => ({
+		x: seedRandom(i * 7 + 3) * 1600,
+		y: seedRandom(i * 11 + 5) * 400,
+		r: 0.5 + seedRandom(i * 13 + 7) * 1.5,
+		opacity: 0.3 + seedRandom(i * 17 + 11) * 0.7
+	}));
 </script>
 
-<div class="forest-container">
+<div class="forest-container" class:dark>
 	<svg
 		viewBox="0 0 1600 900"
 		preserveAspectRatio="xMidYMid slice"
@@ -86,9 +129,9 @@
 	>
 		<defs>
 			<linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-				<stop offset="0%" style="stop-color:#fdfdfa;stop-opacity:1" />
-				<stop offset="50%" style="stop-color:#f2f6eb;stop-opacity:1" />
-				<stop offset="100%" style="stop-color:#e4ecdb;stop-opacity:1" />
+				<stop offset="0%" stop-color={palette.sky[0]} stop-opacity="1" />
+				<stop offset="50%" stop-color={palette.sky[1]} stop-opacity="1" />
+				<stop offset="100%" stop-color={palette.sky[2]} stop-opacity="1" />
 			</linearGradient>
 
 			<!-- Tree Symbols -->
@@ -140,6 +183,23 @@
 		<!-- Background -->
 		<rect width="1600" height="900" fill="url(#skyGradient)" />
 
+		<!-- Stars (dark mode only) -->
+		{#if dark}
+			{#each stars as star}
+				<circle cx={star.x} cy={star.y} r={star.r} fill="white" opacity={star.opacity * 0.6} />
+			{/each}
+		{/if}
+
+		<!-- Ground layer behind all trees -->
+		<rect width="1600" height="500" y="400" fill="url(#groundGradient)" />
+		<defs>
+			<linearGradient id="groundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+				<stop offset="0%" stop-color={palette.ground} stop-opacity="0" />
+				<stop offset="40%" stop-color={palette.ground} stop-opacity="0.5" />
+				<stop offset="100%" stop-color={palette.ground} stop-opacity="1" />
+			</linearGradient>
+		</defs>
+
 		{#each layers as layer, i}
 			<!-- Intermediate Mist for each layer -->
 			<rect
@@ -151,8 +211,8 @@
 			/>
 			<defs>
 				<linearGradient id="mistGradient{i}" x1="0%" y1="0%" x2="0%" y2="100%">
-					<stop offset="0%" style="stop-color:#f0f4e8;stop-opacity:0" />
-					<stop offset="100%" style="stop-color:{layers[i].color};stop-opacity:0.3" />
+					<stop offset="0%" stop-color={palette.mist} stop-opacity="0" />
+					<stop offset="100%" stop-color={layer.color} stop-opacity="0.3" />
 				</linearGradient>
 			</defs>
 
@@ -178,8 +238,8 @@
 		<rect width="1600" height="400" y="500" fill="url(#finalMist)" opacity="0.3" />
 		<defs>
 			<linearGradient id="finalMist" x1="0%" y1="0%" x2="0%" y2="100%">
-				<stop offset="0%" style="stop-color:#f0f4e8;stop-opacity:0" />
-				<stop offset="100%" style="stop-color:#d4e1c9;stop-opacity:0.6" />
+				<stop offset="0%" stop-color={palette.mist} stop-opacity="0" />
+				<stop offset="100%" stop-color={palette.finalMist} stop-opacity="0.6" />
 			</linearGradient>
 		</defs>
 	</svg>
@@ -194,5 +254,10 @@
 		width: 100%;
 		overflow: hidden;
 		background-color: #fdfdfa;
+		transition: background-color 0.3s ease;
+	}
+
+	.forest-container.dark {
+		background-color: #0b1120;
 	}
 </style>
