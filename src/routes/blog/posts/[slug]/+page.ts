@@ -2,6 +2,10 @@ import { error } from '@sveltejs/kit';
 import { calculateReadingTime, stripFrontmatter } from '$lib/utils';
 
 export async function load({ params }) {
+	if (!/^[a-zA-Z0-9_-]+$/.test(params.slug)) {
+		error(400, 'Invalid slug format');
+	}
+
 	try {
 		const post = await import(`../../../../lib/posts/${params.slug}.svx`);
 

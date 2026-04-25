@@ -10,13 +10,15 @@
 			url: 'https://www.linkedin.com/in/mateusbrandt',
 			result:
 				'If you wish to connect with me, this is the best place to do so. I am always open to new opportunities and connections.',
-			target: '_blank'
+			target: '_blank',
+			rel: 'noopener noreferrer'
 		},
 		{
 			url: 'https://github.com/mateuxlucax',
 			result:
 				'Here you can find all my creations and projects. Hopefully, you will find something interesting.',
-			target: '_blank'
+			target: '_blank',
+			rel: 'noopener noreferrer'
 		}
 	];
 </script>
@@ -50,6 +52,7 @@
 		<a
 			href={contact.url}
 			target={contact.target}
+			rel={contact.rel}
 			class="rounded break-all text-pink-400 underline underline-offset-2 hover:bg-gray-200 focus:bg-gray-300 active:bg-gray-300 dark:text-pink-300 dark:hover:bg-gray-700 dark:focus:bg-gray-600 dark:active:bg-gray-600"
 		>
 			{contact.url}

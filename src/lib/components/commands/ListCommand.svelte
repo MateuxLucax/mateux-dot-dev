@@ -25,6 +25,7 @@
 		drwxr-xr-x 2 user group 4.0K Aug 02 12:00 <a
 			href={contact.url}
 			target={contact.url.includes('http') ? '_blank' : '_self'}
+			rel={contact.url.includes('http') ? 'noopener noreferrer' : undefined}
 			class="h-0 text-blue-800">{contact.text}</a
 		>
 	{/each}
