@@ -1,11 +1,32 @@
 <script lang="ts">
 	import Row from '$lib/components/Row.svelte';
 	import Prompt from '$lib/components/Prompt.svelte';
+	import { formatDate } from '$lib/utils';
 
 	let { data } = $props();
 </script>
 
+<svelte:head>
+	<title>mateux@tars ~/Blog</title>
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="mateux.dev blog" />
+	<meta
+		property="og:description"
+		content="Posts about software engineering, distributed systems, and developer tooling."
+	/>
+</svelte:head>
+
 <Row><Prompt /> cd <span class="text-yellow-500 dark:text-yellow-300">~/Blog</span></Row>
+<Row
+	><Prompt path="/Blog" />
+	<span class="text-gray-500 dark:text-gray-400"
+		># <a
+			href="/blog/rss.xml"
+			class="text-blue-500 underline hover:text-blue-300 dark:text-blue-300 dark:hover:text-blue-100"
+			>rss.xml</a
+		></span
+	></Row
+>
 {#if data.posts.length > 0}
 	<Row><Prompt path="/Blog" /> ls -1</Row>
 	<Row>total {data.posts.length}</Row>
@@ -17,7 +38,9 @@
 			>
 				{post.title}/
 			</a>
-			<span class="text-gray-500 dark:text-gray-400"># {post.description}</span>
+			<span class="text-gray-500 dark:text-gray-400">
+				# {formatDate(post.date)} &middot; {post.readingTime} min read &middot; {post.description}
+			</span>
 		</Row>
 	{/each}
 {/if}

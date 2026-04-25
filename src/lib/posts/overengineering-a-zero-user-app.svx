@@ -1,8 +1,8 @@
 ---
-title: "Overengineering a zero user app: distributed media processing with Quarkus, Go, and FFmpeg"
+title: "Overengineering a zero-user app: distributed media processing with Quarkus, Go, and FFmpeg"
 slug: "overengineering-a-zero-user-app"
 date: "2026-04-12"
-tags: [architecture, go, quarkus, ffmpeg, distributed-systems, rabbitmq]
+tags: [architecture, go, quarkus, ffmpeg, distributed-systems, rabbitmq, kotlin]
 description: "I built a fully distributed, asynchronous media processing pipeline using Quarkus, Kotlin, Go, and FFmpeg for a college project. Here is how and why I overengineered it."
 ---
 
@@ -10,9 +10,9 @@ description: "I built a fully distributed, asynchronous media processing pipelin
   import Mermaid from '$lib/components/Mermaid.svelte';
 </script>
 
-Back in 2024 I built [tiny-img](https://github.com/MateuxDotDev/tiny-img) for a college project. The premise was just an image optimizer. I could have thrown a Node.js monolith at it and called it a day, but I the requisites involved multiple services and I saw a chance to mess around with distributed systems, message queues, and async architectures.
+Back in 2024 I built [tiny-img](https://github.com/MateuxDotDev/tiny-img) for a college project. The premise was just an image optimizer. I could have thrown a Node.js monolith at it and called it a day, but the requisites involved multiple services and I saw a chance to mess around with distributed systems, message queues, and async architectures.
 
-So, I built an "enterprise-grade" backend for an application that exactly zero ever used. Here's how that went.
+So, I built an "enterprise-grade" backend for an application that exactly zero users ever used. Here's how that went.
 
 ## Why split the architecture?
 

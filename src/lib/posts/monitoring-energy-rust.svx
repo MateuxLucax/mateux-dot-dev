@@ -1,9 +1,9 @@
 ---
-title: Monitoring Energy Consumption with Rust and Prometheus
-slug: monitoring-energy-rust
-date: 2026-01-20
-tags: [rust, prometheus, tapo, iot, monitoring]
-description: A deep dive into building a lightweight Prometheus exporter for TP-Link Tapo P110 smart plugs using Rust.
+title: "Monitoring energy consumption with Rust and Prometheus"
+slug: "monitoring-energy-rust"
+date: "2026-01-20"
+tags: [rust, prometheus, tapo, iot, monitoring, smart-home]
+description: "A deep dive into building a lightweight Prometheus exporter for TP-Link Tapo P110 smart plugs using Rust."
 ---
 
 <script>

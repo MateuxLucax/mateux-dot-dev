@@ -1,9 +1,9 @@
 ---
-title: Tracking ISP Performance with Playwright and Prometheus
-slug: unifique-speedtest-monitoring
-date: 2026-01-24
+title: "Tracking ISP performance with Playwright and Prometheus"
+slug: "unifique-speedtest-monitoring"
+date: "2026-01-24"
 tags: [nodejs, playwright, prometheus, networking, monitoring]
-description: How I built a custom Prometheus exporter to monitor Unifique ISP performance using Playwright automation.
+description: "How I built a custom Prometheus exporter to monitor Unifique ISP performance using Playwright automation."
 ---
 
 <script>

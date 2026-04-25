@@ -2,8 +2,8 @@
 	import Commands from '$lib/components/commands/Commands.svelte';
 	import Prompt from '$lib/components/Prompt.svelte';
 	import Row from '$lib/components/Row.svelte';
-	import { onMount } from 'svelte';
-	import type { Post } from './blog/posts/type';
+
+	let { data } = $props();
 
 	const contacts = [
 		{
@@ -19,38 +19,14 @@
 			target: '_blank'
 		}
 	];
-
-	let randomPosts: Post[] = $state([]);
-
-	async function getRandomBlogPosts() {
-		try {
-			const response = await fetch('/blog/api/posts', {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to fetch blog posts');
-			}
-
-			const allPosts = await response.json();
-			const shuffled = allPosts.sort(() => 0.5 - Math.random());
-			randomPosts = shuffled.slice(0, 3);
-		} catch (error) {
-			console.error('Error fetching latest blog posts:', error);
-			randomPosts = [];
-		}
-	}
-
-	onMount(() => {
-		getRandomBlogPosts();
-	});
 </script>
 
 <svelte:head>
 	<title>mateux@tars ~></title>
+	<meta
+		name="description"
+		content="Personal website of Mateus Lucas — Software Engineer based in Brazil."
+	/>
 </svelte:head>
 
 <Row><Prompt /> cd <span class="text-yellow-500 dark:text-yellow-300">~/About</span></Row>
@@ -88,9 +64,9 @@
 	<a href="/blog" target="_self" class="text-yellow-500 dark:text-yellow-300"> ~/Blog</a></Row
 >
 <Row><Prompt path="/Blog" /> ls -1</Row>
-{#if randomPosts.length > 0}
-	<Row>total {randomPosts.length}</Row>
-	{#each randomPosts as post}
+{#if data.randomPosts.length > 0}
+	<Row>total {data.randomPosts.length}</Row>
+	{#each data.randomPosts as post}
 		<Row>
 			<a
 				href={`/blog/posts/${post.slug}`}

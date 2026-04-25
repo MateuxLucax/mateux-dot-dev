@@ -1,5 +1,5 @@
 ---
-title: "Rinha de Compiler: Building an interpreter in Dart"
+title: "Rinha de Compiler: building an interpreter in Dart"
 slug: "building-an-interpreter-in-dart"
 date: "2026-04-13"
 tags: [dart, compiler, interpreter, ast, software-engineering]
@@ -136,7 +136,7 @@ You don't need to write production compilers in your day-to-day job, but underst
 
 ## Relevant material if you want to learn more
 
-- Compiladores. Princípios E Técnicas (Aho, Lam, Sethi, Ullman) - The classic "Dragon Book".
+- Compiladores: Princípios, Técnicas e Ferramentas (Aho, Lam, Sethi, Ullman) — the Portuguese edition of the classic "Dragon Book".
 - [Crafting Interpreters](https://craftinginterpreters.com/) (Robert Nystrom) - An incredible, accessible, and free online book that walks you through building an interpreter and compiler from scratch.
 - Writing An Interpreter In Go (Thorsten Ball) - A very hands-on approach to building a language.
 - Engineering a Compiler (Keith Cooper, Linda Torczon) - A great modern alternative to the Dragon Book.

@@ -1,9 +1,9 @@
 ---
-title: Level up your software engineering skills with Mermaid diagrams 
-slug: level-up-software-engineering-with-mermaid
-date: 2025-06-19
+title: "Level up your software engineering skills with Mermaid diagrams"
+slug: "level-up-software-engineering-with-mermaid"
+date: "2025-06-19"
 tags: [mermaid, documentation, diagrams, software-engineering, markdown]
-description: Learn how using Mermaid.js can improve your system design, documentation, and communication skills as a software engineer. Includes examples and best practices. Forget static diagrams that get out of sync - use Mermaid to create living documentation that evolves with your codebase.
+description: "Learn how using Mermaid.js can improve your system design, documentation, and communication skills as a software engineer. Includes examples and best practices. Forget static diagrams that get out of sync — use Mermaid to create living documentation that evolves with your codebase."
 ---
 
 <script>
@@ -208,7 +208,7 @@ These are habits that differentiate strong developers from great engineers.
 ## Limitations to be aware of
 
 * Mermaid’s layout engine isn’t perfect (complex diagrams can look weird)
-* Whitespace matters - indentation errors can break rendering
+* Whitespace matters — indentation errors can break rendering
 * Rendering varies slightly across platforms (e.g., Notion may lag on updates)
 * Large diagrams can be hard to visualize without zoom capabilities by the rendering tool
 
@@ -231,7 +231,7 @@ Mermaid is ideal for fast-moving teams, internal documentation, solo devs, and r
 
 ## Final thoughts
 
-Learning Mermaid won’t just improve your documentation - it will make you a better systems thinker, a better communicator, and a more effective teammate.
+Learning Mermaid won’t just improve your documentation — it will make you a better systems thinker, a better communicator, and a more effective teammate.
 
 And you won’t go back to diagramming by hand ever again.
 

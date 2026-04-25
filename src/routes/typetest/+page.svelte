@@ -6,41 +6,265 @@
 
 	// --- Word bank ---
 	const wordBank = [
-		'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i',
-		'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
-		'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she',
-		'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what',
-		'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
-		'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take',
-		'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see',
-		'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over',
-		'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work',
-		'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these',
-		'give', 'day', 'most', 'us', 'great', 'between', 'need', 'large', 'must',
-		'home', 'big', 'high', 'end', 'long', 'small', 'never', 'should', 'under',
-		'world', 'school', 'still', 'last', 'every', 'own', 'right', 'while',
-		'learn', 'thought', 'keep', 'point', 'hand', 'found', 'play', 'turn',
-		'program', 'system', 'set', 'run', 'move', 'try', 'help', 'start', 'show',
-		'part', 'place', 'problem', 'fact', 'group', 'side', 'head', 'life',
-		'story', 'young', 'left', 'question', 'change', 'same', 'much', 'seem',
-		'kind', 'mean', 'real', 'old', 'off', 'letter', 'number', 'water', 'write',
-		'listen', 'read', 'port', 'stop', 'follow', 'few', 'began', 'might',
-		'next', 'hard', 'open', 'example', 'begin', 'live', 'page', 'being',
-		'study', 'develop', 'state', 'close', 'night', 'light', 'city', 'tree',
-		'cross', 'farm', 'cover', 'food', 'sun', 'four', 'let', 'country',
-		'eye', 'plan', 'face', 'cut', 'second', 'watch', 'walk', 'white',
-		'sea', 'late', 'miss', 'car', 'river', 'call', 'door', 'name', 'class',
-		'build', 'held', 'front', 'earth', 'father', 'stand', 'east', 'fire',
-		'reach', 'land', 'red', 'list', 'air', 'line', 'rest', 'power',
-		'music', 'went', 'area', 'rain', 'best', 'field', 'body', 'table',
-		'dark', 'draw', 'voice', 'clear', 'fall', 'done', 'true', 'force',
-		'love', 'rock', 'idea', 'fish', 'wait', 'strong', 'south', 'order'
+		'the',
+		'be',
+		'to',
+		'of',
+		'and',
+		'a',
+		'in',
+		'that',
+		'have',
+		'i',
+		'it',
+		'for',
+		'not',
+		'on',
+		'with',
+		'he',
+		'as',
+		'you',
+		'do',
+		'at',
+		'this',
+		'but',
+		'his',
+		'by',
+		'from',
+		'they',
+		'we',
+		'say',
+		'her',
+		'she',
+		'or',
+		'an',
+		'will',
+		'my',
+		'one',
+		'all',
+		'would',
+		'there',
+		'their',
+		'what',
+		'so',
+		'up',
+		'out',
+		'if',
+		'about',
+		'who',
+		'get',
+		'which',
+		'go',
+		'me',
+		'when',
+		'make',
+		'can',
+		'like',
+		'time',
+		'no',
+		'just',
+		'him',
+		'know',
+		'take',
+		'people',
+		'into',
+		'year',
+		'your',
+		'good',
+		'some',
+		'could',
+		'them',
+		'see',
+		'other',
+		'than',
+		'then',
+		'now',
+		'look',
+		'only',
+		'come',
+		'its',
+		'over',
+		'think',
+		'also',
+		'back',
+		'after',
+		'use',
+		'two',
+		'how',
+		'our',
+		'work',
+		'first',
+		'well',
+		'way',
+		'even',
+		'new',
+		'want',
+		'because',
+		'any',
+		'these',
+		'give',
+		'day',
+		'most',
+		'us',
+		'great',
+		'between',
+		'need',
+		'large',
+		'must',
+		'home',
+		'big',
+		'high',
+		'end',
+		'long',
+		'small',
+		'never',
+		'should',
+		'under',
+		'world',
+		'school',
+		'still',
+		'last',
+		'every',
+		'own',
+		'right',
+		'while',
+		'learn',
+		'thought',
+		'keep',
+		'point',
+		'hand',
+		'found',
+		'play',
+		'turn',
+		'program',
+		'system',
+		'set',
+		'run',
+		'move',
+		'try',
+		'help',
+		'start',
+		'show',
+		'part',
+		'place',
+		'problem',
+		'fact',
+		'group',
+		'side',
+		'head',
+		'life',
+		'story',
+		'young',
+		'left',
+		'question',
+		'change',
+		'same',
+		'much',
+		'seem',
+		'kind',
+		'mean',
+		'real',
+		'old',
+		'off',
+		'letter',
+		'number',
+		'water',
+		'write',
+		'listen',
+		'read',
+		'port',
+		'stop',
+		'follow',
+		'few',
+		'began',
+		'might',
+		'next',
+		'hard',
+		'open',
+		'example',
+		'begin',
+		'live',
+		'page',
+		'being',
+		'study',
+		'develop',
+		'state',
+		'close',
+		'night',
+		'light',
+		'city',
+		'tree',
+		'cross',
+		'farm',
+		'cover',
+		'food',
+		'sun',
+		'four',
+		'let',
+		'country',
+		'eye',
+		'plan',
+		'face',
+		'cut',
+		'second',
+		'watch',
+		'walk',
+		'white',
+		'sea',
+		'late',
+		'miss',
+		'car',
+		'river',
+		'call',
+		'door',
+		'name',
+		'class',
+		'build',
+		'held',
+		'front',
+		'earth',
+		'father',
+		'stand',
+		'east',
+		'fire',
+		'reach',
+		'land',
+		'red',
+		'list',
+		'air',
+		'line',
+		'rest',
+		'power',
+		'music',
+		'went',
+		'area',
+		'rain',
+		'best',
+		'field',
+		'body',
+		'table',
+		'dark',
+		'draw',
+		'voice',
+		'clear',
+		'fall',
+		'done',
+		'true',
+		'force',
+		'love',
+		'rock',
+		'idea',
+		'fish',
+		'wait',
+		'strong',
+		'south',
+		'order'
 	];
 
 	// --- State ---
 	type TestState = 'idle' | 'running' | 'finished';
 
-	let testState: TestState = $state('idle');
+	let testState = $state<TestState>('idle');
 	let duration: number = $state(30);
 	let timeLeft: number = $state(30);
 	let timer: ReturnType<typeof setInterval> | null = null;
@@ -80,9 +304,7 @@
 	);
 
 	let rawWpm = $derived(
-		testState === 'finished'
-			? Math.round((correctWords + incorrectWords) / (duration / 60))
-			: 0
+		testState === 'finished' ? Math.round((correctWords + incorrectWords) / (duration / 60)) : 0
 	);
 
 	function generateWords(count: number): string[] {
@@ -265,8 +487,8 @@
 			disabled={testState === 'running'}
 			class="cursor-pointer transition-colors duration-100 disabled:cursor-not-allowed disabled:opacity-40
 				{duration === d
-					? 'text-teal-600 underline underline-offset-2 dark:text-teal-300'
-					: 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}"
+				? 'text-teal-600 underline underline-offset-2 dark:text-teal-300'
+				: 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}"
 		>
 			{d}s
 		</button>
@@ -278,13 +500,13 @@
 	<Prompt path="/TypeTest" />
 	{#if testState === 'running'}
 		<span class="text-blue-500 dark:text-blue-300">time</span>
-		<span class="tabular-nums text-teal-600 dark:text-teal-300">{timeLeft}s</span>
+		<span class="text-teal-600 tabular-nums dark:text-teal-300">{timeLeft}s</span>
 		<span class="text-gray-300 dark:text-gray-600">|</span>
 		<span class="text-gray-500 dark:text-gray-400">wpm</span>
-		<span class="tabular-nums text-yellow-500 dark:text-yellow-300">{wpm}</span>
+		<span class="text-yellow-500 tabular-nums dark:text-yellow-300">{wpm}</span>
 		<span class="text-gray-300 dark:text-gray-600">|</span>
 		<span class="text-gray-500 dark:text-gray-400">acc</span>
-		<span class="tabular-nums text-yellow-500 dark:text-yellow-300">{accuracy}%</span>
+		<span class="text-yellow-500 tabular-nums dark:text-yellow-300">{accuracy}%</span>
 	{:else if testState === 'idle'}
 		<span class="text-gray-400 dark:text-gray-500"># start typing to begin the test</span>
 	{:else}
@@ -318,8 +540,8 @@
 											: charStatuses[charIndex] === 'incorrect'
 												? 'text-red-500 dark:text-red-400'
 												: 'text-gray-800 dark:text-gray-200'}
-										{charIndex === currentInput.length ? 'cursor-char' : ''}"
-									>{char}</span>
+										{charIndex === currentInput.length ? 'cursor-char' : ''}">{char}</span
+									>
 								{/each}
 								<!-- Extra typed chars beyond word -->
 								{#if currentInput.length > word.length}
@@ -334,7 +556,9 @@
 							{:else if wordStatuses[wordIndex] === 'correct'}
 								<span class="text-green-600 dark:text-green-400">{word}</span>
 							{:else if wordStatuses[wordIndex] === 'incorrect'}
-								<span class="text-red-500 underline underline-offset-2 dark:text-red-400">{word}</span>
+								<span class="text-red-500 underline underline-offset-2 dark:text-red-400"
+									>{word}</span
+								>
 							{:else}
 								<span class="text-gray-400 dark:text-gray-500">{word}</span>
 							{/if}
@@ -368,14 +592,30 @@
 	<Row>
 		<pre class="w-full text-sm leading-relaxed"><!--
 -->&#123;
-  <span class="text-pink-400 dark:text-pink-300">"wpm"</span>:         <span class="text-teal-600 dark:text-teal-300">{wpm}</span>,
-  <span class="text-pink-400 dark:text-pink-300">"accuracy"</span>:    <span class="text-teal-600 dark:text-teal-300">{accuracy}%</span>,
-  <span class="text-pink-400 dark:text-pink-300">"raw_wpm"</span>:     <span class="text-teal-600 dark:text-teal-300">{rawWpm}</span>,
-  <span class="text-pink-400 dark:text-pink-300">"correct"</span>:     <span class="text-green-600 dark:text-green-400">{correctWords}</span>,
-  <span class="text-pink-400 dark:text-pink-300">"incorrect"</span>:   <span class="text-red-500 dark:text-red-400">{incorrectWords}</span>,
-  <span class="text-pink-400 dark:text-pink-300">"total"</span>:       <span class="text-yellow-500 dark:text-yellow-300">{correctWords + incorrectWords}</span>,
-  <span class="text-pink-400 dark:text-pink-300">"duration"</span>:    <span class="text-yellow-500 dark:text-yellow-300">{duration}s</span>,
-  <span class="text-pink-400 dark:text-pink-300">"keystrokes"</span>:  <span class="text-yellow-500 dark:text-yellow-300">{totalKeystrokes}</span>
+  <span class="text-pink-400 dark:text-pink-300">"wpm"</span>:         <span
+				class="text-teal-600 dark:text-teal-300">{wpm}</span
+			>,
+  <span class="text-pink-400 dark:text-pink-300">"accuracy"</span>:    <span
+				class="text-teal-600 dark:text-teal-300">{accuracy}%</span
+			>,
+  <span class="text-pink-400 dark:text-pink-300">"raw_wpm"</span>:     <span
+				class="text-teal-600 dark:text-teal-300">{rawWpm}</span
+			>,
+  <span class="text-pink-400 dark:text-pink-300">"correct"</span>:     <span
+				class="text-green-600 dark:text-green-400">{correctWords}</span
+			>,
+  <span class="text-pink-400 dark:text-pink-300">"incorrect"</span>:   <span
+				class="text-red-500 dark:text-red-400">{incorrectWords}</span
+			>,
+  <span class="text-pink-400 dark:text-pink-300">"total"</span>:       <span
+				class="text-yellow-500 dark:text-yellow-300">{correctWords + incorrectWords}</span
+			>,
+  <span class="text-pink-400 dark:text-pink-300">"duration"</span>:    <span
+				class="text-yellow-500 dark:text-yellow-300">{duration}s</span
+			>,
+  <span class="text-pink-400 dark:text-pink-300">"keystrokes"</span>:  <span
+				class="text-yellow-500 dark:text-yellow-300">{totalKeystrokes}</span
+			>
 &#125;</pre>
 	</Row>
 
@@ -393,8 +633,13 @@
 
 <style>
 	@keyframes blink {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0; }
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0;
+		}
 	}
 
 	.cursor-char {

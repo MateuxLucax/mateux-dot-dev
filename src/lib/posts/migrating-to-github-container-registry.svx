@@ -1,9 +1,9 @@
 ---
-title: Migrating to GitHub Container Registry
-slug: migrating-to-github-container-registry
-date: 2025-10-07
-tags: [github, docker, container-registry, ci/cd]
-description: Migrating to GitHub Container Registry offers better integration with CI/CD workflows, fine-grained access control, and improved visibility compared to Docker Hub.
+title: "Migrating to GitHub Container Registry"
+slug: "migrating-to-github-container-registry"
+date: "2025-10-07"
+tags: [github, docker, container-registry, ci-cd]
+description: "Migrating to GitHub Container Registry offers better integration with CI/CD workflows, fine-grained access control, and improved visibility compared to Docker Hub."
 ---
 
 I used to avoid GitHub Container Registry (GHCR), assuming it was expensive or complex compared to Docker Hub. I was wrong.
@@ -53,7 +53,7 @@ There's no one-size-fits-all answer here. Both registries have their strengths a
 
 It's crucial to understand how GitHub Container Registry billing works, especially for private packages:
 
-**Public packages**: Completely free - no storage or bandwidth costs
+**Public packages**: Completely free — no storage or bandwidth costs
 **Private packages**: 
 - Free tier includes 500MB storage and 1GB data transfer per month
 - Usage is calculated hourly for storage (GB-hours per month)

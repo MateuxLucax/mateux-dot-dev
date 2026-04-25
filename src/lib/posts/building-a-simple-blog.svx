@@ -1,9 +1,9 @@
 ---
-title: Building a simple blog using SvelteKit and markdown files
-slug: building-a-simple-blog
-date: 2025-06-03
-tags: [svelte, markdown, mdsvex, mermaid, blog]
-description: A guide to building a simple, developer-friendly blog using SvelteKit and Markdown with MDsveX. Covers integrating Markdown files into SvelteKit's static renderer, adding Mermaid diagram support, and enabling syntax highlighting with Shiki.
+title: "Building a simple blog using SvelteKit and Markdown files"
+slug: "building-a-simple-blog"
+date: "2025-06-03"
+tags: [svelte, sveltekit, markdown, mdsvex, mermaid, blog, shiki]
+description: "A guide to building a simple, developer-friendly blog using SvelteKit and Markdown with MDsveX. Covers integrating Markdown files into SvelteKit's static renderer, adding Mermaid diagram support, and enabling syntax highlighting with Shiki."
 ---
 
 <script>
@@ -136,12 +136,6 @@ However, visiting this route won't show anything yet—we still need a component
 			{/each}
 		</section>
 	</header>
-
-	<section>
-		{#each data.meta.categories as category}
-			<span>&num;{category}</span>
-		{/each}
-	</section>
 
 	<section class="prose max-w-prose">
 		<data.content />

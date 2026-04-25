@@ -263,7 +263,7 @@ Nuxt builds with Nitro, which gives you flexible output targets (Node, Deno, Clo
 
 ### The deployment verdict
 
-If your app can be static, SvelteKit wins the deployment story. Smaller images, simpler CI, no Node.js process to babysit. For SSR workloads, Next.js and Nuxt are comparable, but you're paying the operational cost of running a Node server. That's fine, but it means you're back in the territory of health checks, process managers, and memory tuning, the backend problems you already know.
+If your app can be static, SvelteKit wins the deployment story. Smaller images, simpler CI, no Node.js process to babysit. For SSR workloads, Next.js and Nuxt are comparable, but you're paying the operational cost of running a Node server. That's fine, but it means you're back in the territory of health checks, process managers, and memory tuning — the backend problems you already know.
 
 ## Pick what fits your brain
 

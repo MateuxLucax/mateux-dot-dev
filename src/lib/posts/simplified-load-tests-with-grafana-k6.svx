@@ -1,9 +1,9 @@
 ---
-title: Simplified Load Tests with Grafana k6
+title: "Simplified load tests with Grafana k6"
 slug: "simplified-load-tests-with-grafana-k6"
-date: 2025-10-09
-tags: [automated testing, load testing, grafana k6, performance testing]
-description: Learn how to write simple yet powerful load tests using Grafana k6 and JavaScript, from basic setup to CI/CD integration for bulletproof performance testing.
+date: "2025-10-09"
+tags: [automated-testing, load-testing, grafana-k6, performance-testing]
+description: "Learn how to write simple yet powerful load tests using Grafana k6 and JavaScript, from basic setup to CI/CD integration for bulletproof performance testing."
 ---
 
 Load testing often happens too late—after production outages. To prevent this, I needed a simple, version-controlled load testing solution. Enter [Grafana k6](https://k6.io/), an open-source tool that lets you write performant load tests in JavaScript.

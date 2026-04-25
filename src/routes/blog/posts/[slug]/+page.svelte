@@ -1,14 +1,39 @@
 <script lang="ts">
 	import { formatDate } from '$lib/utils';
+	import CodeBlockWrapper from '$lib/components/CodeBlockWrapper.svelte';
 
 	let { data } = $props();
+
+	const canonicalUrl = $derived(`https://mateux.dev/blog/posts/${data.meta.slug}`);
+	const jsonLd = $derived({
+		'@context': 'https://schema.org',
+		'@type': 'BlogPosting',
+		headline: data.meta.title,
+		description: data.meta.description,
+		author: {
+			'@type': 'Person',
+			name: 'Mateus Brandt'
+		},
+		datePublished: data.meta.date,
+		url: canonicalUrl
+	});
 </script>
 
 <svelte:head>
 	<title>{data.meta.title}</title>
+	<meta name="description" content={data.meta.description} />
+	<link rel="canonical" href={canonicalUrl} />
+
 	<meta property="og:type" content="article" />
 	<meta property="og:title" content={data.meta.title} />
 	<meta property="og:description" content={data.meta.description} />
+	<meta property="og:url" content={canonicalUrl} />
+
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content={data.meta.title} />
+	<meta name="twitter:description" content={data.meta.description} />
+
+	{@html `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>`}
 </svelte:head>
 
 <article>
@@ -21,7 +46,12 @@
 		>
 
 		<h1 class="mb-2 text-3xl font-bold">{data.meta.title}</h1>
-		<p>Published at {formatDate(data.meta.date)}</p>
+		<p>
+			Published at {formatDate(data.meta.date)}
+			{#if data.meta.readingTime}
+				&middot; {data.meta.readingTime} min read
+			{/if}
+		</p>
 		<section>
 			{#each data.meta.tags as tag}
 				<span
@@ -33,15 +63,29 @@
 		</section>
 	</header>
 
-	<section>
-		{#each data.meta.categories as category}
-			<span>&num;{category}</span>
-		{/each}
+	<section class="prose max-w-prose">
+		<CodeBlockWrapper>
+			<data.content />
+		</CodeBlockWrapper>
 	</section>
 
-	<section class="prose max-w-prose">
-		<data.content />
-	</section>
+	{#if data.related && data.related.length > 0}
+		<footer class="mt-12 border-t border-gray-200 pt-6 dark:border-gray-700">
+			<h2 class="mb-4 text-lg font-bold">Related posts</h2>
+			<ul class="flex list-none flex-col gap-2">
+				{#each data.related as related}
+					<li>
+						<a
+							href={`/blog/posts/${related.slug}`}
+							class="text-blue-500 underline underline-offset-2 hover:bg-gray-200 focus:bg-gray-300 active:bg-gray-300 dark:text-blue-300 dark:hover:bg-gray-700 dark:focus:bg-gray-600 dark:active:bg-gray-600"
+						>
+							{related.title}/
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</footer>
+	{/if}
 </article>
 
 <style>

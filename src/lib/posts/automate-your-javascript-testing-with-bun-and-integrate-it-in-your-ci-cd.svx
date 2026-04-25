@@ -1,8 +1,9 @@
 ---
-title: Automate Your JavaScript Testing with Bun + Integrate It In Your CI/CD
-date: 2025-10-08
-tags: [automated testing, bun, testing frameworks, javascript, typescript]
-description: Set up automated tests using Bun's built-in testing framework and integrate them into your CI/CD pipeline using GitHub Actions.
+title: "Automate your JavaScript testing with Bun + integrate it in your CI/CD"
+slug: "automate-your-javascript-testing-with-bun-and-integrate-it-in-your-ci-cd"
+date: "2025-10-08"
+tags: [automated-testing, bun, testing-frameworks, javascript, typescript, ci-cd]
+description: "Set up automated tests using Bun's built-in testing framework and integrate them into your CI/CD pipeline using GitHub Actions."
 ---
 
 Bun's built-in testing framework offers speed and simplicity without the configuration fatigue of other tools.
