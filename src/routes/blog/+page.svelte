@@ -19,7 +19,7 @@
 <Row><Prompt /> cd <span class="text-yellow-500 dark:text-yellow-300">~/Blog</span></Row>
 <Row
 	><Prompt path="/Blog" />
-	<span class="text-gray-500 dark:text-gray-400"
+	<span class="text-gray-700 dark:text-gray-300"
 		># <a
 			href="/blog/rss.xml"
 			class="text-blue-500 underline hover:text-blue-300 dark:text-blue-300 dark:hover:text-blue-100"
@@ -38,7 +38,7 @@
 			>
 				{post.title}/
 			</a>
-			<span class="text-gray-500 dark:text-gray-400">
+			<span class="text-gray-700 dark:text-gray-300">
 				# {formatDate(post.date)} &middot; {post.readingTime} min read &middot; {post.description}
 			</span>
 		</Row>

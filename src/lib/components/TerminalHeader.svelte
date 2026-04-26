@@ -8,8 +8,8 @@
 	</div>
 
 	<div>
-		<span class="text-gray-500 dark:text-gray-100">mateux@tars</span>
-		<span class="text-gray-400 dark:text-gray-300">:~$</span>
-		<span class="text-gray-500 dark:text-gray-200">~</span>
+		<span class="text-gray-700 dark:text-gray-100">mateux@tars</span>
+		<span class="text-gray-600 dark:text-gray-300">:~$</span>
+		<span class="text-gray-700 dark:text-gray-200">~</span>
 	</div>
 </header>

@@ -488,7 +488,7 @@
 			class="cursor-pointer transition-colors duration-100 disabled:cursor-not-allowed disabled:opacity-40
 				{duration === d
 				? 'text-teal-600 underline underline-offset-2 dark:text-teal-300'
-				: 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}"
+				: 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100'}"
 		>
 			{d}s
 		</button>
@@ -501,14 +501,14 @@
 	{#if testState === 'running'}
 		<span class="text-blue-500 dark:text-blue-300">time</span>
 		<span class="text-teal-600 tabular-nums dark:text-teal-300">{timeLeft}s</span>
-		<span class="text-gray-300 dark:text-gray-600">|</span>
-		<span class="text-gray-500 dark:text-gray-400">wpm</span>
+		<span class="text-gray-500 dark:text-gray-500">|</span>
+		<span class="text-gray-700 dark:text-gray-300">wpm</span>
 		<span class="text-yellow-500 tabular-nums dark:text-yellow-300">{wpm}</span>
-		<span class="text-gray-300 dark:text-gray-600">|</span>
-		<span class="text-gray-500 dark:text-gray-400">acc</span>
+		<span class="text-gray-500 dark:text-gray-500">|</span>
+		<span class="text-gray-700 dark:text-gray-300">acc</span>
 		<span class="text-yellow-500 tabular-nums dark:text-yellow-300">{accuracy}%</span>
 	{:else if testState === 'idle'}
-		<span class="text-gray-400 dark:text-gray-500"># start typing to begin the test</span>
+		<span class="text-gray-600 dark:text-gray-300"># start typing to begin the test</span>
 	{:else}
 		<span class="text-green-600 dark:text-green-400">✓ test complete</span>
 	{/if}
@@ -560,7 +560,7 @@
 									>{word}</span
 								>
 							{:else}
-								<span class="text-gray-400 dark:text-gray-500">{word}</span>
+								<span class="text-gray-600 dark:text-gray-300">{word}</span>
 							{/if}
 						</span>
 					{/if}
@@ -578,6 +578,7 @@
 				autocorrect="off"
 				autocapitalize="off"
 				spellcheck="false"
+				aria-label="Typing test input"
 				class="absolute top-0 left-0 h-full w-full opacity-0"
 			/>
 		</div>

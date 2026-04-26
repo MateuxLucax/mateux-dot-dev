@@ -58,7 +58,12 @@
 
 	<Row>
 		<Prompt />
-		<input type="text" onkeydown={handleKeyDown} class="command-input flex-1 focus:outline-none" />
+		<input
+			type="text"
+			onkeydown={handleKeyDown}
+			aria-label="Type a command"
+			class="command-input flex-1 focus:outline-none"
+		/>
 	</Row>
 </section>
 

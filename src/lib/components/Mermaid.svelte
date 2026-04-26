@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
-	import mermaid from 'mermaid';
 	import { isDarkMode } from '$lib/utils';
 
 	let { diagram }: { diagram: string } = $props();
@@ -10,6 +9,8 @@
 
 	async function renderDiagram() {
 		if (!diagramElement) return;
+
+		const mermaid = (await import('mermaid')).default;
 
 		mermaid.initialize({
 			startOnLoad: false,

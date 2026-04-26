@@ -37,9 +37,9 @@
 			bind:this={terminalSection}
 			class="terminal-body h-full overflow-y-auto bg-white p-4 md:p-8 dark:bg-gray-800 dark:text-white"
 		>
-			<ul class="flex list-none flex-col gap-2">
+			<div class="flex flex-col gap-2">
 				{@render children?.()}
-			</ul>
+			</div>
 		</section>
 	</section>
 </main>
