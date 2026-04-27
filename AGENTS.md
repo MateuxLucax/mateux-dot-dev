@@ -243,12 +243,89 @@ bun run format   # Must pass
 
 ---
 
+## Testing Standards
+
+### E2E Test Framework
+
+- **Playwright** with `@axe-core/playwright` for accessibility.
+- Custom `test` fixture in `tests/fixtures.ts` blocks GA/GTM requests automatically.
+
+### Commands
+
+```bash
+bun run test:e2e          # Run against local `vite preview`
+bun run test:e2e:ui       # Debug with Playwright UI
+bun run test:e2e:docker   # Test production Docker artifact
+```
+
+### Blog Post Tests
+
+- Tests are **parameterized over all `src/lib/posts/*.svx` files** via `tests/utils/posts.ts`.
+- Post metadata is parsed at test-time with a zero-dependency frontmatter parser.
+- Every post test covers: title, meta tags, canonical, OG, Twitter, JSON-LD, h1, date, reading time, tags, prose content, back-link, Mermaid SVGs (if present), Shiki theme blocks, copy buttons, and accessibility.
+- **Mermaid SVG assertions** use a 15-second timeout: `expect(...).toBeVisible({ timeout: 15000 })`.
+
+### Accessibility
+
+- `@axe-core/playwright` scan runs on every page test in both light and dark modes.
+- Zero violations is the target.
+
+### Performance
+
+- Web Vitals collected via Playwright `page.evaluate()` on Performance API.
+- Thresholds: FCP < 1.8s, TTFB < 600ms.
+
+### CI/CD
+
+- `.github/workflows/test.yml` runs on every push/PR to any branch.
+- `.github/workflows/build.yml` only triggers after `Test` succeeds on `main`.
+
+---
+
+## Development Workflow (TDD)
+
+All new features, bug fixes, and refactors must follow this branch-based TDD cycle:
+
+1. **Create a feature branch** from `main`:
+   ```bash
+   git checkout -b feat/descriptive-name
+   ```
+
+2. **Write tests first** — create Playwright tests that describe the desired behavior. Run them and confirm they fail (red).
+   ```bash
+   bun run test:e2e
+   ```
+
+3. **Implement the feature** — write the minimal code to make tests pass (green).
+
+4. **Run full quality checks**:
+   ```bash
+   bun run build    # static build must succeed
+   bun run check    # TypeScript + Svelte checks
+   bun run format   # Prettier formatting
+   bun run test:e2e # all tests must pass
+   ```
+
+5. **Review** — re-read diffs, ensure no secrets, no unrelated changes, and `AGENTS.md` is updated if conventions changed.
+
+6. **Commit and open PR**:
+   ```bash
+   git add .
+   git commit -m "feat: descriptive commit message"
+   git push -u origin feat/descriptive-name
+   gh pr create --title "feat: descriptive title" --body "Summary of changes and test coverage"
+   ```
+
+7. **Wait for CI** — `.github/workflows/test.yml` runs on the PR. Build and push only happen after tests pass on `main`.
+
+---
+
 ## Agent Checklist (Before Finishing)
 
 - [ ] Changes are minimal and focused.
 - [ ] `bun run build` succeeds.
 - [ ] `bun run check` shows no new errors in blog-related files.
 - [ ] `bun run format` passes.
+- [ ] `bun run test:e2e` passes (or new tests added for changed routes).
 - [ ] No secrets or credentials committed.
-- [ ] No git mutations (commit/push) unless explicitly requested.
 - [ ] `AGENTS.md` updated if any conventions changed.
