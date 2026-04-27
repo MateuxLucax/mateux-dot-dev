@@ -33,22 +33,22 @@ export async function load({ params }) {
 		| { metadata: { tags: string[] } }
 		| undefined;
 	const currentTags: string[] = post?.metadata.tags || [];
-	const related: Array<{ title: string; slug: string }> = [];
+	const related: Array<{ title: string; slug: string; date: string }> = [];
 
 	for (const path in allPaths) {
 		const file = allPaths[path];
 		const slug = path.split('/').at(-1)?.replace('.svx', '');
 		if (!slug || slug === params.slug) continue;
 		if (file && typeof file === 'object' && 'metadata' in file) {
-			const meta = (file as { metadata: { title: string; tags: string[] } }).metadata;
+			const meta = (file as { metadata: { title: string; tags: string[]; date: string } }).metadata;
 			const shared = meta.tags?.filter((t: string) => currentTags.includes(t)) || [];
 			if (shared.length > 0) {
-				related.push({ title: meta.title, slug });
+				related.push({ title: meta.title, slug, date: meta.date });
 			}
 		}
 	}
 
-	related.sort(() => 0.5 - Math.random());
+	related.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 	const topRelated = related.slice(0, 3);
 
 	return {
