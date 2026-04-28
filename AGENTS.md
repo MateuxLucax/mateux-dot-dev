@@ -306,9 +306,14 @@ All new features, bug fixes, and refactors must follow this branch-based TDD cyc
    bun run test:e2e # all tests must pass
    ```
 
-5. **Review** — re-read diffs, ensure no secrets, no unrelated changes, and `AGENTS.md` is updated if conventions changed.
+5. **Bump version** in `package.json` following semantic versioning:
+   - `fix:` → patch (e.g., `3.1.0` → `3.1.1`)
+   - `feat:` → minor (e.g., `3.1.0` → `3.2.0`)
+   - Breaking changes → major (e.g., `3.1.0` → `4.0.0`)
 
-6. **Commit and open PR**:
+6. **Review** — re-read diffs, ensure no secrets, no unrelated changes, and `AGENTS.md` is updated if conventions changed.
+
+7. **Commit and open PR**:
    ```bash
    git add .
    git commit -m "feat: descriptive commit message"
@@ -316,7 +321,7 @@ All new features, bug fixes, and refactors must follow this branch-based TDD cyc
    gh pr create --title "feat: descriptive title" --body "Summary of changes and test coverage"
    ```
 
-7. **Wait for CI** — `.github/workflows/test.yml` runs on the PR. Build and push only happen after tests pass on `main`.
+8. **Wait for CI** — `.github/workflows/test.yml` runs on the PR. Build and push only happen after tests pass on `main`.
 
 ---
 
@@ -327,5 +332,6 @@ All new features, bug fixes, and refactors must follow this branch-based TDD cyc
 - [ ] `bun run check` shows no new errors in blog-related files.
 - [ ] `bun run format` passes.
 - [ ] `bun run test:e2e` passes (or new tests added for changed routes).
+- [ ] `package.json` version bumped following semantic versioning.
 - [ ] No secrets or credentials committed.
 - [ ] `AGENTS.md` updated if any conventions changed.

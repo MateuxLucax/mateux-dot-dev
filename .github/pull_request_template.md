@@ -19,6 +19,16 @@
 
 <!-- What routes or behaviors are covered by new or updated tests? -->
 
+## Version Bump
+
+<!-- Update package.json version following semantic versioning -->
+
+- [ ] `fix:` → patch (e.g., `3.1.0` → `3.1.1`)
+- [ ] `feat:` → minor (e.g., `3.1.0` → `3.2.0`)
+- [ ] Breaking changes → major (e.g., `3.1.0` → `4.0.0`)
+
+**New version**: `<!-- fill in -->`
+
 ## Quality Checks
 
 ```bash
