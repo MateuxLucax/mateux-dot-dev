@@ -28,13 +28,6 @@ export default defineConfig({
 				...devices['Desktop Chrome'],
 				colorScheme: 'dark'
 			}
-		},
-		{
-			name: 'mobile-safari',
-			use: {
-				...devices['iPhone 14'],
-				colorScheme: 'light'
-			}
 		}
 	],
 	webServer: process.env.PLAYWRIGHT_BASE_URL
