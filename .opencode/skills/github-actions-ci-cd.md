@@ -207,6 +207,7 @@ EOF
 ## TDD Workflow in CI
 
 The ideal CI cycle:
+
 1. **Branch created** → `test.yml` runs on push
 2. **Tests fail** (red) → PR blocked by ruleset
 3. **Implementation** → push commits

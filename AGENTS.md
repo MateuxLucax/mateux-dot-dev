@@ -285,6 +285,7 @@ bun run test:e2e:docker   # Test production Docker artifact
 ### Branch Protection (Repository Rulesets)
 
 The `main` branch is protected by a Repository Ruleset with the following rules:
+
 - **Require pull request** before merging
 - **Require status checks**: `check-and-build` and `e2e-docker` must pass
 - **Strict status checks**: branch must be up-to-date with `main`

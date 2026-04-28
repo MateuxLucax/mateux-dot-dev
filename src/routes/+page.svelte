@@ -67,9 +67,9 @@
 	<a href="/blog" target="_self" class="text-yellow-500 dark:text-yellow-300"> ~/Blog</a></Row
 >
 <Row><Prompt path="/Blog" /> ls -1</Row>
-{#if data.randomPosts.length > 0}
-	<Row>total {data.randomPosts.length}</Row>
-	{#each data.randomPosts as post}
+{#if data.latestPosts.length > 0}
+	<Row>total {data.latestPosts.length}</Row>
+	{#each data.latestPosts as post}
 		<Row>
 			<a
 				href={`/blog/posts/${post.slug}`}

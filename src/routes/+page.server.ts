@@ -8,5 +8,5 @@ export function load() {
 		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 		.slice(0, 3);
 
-	return { randomPosts: latestPosts };
+	return { latestPosts };
 }
