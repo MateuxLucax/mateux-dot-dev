@@ -263,7 +263,7 @@ bun run test:e2e:docker   # Test production Docker artifact
 - Tests are **parameterized over all `src/lib/posts/*.svx` files** via `tests/utils/posts.ts`.
 - Post metadata is parsed at test-time with a zero-dependency frontmatter parser.
 - Every post test covers: title, meta tags, canonical, OG, Twitter, JSON-LD, h1, date, reading time, tags, prose content, back-link, Mermaid SVGs (if present), Shiki theme blocks, copy buttons, and accessibility.
-- **Mermaid SVG assertions** use a 15-second timeout: `expect(...).toBeVisible({ timeout: 15000 })`.
+- **Mermaid SVG assertions** use a 30-second timeout: `expect(...).toBeVisible({ timeout: 30000 })`.
 
 ### Accessibility
 
@@ -277,7 +277,9 @@ bun run test:e2e:docker   # Test production Docker artifact
 
 ### CI/CD
 
-- `.github/workflows/test.yml` runs on every push/PR to any branch.
+- `.github/workflows/test.yml` runs on every push/PR to any branch:
+  - `check-and-build` job: lint, type-check, build
+  - `e2e-docker` job: build production Docker image and run Playwright tests against it
 - `.github/workflows/build.yml` only triggers after `Test` succeeds on `main`.
 
 ---
@@ -287,11 +289,13 @@ bun run test:e2e:docker   # Test production Docker artifact
 All new features, bug fixes, and refactors must follow this branch-based TDD cycle:
 
 1. **Create a feature branch** from `main`:
+
    ```bash
    git checkout -b feat/descriptive-name
    ```
 
 2. **Write tests first** — create Playwright tests that describe the desired behavior. Run them and confirm they fail (red).
+
    ```bash
    bun run test:e2e
    ```
@@ -299,6 +303,7 @@ All new features, bug fixes, and refactors must follow this branch-based TDD cyc
 3. **Implement the feature** — write the minimal code to make tests pass (green).
 
 4. **Run full quality checks**:
+
    ```bash
    bun run build    # static build must succeed
    bun run check    # TypeScript + Svelte checks
@@ -314,6 +319,7 @@ All new features, bug fixes, and refactors must follow this branch-based TDD cyc
 6. **Review** — re-read diffs, ensure no secrets, no unrelated changes, and `AGENTS.md` is updated if conventions changed.
 
 7. **Commit and open PR**:
+
    ```bash
    git add .
    git commit -m "feat: descriptive commit message"
