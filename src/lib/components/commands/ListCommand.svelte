@@ -26,7 +26,7 @@
 			href={contact.url}
 			target={contact.url.includes('http') ? '_blank' : '_self'}
 			rel={contact.url.includes('http') ? 'noopener noreferrer' : undefined}
-			class="h-0 text-blue-800">{contact.text}</a
+			class="text-blue-800">{contact.text}</a
 		>
 	{/each}
 </Row>

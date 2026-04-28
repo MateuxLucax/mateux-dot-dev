@@ -1,0 +1,90 @@
+name: Test
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['*']
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run svelte-check
+        run: bun run check
+
+      - name: Build static site
+        run: bun run build
+
+  e2e-docker:
+    runs-on: ubuntu-latest
+    needs: check-and-build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/package.json') }}
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Build and start Docker container
+        run: |
+          docker compose -f test.docker-compose.yml up -d --build site
+          for i in {1..30}; do
+            if curl -sf http://localhost:8080/ > /dev/null 2>&1; then
+              echo "Docker site is up!"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Docker site failed to start"
+          docker compose -f test.docker-compose.yml logs site
+          exit 1
+
+      - name: Run Playwright tests against Docker
+        run: PLAYWRIGHT_BASE_URL=http://localhost:8080 bunx playwright test
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-docker
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Cleanup Docker
+        if: always()
+        run: docker compose -f test.docker-compose.yml down
