@@ -71,7 +71,7 @@ Always test the exact Docker artifact before pushing:
 ```yaml
 - name: Build and start Docker container
   run: |
-    docker compose -f docker-compose.test.yml up -d --build site
+    docker compose -f test.docker-compose.yml up -d --build site
     for i in {1..30}; do
       if curl -sf http://localhost:8080/ > /dev/null 2>&1; then
         echo "Docker site is up!"
@@ -80,7 +80,7 @@ Always test the exact Docker artifact before pushing:
       sleep 1
     done
     echo "Docker site failed to start"
-    docker compose -f docker-compose.test.yml logs site
+    docker compose -f test.docker-compose.yml logs site
     exit 1
 
 - name: Run Playwright tests against Docker
@@ -88,7 +88,7 @@ Always test the exact Docker artifact before pushing:
 
 - name: Cleanup Docker
   if: always()
-  run: docker compose -f docker-compose.test.yml down
+  run: docker compose -f test.docker-compose.yml down
 ```
 
 **Critical**: Always `docker compose down` in `if: always()` to prevent orphaned containers.
