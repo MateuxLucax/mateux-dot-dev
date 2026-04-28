@@ -282,6 +282,17 @@ bun run test:e2e:docker   # Test production Docker artifact
   - `e2e-docker` job: build production Docker image and run Playwright tests against it
 - `.github/workflows/build.yml` only triggers after `Test` succeeds on `main`.
 
+### Branch Protection (Repository Rulesets)
+
+The `main` branch is protected by a Repository Ruleset with the following rules:
+- **Require pull request** before merging
+- **Require status checks**: `check-and-build` and `e2e-docker` must pass
+- **Strict status checks**: branch must be up-to-date with `main`
+- **Block force pushes**
+- **Block deletions**
+- **Require signed commits**
+- **Require linear history** (no merge commits)
+
 ---
 
 ## Development Workflow (TDD)

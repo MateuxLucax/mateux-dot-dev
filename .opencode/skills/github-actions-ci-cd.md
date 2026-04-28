@@ -3,6 +3,7 @@
 ## Workflow Design Patterns
 
 ### Gate Production Builds on Tests
+
 Never push production artifacts without passing tests first. Use `workflow_run` triggers:
 
 ```yaml
@@ -21,6 +22,7 @@ jobs:
 **Why**: This prevents broken builds from reaching the registry. The `workflow_dispatch` fallback allows manual builds for hotfixes.
 
 ### Separate Jobs for Build and Test
+
 Split CI into logical stages with explicit dependencies:
 
 ```yaml
@@ -46,21 +48,24 @@ jobs:
 ```
 
 **Key rules**:
+
 - `needs` ensures sequential execution
 - Artifacts with `retention-days: 1` keep storage low
 - Download artifacts in downstream jobs instead of rebuilding
 
 ### Parallel Test Environments
+
 Test against both the dev build and production artifact simultaneously:
 
-| Job | Purpose | URL |
-|-----|---------|-----|
-| `e2e-bun` | Tests dev build | `http://localhost:4173` |
+| Job          | Purpose                | URL                     |
+| ------------ | ---------------------- | ----------------------- |
+| `e2e-bun`    | Tests dev build        | `http://localhost:4173` |
 | `e2e-docker` | Tests production nginx | `http://localhost:8080` |
 
 Use `PLAYWRIGHT_BASE_URL` env var to switch targets without duplicating tests.
 
 ### Docker Testing in CI
+
 Always test the exact Docker artifact before pushing:
 
 ```yaml
@@ -89,6 +94,7 @@ Always test the exact Docker artifact before pushing:
 **Critical**: Always `docker compose down` in `if: always()` to prevent orphaned containers.
 
 ### Playwright in CI
+
 Install browsers with system dependencies:
 
 ```yaml
@@ -109,6 +115,7 @@ Upload reports on failure only:
 ```
 
 ### Bun in GitHub Actions
+
 Use the official setup action:
 
 ```yaml
@@ -126,14 +133,14 @@ Always use `--frozen-lockfile` for reproducible installs:
 
 ## Common Pitfalls
 
-| Issue | Solution |
-|-------|----------|
-| Orphaned containers | `docker compose down` in `if: always()` |
-| Preview server not ready | Wait loop with `curl` before tests |
-| Nginx 301 redirects | Use `try_files $uri $uri/index.html $uri.html =404` |
-| Playwright timeouts in CI | Use `retries: 2` and longer timeouts for Mermaid |
-| Artifact bloat | `retention-days: 1` for build artifacts, `7` for reports |
-| Missing build output | Upload artifact after `bun run build`, download in test jobs |
+| Issue                     | Solution                                                     |
+| ------------------------- | ------------------------------------------------------------ |
+| Orphaned containers       | `docker compose down` in `if: always()`                      |
+| Preview server not ready  | Wait loop with `curl` before tests                           |
+| Nginx 301 redirects       | Use `try_files $uri $uri/index.html $uri.html =404`          |
+| Playwright timeouts in CI | Use `retries: 2` and longer timeouts for Mermaid             |
+| Artifact bloat            | `retention-days: 1` for build artifacts, `7` for reports     |
+| Missing build output      | Upload artifact after `bun run build`, download in test jobs |
 
 ## PR Template Integration
 
@@ -148,13 +155,62 @@ Require quality check confirmations:
 - [ ] `bun run test:e2e` passes
 ```
 
+## Branch Protection (Repository Rulesets)
+
+Use GitHub Repository Rulesets (not classic branch protection) for modern, flexible controls:
+
+```bash
+# Create ruleset via API
+gh api repos/OWNER/REPO/rulesets --method POST --input - <<'EOF'
+{
+  "name": "Protect main branch",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["~DEFAULT_BRANCH"],
+      "exclude": []
+    }
+  },
+  "rules": [
+    { "type": "pull_request" },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "required_status_checks": [
+          { "context": "check-and-build", "integration_id": 15368 },
+          { "context": "e2e-docker", "integration_id": 15368 }
+        ],
+        "strict_required_status_checks_policy": true
+      }
+    },
+    { "type": "non_fast_forward" },
+    { "type": "deletion" },
+    { "type": "required_signatures" },
+    { "type": "required_linear_history" }
+  ]
+}
+EOF
+```
+
+**Rules explained**:
+| Rule | Effect |
+|------|--------|
+| `pull_request` | No direct pushes; all changes via PR |
+| `required_status_checks` | CI must pass before merge |
+| `strict_required_status_checks_policy` | Branch must be up-to-date with `main` |
+| `non_fast_forward` | Blocks force pushes |
+| `deletion` | Blocks branch deletion |
+| `required_signatures` | All commits must be GPG signed |
+| `required_linear_history` | No merge commits; rebase or squash only |
+
 ## TDD Workflow in CI
 
 The ideal CI cycle:
 1. **Branch created** → `test.yml` runs on push
-2. **Tests fail** (red) → PR blocked
+2. **Tests fail** (red) → PR blocked by ruleset
 3. **Implementation** → push commits
-4. **Tests pass** (green) → PR approved
+4. **Tests pass** (green) → PR eligible for merge
 5. **Merge to main** → `test.yml` runs again
 6. **Tests pass on main** → `build.yml` triggers automatically
 7. **Docker image pushed** to registry
