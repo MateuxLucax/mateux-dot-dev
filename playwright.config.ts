@@ -28,6 +28,20 @@ export default defineConfig({
 				...devices['Desktop Chrome'],
 				colorScheme: 'dark'
 			}
+		},
+		{
+			name: 'mobile-chrome-pixel',
+			use: {
+				...devices['Pixel 5'],
+				colorScheme: 'light'
+			}
+		},
+		{
+			name: 'mobile-chrome-galaxy',
+			use: {
+				...devices['Galaxy S8'],
+				colorScheme: 'light'
+			}
 		}
 	],
 	webServer: process.env.PLAYWRIGHT_BASE_URL
