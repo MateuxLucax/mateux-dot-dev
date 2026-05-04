@@ -6,7 +6,7 @@ Agent-facing instructions for working on this SvelteKit static blog.
 
 ## Project Overview
 
-A personal terminal-themed website and blog built with **SvelteKit**, **Tailwind CSS**, and **Bun**. The entire site is statically generated and deployed as static HTML via `adapter-static`. The blog uses **MDsveX** to render `.svx` Markdown files with embedded Svelte components (notably Mermaid diagrams).
+A personal terminal-themed website and blog built with **SvelteKit**, **Tailwind CSS**, and **Bun**. The entire site is statically generated (fully prerendered) and deployed to **Cloudflare Pages** via `adapter-cloudflare`. The blog uses **MDsveX** to render `.svx` Markdown files with embedded Svelte components (notably Mermaid diagrams).
 
 ### Key URLs
 
@@ -19,16 +19,16 @@ A personal terminal-themed website and blog built with **SvelteKit**, **Tailwind
 
 ## Technology Stack
 
-| Layer               | Tool                                         |
-| ------------------- | -------------------------------------------- |
-| Framework           | SvelteKit 2.x with Svelte 5 (runes)          |
-| Language            | TypeScript                                   |
-| Styling             | Tailwind CSS 4.x + `@tailwindcss/typography` |
-| Runtime             | Bun                                          |
-| Markdown            | MDsveX (`*.svx` files)                       |
-| Diagrams            | Mermaid.js                                   |
-| Syntax Highlighting | Shiki (catppuccin-mocha / catppuccin-latte)  |
-| Adapter             | `@sveltejs/adapter-static` (static site)     |
+| Layer               | Tool                                              |
+| ------------------- | ------------------------------------------------- |
+| Framework           | SvelteKit 2.x with Svelte 5 (runes)               |
+| Language            | TypeScript                                        |
+| Styling             | Tailwind CSS 4.x + `@tailwindcss/typography`      |
+| Runtime             | Bun                                               |
+| Markdown            | MDsveX (`*.svx` files)                            |
+| Diagrams            | Mermaid.js                                        |
+| Syntax Highlighting | Shiki (catppuccin-mocha / catppuccin-latte)       |
+| Adapter             | `@sveltejs/adapter-cloudflare` (Cloudflare Pages) |
 
 ---
 
@@ -105,11 +105,12 @@ The entire UI should feel like a terminal:
 
 ### Static Site Constraints
 
-- This is **fully static**. No server at runtime.
+- This is **fully prerendered**. No server at runtime (Cloudflare Pages serves static assets).
 - All dynamic data must be resolved at **build time**.
 - Server endpoints (`+server.ts`) must export `prerender = true`.
 - Page data loaders (`+page.server.ts`, `+page.ts`) can use `import()` for posts.
 - Client-side `fetch()` to internal APIs is acceptable but discouraged when build-time loading is possible.
+- Deployed to **Cloudflare Pages** via Git integration on the `main` branch.
 
 ---
 
@@ -255,7 +256,6 @@ bun run format   # Must pass
 ```bash
 bun run test:e2e          # Run against local `vite preview`
 bun run test:e2e:ui       # Debug with Playwright UI
-bun run test:e2e:docker   # Test production Docker artifact
 ```
 
 ### Blog Post Tests
@@ -279,15 +279,15 @@ bun run test:e2e:docker   # Test production Docker artifact
 
 - `.github/workflows/test.yml` runs on every push/PR to any branch:
   - `check-and-build` job: lint, type-check, build
-  - `e2e-docker` job: build production Docker image and run Playwright tests against it
-- `.github/workflows/build.yml` only triggers after `Test` succeeds on `main`.
+  - `e2e` job: build + `vite preview` + Playwright tests
+- Cloudflare Pages Git integration deploys on push to `main`.
 
 ### Branch Protection (Repository Rulesets)
 
 The `main` branch is protected by a Repository Ruleset with the following rules:
 
 - **Require pull request** before merging
-- **Require status checks**: `check-and-build` and `e2e-docker` must pass
+- **Require status checks**: `check-and-build` and `e2e` must pass
 - **Strict status checks**: branch must be up-to-date with `main`
 - **Block force pushes**
 - **Block deletions**

@@ -9,10 +9,6 @@ on:
 permissions:
   contents: read
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
@@ -32,10 +28,10 @@ jobs:
       - name: Run svelte-check
         run: bun run check
 
-      - name: Build static site
+      - name: Build site
         run: bun run build
 
-  e2e-docker:
+  e2e:
     runs-on: ubuntu-latest
     needs: check-and-build
 
@@ -60,31 +56,29 @@ jobs:
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps chromium
 
-      - name: Build and start Docker container
+      - name: Build site for preview
+        run: bun run build
+
+      - name: Start vite preview
         run: |
-          docker compose -f test.docker-compose.yml up -d --build site
+          bun run preview &
           for i in {1..30}; do
-            if curl -sf http://localhost:8080/ > /dev/null 2>&1; then
-              echo "Docker site is up!"
+            if curl -sf http://localhost:4173/ > /dev/null 2>&1; then
+              echo "Preview server is up!"
               exit 0
             fi
             sleep 1
           done
-          echo "Docker site failed to start"
-          docker compose -f test.docker-compose.yml logs site
+          echo "Preview server failed to start"
           exit 1
 
-      - name: Run Playwright tests against Docker
-        run: PLAYWRIGHT_BASE_URL=http://localhost:8080 bunx playwright test
+      - name: Run Playwright tests
+        run: PLAYWRIGHT_BASE_URL=http://localhost:4173 bunx playwright test
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report-docker
+          name: playwright-report
           path: playwright-report/
           retention-days: 7
-
-      - name: Cleanup Docker
-        if: always()
-        run: docker compose -f test.docker-compose.yml down
