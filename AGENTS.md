@@ -249,7 +249,6 @@ bun run format   # Must pass
 ### E2E Test Framework
 
 - **Playwright** with `@axe-core/playwright` for accessibility.
-- Custom `test` fixture in `tests/fixtures.ts` blocks GA/GTM requests automatically.
 
 ### Commands
 
@@ -308,20 +307,22 @@ Branches and PRs follow the [Conventional Branch](https://conventional-branch.gi
 <type>/<kebab-case-description>
 ```
 
-| Change Type               | Branch Prefix | Commit Prefix | Version Bump |
-| ------------------------- | ------------- | ------------- | ------------ |
-| New feature               | `feat/`       | `feat:`       | minor        |
-| Bug fix                   | `fix/`        | `fix:`        | patch        |
-| Urgent production fix     | `hotfix/`     | `fix:`        | patch        |
-| Non-code (deps, config)   | `chore/`      | `chore:`      | patch        |
+| Change Type             | Branch Prefix | Commit Prefix | Version Bump |
+| ----------------------- | ------------- | ------------- | ------------ |
+| New feature             | `feat/`       | `feat:`       | minor        |
+| Bug fix                 | `fix/`        | `fix:`        | patch        |
+| Urgent production fix   | `hotfix/`     | `fix:`        | patch        |
+| Non-code (deps, config) | `chore/`      | `chore:`      | patch        |
 
 **Rules:**
+
 - Lowercase alphanumerics and hyphens only (`a-z`, `0-9`, `-`).
 - No consecutive, leading, or trailing hyphens (e.g., `feat/new--login`, `feat/-new-login` are invalid).
 - Keep it concise and descriptive (e.g., `fix/header-overflow-on-mobile`).
 - Include ticket numbers if applicable (e.g., `feat/issue-123-new-login`).
 
 **Examples:**
+
 - `feat/add-dark-mode-toggle` — new feature
 - `fix/header-overflow-on-mobile` — bug fix
 - `hotfix/security-patch` — urgent fix

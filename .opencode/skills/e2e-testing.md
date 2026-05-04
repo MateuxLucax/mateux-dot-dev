@@ -9,7 +9,6 @@
 ## Patterns
 
 - Load post metadata from `src/lib/posts/*.svx` via `tests/utils/posts.ts` (zero-dependency parser)
-- Block GA/GTM requests in `beforeEach` via `tests/fixtures.ts`
 - Mermaid wait: `expect(locator).toBeVisible({ timeout: 15000 })`
 - Accessibility scan after every page load using `@axe-core/playwright`
 - Performance thresholds: FCP < 1.8s, TTFB < 600ms
