@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures';
+import { test, expect } from '@playwright/test';
 import { assertPrompt, runA11yScan } from './utils';
 import { getAllPosts } from './utils/posts';
 

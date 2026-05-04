@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures';
+import { test, expect } from '@playwright/test';
 
 test.describe('Terminal Theme', () => {
 	test('global font is monospace class', async ({ page }) => {
