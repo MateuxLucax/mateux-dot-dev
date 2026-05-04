@@ -1,0 +1,3 @@
+name = "mateux-dot-dev"
+compatibility_date = "2025-05-04"
+pages_build_output_dir = "build"

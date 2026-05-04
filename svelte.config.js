@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-static';
+import adapter from '@sveltejs/adapter-cloudflare';
 import { escapeSvelte, mdsvex } from 'mdsvex';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { createHighlighter } from 'shiki';
