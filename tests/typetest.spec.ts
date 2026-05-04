@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures';
+import { test, expect } from '@playwright/test';
 import { runA11yScan } from './utils';
 
 test.describe('TypeTest', () => {

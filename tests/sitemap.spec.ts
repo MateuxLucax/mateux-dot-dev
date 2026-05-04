@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures';
+import { test, expect } from '@playwright/test';
 import { getAllPosts } from './utils/posts';
 
 const allPosts = getAllPosts();

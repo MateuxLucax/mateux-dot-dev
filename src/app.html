@@ -15,20 +15,7 @@
 			href="/blog/rss.xml"
 		/>
 		<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
-		<link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-		<link rel="preconnect" href="https://www.googletagmanager.com" crossorigin="anonymous" />
 		%sveltekit.head%
-		<!-- Google tag (gtag.js) -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=G-86B979RNB1"></script>
-		<script defer>
-			window.dataLayer = window.dataLayer || [];
-			function gtag() {
-				dataLayer.push(arguments);
-			}
-			gtag('js', new Date());
-
-			gtag('config', 'G-86B979RNB1');
-		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
