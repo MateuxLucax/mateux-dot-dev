@@ -296,14 +296,43 @@ The `main` branch is protected by a Repository Ruleset with the following rules:
 
 ---
 
-## Development Workflow (TDD)
+## Development Workflow (Branch + PR Required)
 
-All new features, bug fixes, and refactors must follow this branch-based TDD cycle:
+**Every request that changes code MUST create a branch and open a pull request.** No code changes are pushed directly to `main`. This is non-negotiable — the `main` branch is protected and requires PRs.
 
-1. **Create a feature branch** from `main`:
+Branches and PRs follow the [Conventional Branch](https://conventional-branch.github.io) specification, which pairs naturally with [Conventional Commits](https://www.conventionalcommits.org).
+
+### Branch Naming
+
+```
+<type>/<kebab-case-description>
+```
+
+| Change Type               | Branch Prefix | Commit Prefix | Version Bump |
+| ------------------------- | ------------- | ------------- | ------------ |
+| New feature               | `feat/`       | `feat:`       | minor        |
+| Bug fix                   | `fix/`        | `fix:`        | patch        |
+| Urgent production fix     | `hotfix/`     | `fix:`        | patch        |
+| Non-code (deps, config)   | `chore/`      | `chore:`      | patch        |
+
+**Rules:**
+- Lowercase alphanumerics and hyphens only (`a-z`, `0-9`, `-`).
+- No consecutive, leading, or trailing hyphens (e.g., `feat/new--login`, `feat/-new-login` are invalid).
+- Keep it concise and descriptive (e.g., `fix/header-overflow-on-mobile`).
+- Include ticket numbers if applicable (e.g., `feat/issue-123-new-login`).
+
+**Examples:**
+- `feat/add-dark-mode-toggle` — new feature
+- `fix/header-overflow-on-mobile` — bug fix
+- `hotfix/security-patch` — urgent fix
+- `chore/update-tailwind-v4` — dependency update
+
+### TDD Cycle
+
+1. **Create a branch** from `main` using the appropriate prefix above:
 
    ```bash
-   git checkout -b feat/descriptive-name
+   git checkout -b <type>/<description>
    ```
 
 2. **Write tests first** — create Playwright tests that describe the desired behavior. Run them and confirm they fail (red).
@@ -312,7 +341,7 @@ All new features, bug fixes, and refactors must follow this branch-based TDD cyc
    bun run test:e2e
    ```
 
-3. **Implement the feature** — write the minimal code to make tests pass (green).
+3. **Implement the change** — write the minimal code to make tests pass (green).
 
 4. **Run full quality checks**:
 
@@ -324,7 +353,7 @@ All new features, bug fixes, and refactors must follow this branch-based TDD cyc
    ```
 
 5. **Bump version** in `package.json` following semantic versioning:
-   - `fix:` → patch (e.g., `3.1.0` → `3.1.1`)
+   - `fix:` / `chore:` → patch (e.g., `3.1.0` → `3.1.1`)
    - `feat:` → minor (e.g., `3.1.0` → `3.2.0`)
    - Breaking changes → major (e.g., `3.1.0` → `4.0.0`)
 
@@ -334,22 +363,27 @@ All new features, bug fixes, and refactors must follow this branch-based TDD cyc
 
    ```bash
    git add .
-   git commit -m "feat: descriptive commit message"
-   git push -u origin feat/descriptive-name
-   gh pr create --title "feat: descriptive title" --body "Summary of changes and test coverage"
+   git commit -m "<type>: descriptive commit message"
+   git push -u origin <type>/<description>
+   gh pr create --title "<type>: descriptive title" --body "Summary of changes and test coverage"
    ```
 
-8. **Wait for CI** — `.github/workflows/test.yml` runs on the PR. Build and push only happen after tests pass on `main`.
+   The commit type must match the branch type (e.g., branch `feat/add-x` → commit `feat: add x`).
+
+8. **Wait for CI** — `.github/workflows/test.yml` runs on the PR. Merge only after all checks pass. Cloudflare Pages deploys on push to `main`.
 
 ---
 
 ## Agent Checklist (Before Finishing)
 
+- [ ] **Branch created** from `main` following [Conventional Branch](https://conventional-branch.github.io) naming (`feat/`, `fix/`, `hotfix/`, `chore/`).
+- [ ] **PR opened** against `main` with matching Conventional Commits prefix in title.
 - [ ] Changes are minimal and focused.
 - [ ] `bun run build` succeeds.
 - [ ] `bun run check` shows no new errors in blog-related files.
 - [ ] `bun run format` passes.
 - [ ] `bun run test:e2e` passes (or new tests added for changed routes).
 - [ ] `package.json` version bumped following semantic versioning.
+- [ ] Commit type matches branch type (e.g., branch `feat/x` → commit `feat: x`).
 - [ ] No secrets or credentials committed.
 - [ ] `AGENTS.md` updated if any conventions changed.

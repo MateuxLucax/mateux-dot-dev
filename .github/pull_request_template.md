@@ -8,9 +8,9 @@
 
 ## TDD Cycle
 
-<!-- Confirm you followed the branch-based TDD workflow -->
+<!-- Confirm you followed the branch-based TDD workflow (see AGENTS.md) -->
 
-- [ ] Created feature branch from `main`
+- [ ] Created branch from `main` following [Conventional Branch](https://conventional-branch.github.io) naming
 - [ ] Wrote tests first (confirmed they fail / red)
 - [ ] Implemented until tests pass (green)
 - [ ] Ran full quality checks (see below)
