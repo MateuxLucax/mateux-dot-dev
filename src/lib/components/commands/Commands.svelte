@@ -32,7 +32,7 @@
 </script>
 
 <section class="flex flex-col">
-	{#each typedCommands as cmd}
+	{#each typedCommands as cmd, i (i)}
 		<Row>
 			<Prompt />
 			<span

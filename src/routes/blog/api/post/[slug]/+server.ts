@@ -32,7 +32,7 @@ export const GET: RequestHandler = async ({ params }) => {
 				'Content-Type': 'text/markdown; charset=utf-8'
 			}
 		});
-	} catch (e) {
+	} catch {
 		throw error(404, `Post with slug "${slug}" not found`);
 	}
 };

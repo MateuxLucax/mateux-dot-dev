@@ -67,9 +67,7 @@ test.describe('Blog Posts', () => {
 			test('Shiki syntax highlighting blocks exist', async ({ page }) => {
 				// Only check if post likely has code blocks
 				const light = page.locator('.shiki-light');
-				const dark = page.locator('.shiki-dark');
 				const lightCount = await light.count();
-				const darkCount = await dark.count();
 
 				if (lightCount > 0) {
 					await assertShikiBlocks(page);

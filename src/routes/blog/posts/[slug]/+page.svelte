@@ -17,6 +17,10 @@
 		datePublished: data.meta.date,
 		url: canonicalUrl
 	});
+	// Escaped so the JSON cannot close the script tag.
+	const jsonLdScript = $derived(
+		`<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/&/g, '\\u0026').replace(/</g, '\\u003c').replace(/>/g, '\\u003e')}</${'script'}>`
+	);
 </script>
 
 <svelte:head>
@@ -33,7 +37,8 @@
 	<meta name="twitter:title" content={data.meta.title} />
 	<meta name="twitter:description" content={data.meta.description} />
 
-	{@html `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/&/g, '\\u0026').replace(/</g, '\\u003c').replace(/>/g, '\\u003e')}</script>`}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -- JSON-LD, escaped above -->
+	{@html jsonLdScript}
 </svelte:head>
 
 <article>
@@ -53,7 +58,7 @@
 			{/if}
 		</p>
 		<section>
-			{#each data.meta.tags as tag}
+			{#each data.meta.tags as tag (tag)}
 				<span
 					class="mr-2 mb-2 inline-block rounded bg-gray-200 px-2 py-1 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
 				>
@@ -73,7 +78,7 @@
 		<footer class="mt-12 border-t border-gray-200 pt-6 dark:border-gray-700">
 			<h2 class="mb-4 text-lg font-bold">Related posts</h2>
 			<ul class="flex list-none flex-col gap-2">
-				{#each data.related as related}
+				{#each data.related as related (related.slug)}
 					<li>
 						<a
 							href={`/blog/posts/${related.slug}`}

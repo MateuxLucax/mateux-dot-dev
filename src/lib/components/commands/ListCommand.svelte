@@ -21,7 +21,7 @@
 	total {contacts.length * 4}k
 </Row>
 <Row>
-	{#each contacts as contact}
+	{#each contacts as contact (contact.url)}
 		drwxr-xr-x 2 user group 4.0K Aug 02 12:00 <a
 			href={contact.url}
 			target={contact.url.includes('http') ? '_blank' : '_self'}

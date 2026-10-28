@@ -12,7 +12,7 @@
 
 <Row>
 	Available commands:
-	{#each availableCommands as command}
+	{#each availableCommands as command (command)}
 		{command}<br />
 	{/each}
 </Row>

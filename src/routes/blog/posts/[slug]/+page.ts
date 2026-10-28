@@ -13,7 +13,7 @@ export async function load({ params, data }) {
 			meta: { ...post.metadata, readingTime: data.readingTime },
 			related: data.related
 		};
-	} catch (e) {
+	} catch {
 		error(404, `Could not find ${params.slug}`);
 	}
 }
