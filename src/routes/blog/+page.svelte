@@ -30,7 +30,7 @@
 {#if data.posts.length > 0}
 	<Row><Prompt path="/Blog" /> ls -1</Row>
 	<Row>total {data.posts.length}</Row>
-	{#each data.posts as post}
+	{#each data.posts as post (post.slug)}
 		<Row>
 			<a
 				href={`/blog/posts/${post.slug}`}

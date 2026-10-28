@@ -481,7 +481,7 @@
 <Row>
 	<Prompt path="/TypeTest" />
 	<span class="text-blue-500 dark:text-blue-300">--duration</span>
-	{#each [15, 30, 60] as d}
+	{#each [15, 30, 60] as d (d)}
 		<button
 			onclick={() => setDuration(d)}
 			disabled={testState === 'running'}
@@ -525,7 +525,7 @@
 			class="relative max-h-[5.4em] w-full cursor-text overflow-hidden leading-[1.8]"
 		>
 			<div class="flex flex-wrap gap-x-2 gap-y-0.5 text-lg">
-				{#each words as word, wordIndex}
+				{#each words as word, wordIndex (wordIndex)}
 					{#if wordIndex < currentWordIndex + 80}
 						<span
 							class="relative tracking-wide transition-opacity duration-100"
@@ -533,7 +533,7 @@
 						>
 							{#if wordIndex === currentWordIndex}
 								<!-- Active word: per-char coloring with inline cursor -->
-								{#each word.split('') as char, charIndex}
+								{#each word.split('') as char, charIndex (charIndex)}
 									<span
 										class="{charStatuses[charIndex] === 'correct'
 											? 'text-green-600 dark:text-green-400'
@@ -545,7 +545,9 @@
 								{/each}
 								<!-- Extra typed chars beyond word -->
 								{#if currentInput.length > word.length}
-									{#each currentInput.slice(word.length).split('') as extraChar}
+									{#each currentInput
+										.slice(word.length)
+										.split('') as extraChar, extraIndex (extraIndex)}
 										<span class="text-red-500/70 dark:text-red-400/70">{extraChar}</span>
 									{/each}
 								{/if}

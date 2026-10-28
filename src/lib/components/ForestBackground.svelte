@@ -185,7 +185,7 @@
 
 		<!-- Stars (dark mode only) -->
 		{#if dark}
-			{#each stars as star}
+			{#each stars as star, i (i)}
 				<circle cx={star.x} cy={star.y} r={star.r} fill="white" opacity={star.opacity * 0.6} />
 			{/each}
 		{/if}
@@ -200,7 +200,7 @@
 			</linearGradient>
 		</defs>
 
-		{#each layers as layer, i}
+		{#each layers as layer, i (i)}
 			<!-- Intermediate Mist for each layer -->
 			<rect
 				width="1600"
@@ -218,7 +218,7 @@
 
 			<!-- Tree Groups -->
 			<g fill={layer.color} opacity={layer.opacity} style="filter: {layer.blur}">
-				{#each Array(layer.count) as _, j}
+				{#each Array(layer.count) as _, j (j)}
 					{@const seed = i * 100 + j}
 					{@const xPos = j * layer.spacing + seedRandom(seed) * 50 - 100}
 					{@const yOffset = seedRandom(seed + 1) * 30}

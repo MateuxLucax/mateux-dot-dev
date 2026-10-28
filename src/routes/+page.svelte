@@ -44,7 +44,7 @@
 	great user experiences as if I were the target user who really enjoys a beautifully crafted experience.
 </Row>
 <Row><Prompt /> cd <span class="text-yellow-500 dark:text-yellow-300"> ~/Contacts</span></Row>
-{#each contacts as contact}
+{#each contacts as contact (contact.url)}
 	<Row>
 		<Prompt path="/Contacts" />
 		curl <span class="text-teal-600 dark:text-teal-300">-I -X</span>
@@ -69,7 +69,7 @@
 <Row><Prompt path="/Blog" /> ls -1</Row>
 {#if data.latestPosts.length > 0}
 	<Row>total {data.latestPosts.length}</Row>
-	{#each data.latestPosts as post}
+	{#each data.latestPosts as post (post.slug)}
 		<Row>
 			<a
 				href={`/blog/posts/${post.slug}`}

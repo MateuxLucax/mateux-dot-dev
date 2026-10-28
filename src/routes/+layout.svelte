@@ -11,7 +11,7 @@
 	let terminalSection: HTMLElement | null = null;
 
 	onMount(() => {
-		window.addEventListener('on-new-commmand', async (_) => {
+		window.addEventListener('on-new-commmand', async () => {
 			await tick();
 
 			if (!terminalSection) return;
