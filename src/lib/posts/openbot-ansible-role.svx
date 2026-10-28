@@ -1,55 +1,80 @@
 ---
-title: "One role, one user, one memory cap: how I run OpenBot on my homeserver"
+title: "How to safely deploy OpenBot"
 slug: "openbot-ansible-role"
 date: "2026-10-28"
 tags: [ansible, systemd, homelab, self-hosting, linux, security]
-description: "How I deploy OpenBot on my homeserver with a single idempotent Ansible role, a dedicated user outside the docker group, and a systemd drop-in that caps memory."
+description: "Deploying OpenBot safely on a homeserver: an idempotent Ansible role, a dedicated user outside the docker group, and a systemd drop-in that caps memory."
 ---
 
-On a homeserver, the hard part is not the first install. It is the second one, six months later, when you no longer remember what you typed.
+<script>
+  import Mermaid from '$lib/components/Mermaid.svelte';
+</script>
 
-I run OpenBot on my own server, and I deploy it with one Ansible role that lives in my homelab repository. The role makes three decisions, and none of them is specific to OpenBot. That is why I think they are worth copying for the next thing you self-host.
+I deploy OpenBot on my homeserver with a single Ansible role. The role creates a dedicated system user, installs a systemd drop-in that caps memory, and makes the install safe to re-run.
 
-## The role: idempotency is the feature
+## The role
 
-An Ansible role is a directory contract. You only create the directories you use, and `main.yml` in each one is picked up automatically. For a single-service role, that is usually this:
+An Ansible role is a fixed directory layout, and only the directories you use need to exist. For one service I keep four:
 
 ```text
-roles/example/
+roles/openbot/
 ├── defaults/main.yml     # tunables: user, paths, memory limit
 ├── tasks/main.yml        # user, files, drop-in, service
 ├── handlers/main.yml     # daemon-reload + restart
 └── meta/main.yml         # optional metadata
 ```
 
-[Ansible's glossary](https://docs.ansible.com/ansible/latest/reference_appendices/glossary.html#term-Idempotency) defines idempotency like this: an operation is idempotent if the result of performing it once is exactly the same as the result of performing it repeatedly. For a service, that means a second run creates no duplicate user, no duplicate unit and no duplicate config.
+The reason to put the deploy in a role is idempotency. [Ansible's glossary](https://docs.ansible.com/ansible/latest/reference_appendices/glossary.html#term-Idempotency) defines an operation as idempotent when running it once gives the same result as running it repeatedly. A second run creates no duplicate user, no duplicate unit, no duplicate config.
 
-It also means no pointless restarts, and this is where people overreach. The role does not avoid restarts by being clever. It avoids them because restarts live in **handlers**. A [handler](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html) only runs when a task that notifies it reports `changed`, and if several tasks notify the same handler, it still runs once. A run that changes nothing restarts nothing.
+Restarts are where idempotency usually breaks. The role avoids unconditional restarts by doing them only through [handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html). A handler runs when a task that notifies it reports `changed`, and if several tasks notify the same handler it still runs once. A run that changes nothing restarts nothing.
 
-My acceptance test is a dry run followed by running the role twice:
+This is the provisioning flow on a first run, and what the second run does:
+
+<Mermaid diagram={`
+    sequenceDiagram
+        participant OP as Operator
+        participant PL as Ansible play
+        participant US as user task
+        participant CP as copy task
+        participant HD as Handler
+        participant SD as systemd
+        OP->>PL: ansible-playbook site.yml
+        PL->>US: create service user
+        US-->>PL: ok / changed
+        PL->>CP: write drop-in
+        CP-->>PL: ok / changed
+        CP-->>HD: notify
+        PL->>HD: run notified handler
+        HD->>SD: systemctl daemon-reload
+        HD->>SD: restart openbot.service
+        Note over PL,SD: second run
+        PL->>US: user unchanged
+        PL->>CP: drop-in unchanged
+        Note over PL,HD: nothing notified, no restart
+    `} />
+
+I check it by running the role twice:
 
 ```bash
 ansible-playbook site.yml --check --diff   # what would change
-ansible-playbook site.yml                  # first run: applies the changes
+ansible-playbook site.yml                  # first run: applies changes
 ansible-playbook site.yml                  # second run: expect changed=0
 ```
 
-If the second run reports changes, something in the role is not declarative yet.
+If the second run reports changes, the role is not declarative yet.
 
-## A dedicated user, and not in the `docker` group
+## A dedicated user, outside `docker`
 
-OpenBot gets its own system account. The important part is what that account does **not** have: membership in the `docker` group.
+OpenBot runs under its own system account. The important part is what that account does not have: membership in the `docker` group.
 
-This is not a convenience flag. Docker's own docs ([post-install](https://docs.docker.com/engine/install/linux-postinstall/) and [security](https://docs.docker.com/engine/security/)) are blunt about it: the daemon always runs as root, only trusted users should control it, and the `docker` group grants root-level privileges. Anyone who can talk to the daemon can start a container with the host's `/` mounted into it, so access to the daemon is effectively access to the host.
+Docker's docs ([post-install](https://docs.docker.com/engine/install/linux-postinstall/) and [security](https://docs.docker.com/engine/security/)) are explicit: the daemon always runs as root, only trusted users should control it, and the `docker` group grants root-level privileges. Anyone who can talk to the daemon can start a container with the host's `/` mounted into it, so daemon access is host access.
 
-A service that never needs the Docker API should not hold that. So the service account is not in `docker`. If a container runtime is involved anywhere in the setup, the play drives it, not this account.
-
-Here is the task, written generically:
+A service that never talks to the Docker API should not hold that. The service account is not in `docker`. If a container runtime is involved, the play drives it, not this account.
 
 ```yaml
 - name: Create the service account (no supplementary groups)
   ansible.builtin.user:
-    name: example
+    name: openbot
     system: true
     create_home: true
     shell: /usr/sbin/nologin
@@ -57,57 +82,61 @@ Here is the task, written generically:
     state: present
 ```
 
-Two details in the [`user` module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html) matter here:
+Two details in the [`user` module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html) matter:
 
-- I set `groups: ""`. Leaving the key out would not mean "no extra groups"; it would mean Ansible does not manage groups at all, and an account someone had already added to `docker` would stay there. Once you list `groups`, Ansible manages membership and by default removes the user from every supplementary group you did not list (the primary group is not affected). The empty string removes all of them, so the account converges to "no extra groups" even if someone added it to `docker` by hand.
-- `system: true` cannot be changed on an existing user. Creating the account correctly the first time is part of idempotency.
+- I set `groups: ""`. Omitting the key does not mean "no extra groups": it means Ansible does not manage groups at all, and an account someone added to `docker` stays there. Listing `groups` makes Ansible manage membership and, by default, remove the user from every supplementary group you did not list (the primary group is not affected). The empty string removes all of them, so the account converges to "no extra groups" even if someone added it to `docker` by hand.
+- `system: true` cannot be changed on an existing user, so the account has to be created correctly the first time.
 
-The trade-off: file ownership and permissions have to be right from the start, and anything the service needs from a privileged subsystem has to be arranged outside that account. I consider that a feature, not a cost.
+## A memory cap, as a systemd drop-in
 
-## The memory cap, as a systemd drop-in
+A runaway process should not take the whole homeserver down. I cap memory at the systemd layer, next to the unit that starts the service.
 
-I do not want a misbehaving service to take the whole homeserver down with it, so the role caps its memory at the systemd layer, next to the thing that already starts it.
+[`MemoryMax=`](https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html) sets an absolute limit on the unit (available since systemd 231). If the processes cannot stay under it, the OOM killer is invoked inside that unit. It is the last line of defense, not the main control: `MemoryHigh=` throttles and reclaims memory instead of killing. I keep `MemoryMax=` as the hard backstop, and reach for `MemoryHigh=` only when throttling is enough.
 
-[`MemoryMax=`](https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html) sets an absolute limit on a unit (available since systemd 231). If the unit's processes cannot stay under it, the OOM killer is invoked inside that unit. So it does not prevent the OOM killer: it is what triggers it, but only for that unit, which is exactly the blast radius I want. systemd's docs call it the last line of defense; the softer main control is `MemoryHigh=`, which throttles and reclaims instead of killing. Pick that one if you want slowdown rather than a kill.
-
-The limit goes in a drop-in instead of an edit to the unit file:
+The limit lives in a drop-in, not in an edit to the unit file:
 
 ```plaintext
-# /etc/systemd/system/example.service.d/10-memory.conf
+# /etc/systemd/system/openbot.service.d/10-memory.conf
 [Service]
 MemoryMax=1G
 ```
 
-`1G` is a placeholder here, not my real value. Size it for your own machine; the directive accepts `K`, `M`, `G` and `T` suffixes, or a percentage of installed RAM.
+`1G` is a placeholder, not my real value. The directive accepts `K`, `M`, `G`, `T` suffixes or a percentage of installed RAM.
 
-Why a drop-in? Files in `<unit>.d/*.conf` are [merged](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html) in alphanumeric order and parsed after the main unit file, and drop-ins in `/etc` take precedence over those in `/run` and `/usr/lib`. systemd's docs spell out the benefit: when you override only the settings you care about, vendor updates to the rest of the unit still apply. If you replace the whole unit, you stop receiving those improvements. In practice, an upgrade that ships a new unit does not silently drop my limit, and the limit lives in the role instead of in a file I edited by hand once.
+Drop-in files are merged after the main unit file, in alphanumeric order, and `/etc` takes precedence over `/run` and `/usr/lib` ([systemd.unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html)). Overriding only the setting I care about means vendor updates to the rest of the unit still apply; a full replacement unit stops receiving them. An upgrade that ships a new unit does not silently drop my limit, and the limit stays in the role.
 
-After writing the drop-in, systemd has to re-read its configuration with `systemctl daemon-reload`. That is a job for the handler, so it only happens when the drop-in actually changed:
+<Mermaid diagram={`
+    flowchart TD
+        V["vendor unit<br/>/usr/lib/systemd/system/openbot.service"] -->|parsed first| M["openbot.service (merged)"]
+        D["drop-in<br/>/etc/systemd/system/openbot.service.d/10-memory.conf"] -->|parsed after, wins| M["openbot.service (merged)"]
+    `} />
+
+After writing the drop-in, systemd must re-read its configuration. The reload and restart go through a handler, so they only happen when the file changed:
 
 ```yaml
 # tasks/main.yml
 - name: Install the memory-cap drop-in
   ansible.builtin.copy:
-    dest: /etc/systemd/system/example.service.d/10-memory.conf
+    dest: /etc/systemd/system/openbot.service.d/10-memory.conf
     mode: "0644"
     content: |
       [Service]
       MemoryMax=1G
-  notify: Reload systemd and restart example
+  notify: Reload systemd and restart openbot
 
 # handlers/main.yml
-- name: Reload systemd and restart example
+- name: Reload systemd and restart openbot
   ansible.builtin.systemd_service:
-    name: example
+    name: openbot
     state: restarted
     daemon_reload: true
 ```
 
-Once it is applied, `systemctl show example -p MemoryMax` is a quick way to check the limit systemd actually applied.
+`systemctl show openbot -p MemoryMax` is a quick way to check the limit systemd actually applied.
 
 ## A checklist for the next service
 
-None of this is OpenBot-specific. When I turn any self-hosted app into a managed service, I go through this list:
+None of this is OpenBot-specific. For any self-hosted app I manage this way:
 
 - One role per service, with `defaults/` holding every tunable.
 - One dedicated system user, no supplementary groups, no login shell.
@@ -116,5 +145,3 @@ None of this is OpenBot-specific. When I turn any self-hosted app into a managed
 - Limits and overrides as drop-ins under `/etc/systemd/system/<unit>.d/`.
 - Handlers for `daemon-reload` and restart, so a no-op run stays a no-op.
 - A second run of the role as the acceptance test: it should change nothing.
-
-That is the whole pattern. It is not exciting, and that is the point: a service I can rebuild by re-running one role, under an account that cannot own the host, with a memory ceiling that survives upgrades.
