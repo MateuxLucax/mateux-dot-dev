@@ -1,0 +1,88 @@
+---
+title: "Decoding a coffee scale's BLE protocol without an SDK"
+slug: "timemore-dot-ble"
+date: "2026-10-31"
+tags: [android, bluetooth, ble, reverse-engineering, kotlin]
+description: "Reverse-engineering the Timemore Dot coffee scale's BLE protocol from captures: GATT from zero, an A5 5A frame with a CRC you only half-trust, and recorded sessions replayed by a test."
+---
+
+<script>
+  import Mermaid from '$lib/components/Mermaid.svelte';
+</script>
+
+I have a coffee scale with no screen. The Timemore Dot — model TES017, advertised as `TIMEMORE_Dot` — is a slab with one power button hidden under the platform and a single LED. There is no display, no vendor SDK, and no public protocol document. If I want the weight, I have to read the bytes.
+
+## BLE in a page
+
+A BLE device is a GATT server: it exposes a table of services, each holding characteristics, each optionally with descriptors. The phone is the client. `connectGatt()` returns a `BluetoothGatt`, `discoverServices()` reveals the table, and then you read characteristics, write them, or subscribe to notifications.
+
+Notifications are opt-in twice. You call `setCharacteristicNotification()` locally, and you write the Client Characteristic Configuration descriptor (`0x2902`) so the peripheral knows to push. Data then arrives in `onCharacteristicChanged()`.
+
+Two concepts trip people up. Bonding is `createBond()` — an OS-level pairing that persists a key and gives the link encryption, separate from GATT. MTU is the packet size: the ATT default is 23 bytes, so 20 bytes of payload, and you call `requestMtu()` if you expect more. All of it is in the [Android BLE guide](https://developer.android.com/develop/connectivity/bluetooth/ble/connect-gatt-server).
+
+This scale exposes service `fff0` with two characteristics: `fff1` notifies (scale → app) and `fff2` writes without response (app → scale).
+
+## The handshake that worked
+
+The order matters. What finally worked was:
+
+<Mermaid diagram={`
+sequenceDiagram
+    participant App
+    participant Scale
+    App->>Scale: connectGatt, retry up to 3x at 500 ms
+    App->>Scale: requestMtu(247)
+    App->>Scale: createBond
+    App->>Scale: discoverServices
+    App->>Scale: subscribe fff1 notifications
+    Note over App: 500 ms
+    App->>Scale: unit grams
+    Note over App: 200 ms
+    App->>Scale: standard mode, battery query
+    Scale-->>App: weight notifications
+`} />
+
+Two traps matter most. The scale only streams on an encrypted link, so skipping bonding gets you silence — and bonding is one-slot, because the scale remembers a single bonded device and drops any other with HCI `0x3E`, so re-pairing means holding the button until the LED blinks fast. The first connect after a long idle often fails with status 133, so I retry instead of declaring the device broken. I request MTU 247 because real notifications carry several frames: the largest capture was 36 bytes, and 15 of 3,419 idle notifications exceed the 20-byte default, so they would have been split.
+
+## Framing: `A5 5A` and a CRC you only half-trust
+
+Each frame is:
+
+```plaintext
+A5 5A <type> <cmd> <len_hi> <len_lo> <payload…> <crc_hi> <crc_lo>
+```
+
+`type` is `01` for notification, `02` for read, `03` for write/ack. The length field is two bytes, big-endian.
+
+The CRC is the subtle part. Outgoing frames carry CRC-16/MODBUS — init `0xFFFF`, reflected polynomial `0xA001` — over every byte before it, big-endian. That big-endian order is already a deviation from MODBUS convention, which sends the CRC low byte first, and you only learn it by computing the value and comparing. The "set unit to grams" frame `A5 5A 03 06 00 01 00` checksums to `E8 A7`, and the app sends `A5 5A 03 06 00 01 00 E8 A7`.
+
+Incoming frames are different. Every one of the 3,931 received frames in my two real captures ends in `00 00` — the scale never fills in the checksum. A valid incoming weight body would checksum to `0x82E6` and still arrives as `00 00`. If you validate the received CRC, you drop every valid reading. The rule: validate what you send, never what you receive.
+
+The layout itself came from community notes, then I confirmed each field against the device. Hypothesize, then verify — that is the whole method.
+
+## One notification is not one frame
+
+A notification can hold several frames — I saw an ack, a battery read, and a weight update packed into one 36-byte notification — and a frame can be split across two notifications. So the decoder's real job is resynchronization, not parsing.
+
+Append to a buffer, scan for `A5 5A`, read the declared length, drop absurd lengths (above 64) as out of sync, wait until the whole frame is buffered, emit it, repeat. Keep a trailing `A5`, because its `5A` may arrive in the next chunk. I cap the buffer at 512 bytes so a garbage stream cannot grow forever, and reset it on reconnect.
+
+## The payload
+
+The `01 01` frame is the weight update, measured at 10.01 Hz on my unit, 9 bytes:
+
+```kotlin
+weightGrams = int32(p, 0) / 10.0         // int32 big-endian, ÷10 g
+flowGramsPerSecond = int16(p, 4) / 10.0  // int16 big-endian, ÷10 g/s
+timerSeconds = uint16(p, 6)              // uint16 seconds
+overload = p.size > 8 && p[8] != 0       // overload flag in byte 8
+```
+
+A real frame `00 00 04 DA 02 24 00 00 00` decodes to 124.2 g at 54.8 g/s with the timer at 0.
+
+Battery is read with `02 05`, answered as two bytes `[bars, percent]` — `03 64` is 3 bars, 100 %. The scale also pushes the same payload on its own, but not on a reliable schedule, so the app polls every 60 seconds and takes the push whenever it arrives. Commands are writes: `03 0D` tare, `03 02 [01|02|03]` timer start/pause/reset, `03 06 [00]` set grams, `03 08 [01 00]` standard mode, `02 13` read model. Each is acknowledged with `03 <cmd> 00 01 01`.
+
+## Trusting the numbers
+
+Decoding is the easy half. The raw flow saturates on a sudden load — 99.9 g/s measured — so I clamp it to 0–25 g/s and smooth it. That clamp is a decision in the app, not a limit of the scale; the scale itself reports higher. There is no stability flag at all: stability has to be computed in the app, which is where "just read the weight" turns into a data problem. The overload flag turned on around 1300 g on this unit, and an idle session stayed connected for 5 min 42 s with no keep-alive — both measured on one device, not a datasheet.
+
+For me, reverse engineering is not done when the byte table is written down. It is done when `RecordedSessionTest` replays the recorded sessions through the decoder and passes. I keep the notifications as JSONL and feed them back through the decoder, asserting no unknown frames, the overload event, the unit and mode acknowledgements, and about 3,400 weight readings in the idle capture. What the app does with those readings after that is another post.
