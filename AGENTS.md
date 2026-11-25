@@ -24,7 +24,7 @@ A personal terminal-themed website and blog built with **SvelteKit**, **Tailwind
 | Framework           | SvelteKit 3.x with Svelte 5 (runes)               |
 | Language            | TypeScript                                        |
 | Styling             | Tailwind CSS 4.x + `@tailwindcss/typography`      |
-| Runtime             | Bun                                               |
+| Runtime             | Bun 1.4.5 or later                                |
 | Markdown            | MDsveX (`*.svx` files)                            |
 | Diagrams            | Pele                                              |
 | Syntax Highlighting | Shiki (catppuccin-mocha / catppuccin-latte)       |
