@@ -115,4 +115,39 @@
 			--tw-prose-bold: var(--color-gray-100);
 		}
 	}
+
+	/* Pele diagrams (rendered to SVG at build time) use Catppuccin to match the Shiki themes. */
+	:global(.pele-diagram) {
+		margin-block: 1.5em;
+	}
+
+	:global(.pele-diagram .pele) {
+		--pele-bg: #eff1f5;
+		--pele-fg: #4c4f69;
+		--pele-fg-on-light: #4c4f69;
+		--pele-fg-on-dark: #eff1f5;
+		--pele-muted: #6c6f85;
+		--pele-line: #4c4f69;
+		--pele-surface: #e6e9ef;
+		--pele-surface-alt: #dce0e8;
+		--pele-border: #9ca0b0;
+		--pele-accent: #1e66f5;
+		--pele-critical: #d20f39;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:global(.pele-diagram .pele) {
+			--pele-bg: #1e1e2e;
+			--pele-fg: #cdd6f4;
+			--pele-fg-on-light: #1e1e2e;
+			--pele-fg-on-dark: #cdd6f4;
+			--pele-muted: #a6adc8;
+			--pele-line: #cdd6f4;
+			--pele-surface: #313244;
+			--pele-surface-alt: #181825;
+			--pele-border: #6c7086;
+			--pele-accent: #89b4fa;
+			--pele-critical: #f38ba8;
+		}
+	}
 </style>

@@ -6,10 +6,6 @@ tags: [rust, prometheus, tapo, iot, monitoring, smart-home]
 description: "A deep dive into building a lightweight Prometheus exporter for TP-Link Tapo P110 smart plugs using Rust."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-</script>
-
 I recently started building my smart home setup, and one of the first things I wanted to track was energy consumption. I picked up a few **TP-Link Tapo P110** smart plugs because they are affordable and have energy monitoring capabilities.
 
 However, I quickly realized that getting that data out of the Tapo app and into my own dashboard (Grafana) wasn't straightforward.
@@ -24,17 +20,15 @@ I looked around for existing solutions, but many were Python scripts that requir
 
 I decided to build my own exporter. I wanted something **fast**, **lightweight**, and **reliable**.
 
-<Mermaid
-  diagram={`
-    graph LR;
-        A[Prometheus] -- Scrape /metrics --> B[Exporter];
-        B -- Get Status --> C[Tapo Plug 1];
-        B -- Get Status --> D[Tapo Plug 2];
-        C -- Return Data --> B;
-        D -- Return Data --> B;
-        B -- Metrics Format --> A;
-  `}
-/>
+```mermaid
+graph LR;
+    A[Prometheus] -- Scrape /metrics --> B[Exporter];
+    B -- Get Status --> C[Tapo Plug 1];
+    B -- Get Status --> D[Tapo Plug 2];
+    C -- Return Data --> B;
+    D -- Return Data --> B;
+    B -- Metrics Format --> A;
+```
 
 I utilized the fantastic [tapo-rest](https://github.com/ClementNerma/tapo-rest) library (though an unofficial API) which made communicating with the plugs a breeze. 
 

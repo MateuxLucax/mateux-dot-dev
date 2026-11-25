@@ -6,10 +6,6 @@ tags: [ansible, systemd, homelab, self-hosting, linux, security]
 description: "Deploying OpenBot safely on a homeserver: an idempotent Ansible role, a dedicated user outside the docker group, and a systemd drop-in that caps memory."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-</script>
-
 I deploy OpenBot on my homeserver with a single Ansible role. The role creates a dedicated system user, installs a systemd drop-in that caps memory, and makes the install safe to re-run.
 
 ## The role
@@ -30,28 +26,28 @@ Restarts are where idempotency usually breaks. The role avoids unconditional res
 
 This is the provisioning flow on a first run, and what the second run does:
 
-<Mermaid diagram={`
-    sequenceDiagram
-        participant OP as Operator
-        participant PL as Ansible play
-        participant US as user task
-        participant CP as copy task
-        participant HD as Handler
-        participant SD as systemd
-        OP->>PL: ansible-playbook site.yml
-        PL->>US: create service user
-        US-->>PL: ok / changed
-        PL->>CP: write drop-in
-        CP-->>PL: ok / changed
-        CP-->>HD: notify
-        PL->>HD: run notified handler
-        HD->>SD: systemctl daemon-reload
-        HD->>SD: restart openbot.service
-        Note over PL,SD: second run
-        PL->>US: user unchanged
-        PL->>CP: drop-in unchanged
-        Note over PL,HD: nothing notified, no restart
-    `} />
+```mermaid
+sequenceDiagram
+    participant OP as Operator
+    participant PL as Ansible play
+    participant US as user task
+    participant CP as copy task
+    participant HD as Handler
+    participant SD as systemd
+    OP->>PL: ansible-playbook site.yml
+    PL->>US: create service user
+    US-->>PL: ok / changed
+    PL->>CP: write drop-in
+    CP-->>PL: ok / changed
+    CP-->>HD: notify
+    PL->>HD: run notified handler
+    HD->>SD: systemctl daemon-reload
+    HD->>SD: restart openbot.service
+    Note over PL,SD: second run
+    PL->>US: user unchanged
+    PL->>CP: drop-in unchanged
+    Note over PL,HD: nothing notified, no restart
+```
 
 I check it by running the role twice:
 
@@ -105,11 +101,11 @@ MemoryMax=1G
 
 Drop-in files are merged after the main unit file, in alphanumeric order, and `/etc` takes precedence over `/run` and `/usr/lib` ([systemd.unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html)). Overriding only the setting I care about means vendor updates to the rest of the unit still apply; a full replacement unit stops receiving them. An upgrade that ships a new unit does not silently drop my limit, and the limit stays in the role.
 
-<Mermaid diagram={`
-    flowchart TD
-        V["vendor unit<br/>/usr/lib/systemd/system/openbot.service"] -->|parsed first| M["openbot.service (merged)"]
-        D["drop-in<br/>/etc/systemd/system/openbot.service.d/10-memory.conf"] -->|parsed after, wins| M["openbot.service (merged)"]
-    `} />
+```mermaid
+flowchart TD
+    V["vendor unit<br/>/usr/lib/systemd/system/openbot.service"] -->|parsed first| M["openbot.service (merged)"]
+    D["drop-in<br/>/etc/systemd/system/openbot.service.d/10-memory.conf"] -->|parsed after, wins| M["openbot.service (merged)"]
+```
 
 After writing the drop-in, systemd must re-read its configuration. The reload and restart go through a handler, so they only happen when the file changed:
 

@@ -6,7 +6,7 @@ Agent-facing instructions for working on this SvelteKit static blog.
 
 ## Project Overview
 
-A personal terminal-themed website and blog built with **SvelteKit**, **Tailwind CSS**, and **Bun**. The entire site is statically generated (fully prerendered) and deployed to **Cloudflare Pages** via `adapter-cloudflare`. The blog uses **MDsveX** to render `.svx` Markdown files with embedded Svelte components (notably Mermaid diagrams).
+A personal terminal-themed website and blog built with **SvelteKit**, **Tailwind CSS**, and **Bun**. The entire site is statically generated (fully prerendered) and deployed to **Cloudflare Pages** via `adapter-cloudflare`. The blog uses **MDsveX** to render `.svx` Markdown files with embedded Svelte components and static Pele diagrams.
 
 ### Key URLs
 
@@ -26,7 +26,7 @@ A personal terminal-themed website and blog built with **SvelteKit**, **Tailwind
 | Styling             | Tailwind CSS 4.x + `@tailwindcss/typography`      |
 | Runtime             | Bun                                               |
 | Markdown            | MDsveX (`*.svx` files)                            |
-| Diagrams            | Mermaid.js                                        |
+| Diagrams            | Pele                                              |
 | Syntax Highlighting | Shiki (catppuccin-mocha / catppuccin-latte)       |
 | Adapter             | `@sveltejs/adapter-cloudflare` (Cloudflare Pages) |
 
@@ -41,7 +41,6 @@ src/
 ├── app.d.ts                    # App-level types
 ├── lib/
 │   ├── components/             # Reusable Svelte components
-│   │   ├── Mermaid.svelte      # Mermaid diagram renderer
 │   │   ├── Prompt.svelte       # Terminal prompt (mateux@tars)
 │   │   ├── Row.svelte          # Terminal row wrapper
 │   │   ├── TerminalHeader.svelte
@@ -150,21 +149,13 @@ description: 'One to two sentences summarizing the post.'
 
 ### Embedded Components
 
-Posts can embed Svelte components directly:
-
-```svelte
-<script>
-	import Mermaid from '$lib/components/Mermaid.svelte';
-</script>
-```
-
-Use `<Mermaid diagram={\`...\`} />` for diagrams.
+Posts can embed Svelte components directly. For diagrams, use a fenced `mermaid` block: Pele renders Mermaid syntax into static SVG at build time, and CSS variables provide light and dark themes.
 
 ### Code Blocks
 
 - Use fenced code blocks with language tags.
 - Ensure the language exists in `svelte.config.js` `langs` array.
-- Supported: `javascript`, `typescript`, `java`, `python`, `bash`, `html`, `css`, `json`, `php`, `sql`, `yaml`, `markdown`, `svelte`, `kotlin`, `go`, `mermaid`, `dart`, `tsx`, `vue`, `dockerfile`.
+- Supported: `javascript`, `typescript`, `java`, `python`, `bash`, `html`, `css`, `json`, `php`, `sql`, `yaml`, `markdown`, `svelte`, `kotlin`, `go`, `dart`, `tsx`, `vue`, `dockerfile`.
 - If you need a new language, add it to `svelte.config.js` and rebuild.
 
 ---
@@ -261,8 +252,8 @@ bun run test:e2e:ui       # Debug with Playwright UI
 
 - Tests are **parameterized over all `src/lib/posts/*.svx` files** via `tests/utils/posts.ts`.
 - Post metadata is parsed at test-time with a zero-dependency frontmatter parser.
-- Every post test covers: title, meta tags, canonical, OG, Twitter, JSON-LD, h1, date, reading time, tags, prose content, back-link, Mermaid SVGs (if present), Shiki theme blocks, copy buttons, and accessibility.
-- **Mermaid SVG assertions** use a 30-second timeout: `expect(...).toBeVisible({ timeout: 30000 })`.
+- Every post test covers: title, meta tags, canonical, OG, Twitter, JSON-LD, h1, date, reading time, tags, prose content, back-link, Pele SVGs (if present), Shiki theme blocks, copy buttons, and accessibility.
+- Pele diagrams are prerendered and tested in both color schemes.
 
 ### Accessibility
 

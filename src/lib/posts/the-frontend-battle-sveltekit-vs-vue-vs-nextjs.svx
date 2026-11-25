@@ -6,10 +6,6 @@ tags: [sveltekit, vue, nextjs, react, dx, frontend, opinion]
 description: "An honest comparison of SvelteKit, Vue/Nuxt, and Next.js from someone who loves frontend tinkering but spends most of the workday on backend systems."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-</script>
-
 *Framework versions and ecosystem observations current as of April 2026.*
 
 I've loved frontend development since I started programming. Building interfaces, experimenting with frameworks, watching things render on screen. That part has always been fun. But professionally, my work has been almost entirely backend: Quarkus with Kotlin, Go microservices, Rust CLI tools, distributed systems glued together by message queues.
@@ -133,17 +129,17 @@ React and Vue rely on a virtual DOM, a runtime abstraction that diffs a virtual 
 
 I love this tradeoff. There's no reconciliation layer to debug, no "why did this component re-render 47 times" investigation. What the compiler produces is close to what you'd write by hand.
 
-<Mermaid diagram={`
-    graph LR
-        subgraph "React / Vue"
-            A1[Component Code] --> B1[Virtual DOM Diff]
-            B1 --> C1[Real DOM Patch]
-        end
-        subgraph SvelteKit
-            A2[Component Code] --> B2["Compiled JS (build time)"]
-            B2 --> C2[Direct DOM Update]
-        end
-`} />
+```mermaid
+graph LR
+    subgraph "React / Vue"
+        A1[Component Code] --> B1[Virtual DOM Diff]
+        B1 --> C1[Real DOM Patch]
+    end
+    subgraph SvelteKit
+        A2[Component Code] --> B2["Compiled JS (build time)"]
+        B2 --> C2[Direct DOM Update]
+    end
+```
 
 ### Reactivity as assignment
 
@@ -189,7 +185,7 @@ There's no guessing game. If it's in `+page.server.ts`, it never touches the bro
 
 ### MDsveX: markdown meets components
 
-This blog runs on [MDsveX](https://mdsvex.com/), which lets me write posts in Markdown files (`.svx`) with full Svelte component support. I can drop a `<Mermaid>` component into a Markdown paragraph and it just works. Try doing that cleanly in Next.js MDX setup without three config files and a custom webpack loader.
+This blog runs on [MDsveX](https://mdsvex.com/), which lets me write posts in Markdown files (`.svx`) with full Svelte component support. I can add a Mermaid diagram in a Markdown code fence and Pele renders it at build time. Try doing that cleanly in Next.js MDX setup without three config files and a custom webpack loader.
 
 ### The trade-off
 

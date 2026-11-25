@@ -6,10 +6,6 @@ tags: [svelte, sveltekit, markdown, mdsvex, mermaid, blog, shiki]
 description: "A guide to building a simple, developer-friendly blog using SvelteKit and Markdown with MDsveX. Covers integrating Markdown files into SvelteKit's static renderer, adding Mermaid diagram support, and enabling syntax highlighting with Shiki."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-</script>
-
 I needed a personal blog that was simple, developer-friendly, and capable of rendering code blocks and diagrams. WordPress and Strapi were too heavy, so I built my own using SvelteKit and Markdown.
 
 ## My requirements
@@ -318,16 +314,14 @@ This will render a Mermaid diagram in your blog post. You can customize the diag
 
 Here is an example of the sample diagram above rendered in the blog post:
 
-<Mermaid
-  diagram={`
-    graph TD;
-        A[Start] --> B{Is it working?};
-        B -- Yes --> C[Great!];
-        B -- No --> D[Fix it];
-        D --> B;
-        C --> E[End];
-  `}
-/>
+```mermaid
+graph TD;
+    A[Start] --> B{Is it working?};
+    B -- Yes --> C[Great!];
+    B -- No --> D[Fix it];
+    D --> B;
+    C --> E[End];
+```
 
 ## Adding syntax highlighting for code blocks
 

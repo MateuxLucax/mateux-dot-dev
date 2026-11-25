@@ -6,10 +6,6 @@ tags: [nodejs, playwright, prometheus, networking, monitoring]
 description: "How I built a custom Prometheus exporter to monitor Unifique ISP performance using Playwright automation."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-</script>
-
 We've all been there: the internet feels slow, but when you call the ISP, they say "everything looks fine on our end."
 
 I wanted to monitor my connection speed consistently over time, not just when I felt a lag. My ISP, Unifique, provides a speed test page, but I wanted those numbers in Prometheus.
@@ -32,17 +28,15 @@ Playwright is fantastic for browser automation. I built a simple Node.js applica
 
 The [unifique-speedtest-exporter](https://github.com/MateuxLucax/unifique-speedtest-exporter) exposes a metrics endpoint. When scraped, it triggers the Playwright flow.
 
-<Mermaid
-  diagram={`
-    graph LR;
-        A[Prometheus] -- Scrape /metrics --> B[Exporter];
-        B -- Trigger Test --> C[Playwright];
-        C -- Open Browser --> D[Speedtest Site];
-        D -- Results --> C;
-        C -- Metrics --> B;
-        B -- Response --> A;
-  `}
-/>
+```mermaid
+graph LR;
+    A[Prometheus] -- Scrape /metrics --> B[Exporter];
+    B -- Trigger Test --> C[Playwright];
+    C -- Open Browser --> D[Speedtest Site];
+    D -- Results --> C;
+    C -- Metrics --> B;
+    B -- Response --> A;
+```
 
 > **Note:** Because speed tests take time (30s+), you'll need to increase the scrape timeout in your Prometheus configuration.
 

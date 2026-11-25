@@ -59,15 +59,24 @@ export async function assertShikiBlocks(page: Page) {
 	await expect(dark.first()).toBeAttached();
 }
 
-export async function waitForMermaidSVGs(page: Page, count = 1) {
-	// Wait for at least one SVG to appear
-	const svgs = page.locator('.mermaid svg');
-	await expect(svgs.first()).toBeVisible({ timeout: 30000 });
+export async function assertPeleDiagrams(page: Page, count: number) {
+	// Diagrams are rendered to SVG at build time, so they must be in the prerendered HTML
+	// (no client-side Mermaid runtime) and visible immediately.
+	const svgs = page.locator('.pele-diagram svg.pele');
+	await expect(svgs).toHaveCount(count);
+	for (const svg of await svgs.all()) {
+		await expect(svg).toBeVisible();
+	}
+	await expect(page.locator('.mermaid')).toHaveCount(0);
+}
 
-	// Verify expected count (Mermaid CSS may contain 'error' class names,
-	// so we only check SVG presence and count)
-	const actualCount = await svgs.count();
-	expect(actualCount).toBeGreaterThanOrEqual(Math.min(count, 1));
+export async function assertPeleTheme(page: Page, scheme: 'light' | 'dark') {
+	const fg = await page
+		.locator('.pele-diagram svg.pele')
+		.first()
+		.evaluate((el) => getComputedStyle(el).getPropertyValue('--pele-fg').trim().toLowerCase());
+	// Catppuccin Latte / Mocha text colors, matching the Shiki themes.
+	expect(fg).toBe(scheme === 'dark' ? '#cdd6f4' : '#4c4f69');
 }
 
 export async function runA11yScan(page: Page) {

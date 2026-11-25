@@ -7,7 +7,7 @@ export type PostMeta = {
 	date: string;
 	tags: string[];
 	description: string;
-	mermaidCount: number;
+	diagramCount: number;
 };
 
 function parseFrontmatter(text: string): Record<string, unknown> {
@@ -56,7 +56,7 @@ export function getAllPosts(): PostMeta[] {
 	for (const file of files) {
 		const content = readFileSync(join(postsDir, file), 'utf-8');
 		const frontmatter = parseFrontmatter(content);
-		const mermaidCount = (content.match(/<Mermaid/g) || []).length;
+		const diagramCount = (content.match(/^```mermaid\s*$/gm) || []).length;
 
 		posts.push({
 			title: String(frontmatter.title || ''),
@@ -64,7 +64,7 @@ export function getAllPosts(): PostMeta[] {
 			date: String(frontmatter.date || ''),
 			tags: Array.isArray(frontmatter.tags) ? frontmatter.tags.map(String) : [],
 			description: String(frontmatter.description || ''),
-			mermaidCount
+			diagramCount
 		});
 	}
 

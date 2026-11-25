@@ -6,10 +6,6 @@ tags: [dart, compiler, interpreter, ast, software-engineering]
 description: "Why reinvent the wheel? A technical deep dive into building an interpreter from scratch in Dart, exploring ASTs, parsers, and language evaluation."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-</script>
-
 Building an interpreter is one of those classic computer science projects that usually gets skipped outside of academic environments. We spend all day using programming languages, but rarely stop to think about how our lines of text are transformed into actual execution.
 
 When the "Compiler Rinha" (a popular Brazilian developer community challenge) popped up, it was the perfect excuse to learn and build an interpreter from scratch. I chose Dart (because, why not?). Here is a technical breakdown of my journey mapping an Abstract Syntax Tree (AST) and executing it dynamically.
@@ -22,14 +18,14 @@ When building an interpreter, the process usually involves two major steps:
 
 In the context of the *Rinha*, the challenge actually skipped the Lexer and AST generation part for us. We received the AST pre-parsed in JSON format, which meant my job was purely to read that JSON, map it to my own terms, and evaluate them recursively.
 
-<Mermaid diagram={`
-    flowchart TD
-        A[JSON AST] --> B(Tree Interpreter)
-        B --> C{Parse Expressions}
-        C --> D[Dart Term Classes]
-        D --> E((Evaluator))
-        E --> F[Execute Logic]
-`} />
+```mermaid
+flowchart TD
+    A[JSON AST] --> B(Tree Interpreter)
+    B --> C{Parse Expressions}
+    C --> D[Dart Term Classes]
+    D --> E((Evaluator))
+    E --> F[Execute Logic]
+```
 
 ## Modeling the Abstract Syntax Tree (AST)
 
