@@ -1,5 +1,5 @@
 import type { Post } from '../../routes/blog/posts/type';
-import { calculateReadingTime, stripFrontmatter } from '$lib/utils';
+import { calculateReadingTime, stripFrontmatter } from '#lib/utils.ts';
 
 export function getSvxPosts(): Post[] {
 	let posts: Post[] = [];

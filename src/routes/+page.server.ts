@@ -1,4 +1,4 @@
-import { getSvxPosts } from '$lib/server/posts';
+import { getSvxPosts } from '#lib/server/posts.ts';
 
 export const prerender = true;
 

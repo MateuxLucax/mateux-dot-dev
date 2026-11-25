@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import Prompt from '$lib/components/Prompt.svelte';
-	import Row from '$lib/components/Row.svelte';
+	import Prompt from '#lib/components/Prompt.svelte';
+	import Row from '#lib/components/Row.svelte';
 	import { goto } from '$app/navigation';
 
 	// --- Word bank ---
