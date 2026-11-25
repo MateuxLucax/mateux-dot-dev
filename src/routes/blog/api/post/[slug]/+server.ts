@@ -1,6 +1,6 @@
 import { error, type RequestHandler } from '@sveltejs/kit';
 import type { EntryGenerator } from './$types';
-import { getSvxPosts } from '$lib/server/posts';
+import { getSvxPosts } from '#lib/server/posts.ts';
 
 export const entries: EntryGenerator = () => {
 	const posts = getSvxPosts();

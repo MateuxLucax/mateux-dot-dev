@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Row from '$lib/components/Row.svelte';
-	import Prompt from '$lib/components/Prompt.svelte';
-	import { formatDate } from '$lib/utils';
+	import Row from '#lib/components/Row.svelte';
+	import Prompt from '#lib/components/Prompt.svelte';
+	import { formatDate } from '#lib/utils.ts';
 
 	let { data } = $props();
 </script>

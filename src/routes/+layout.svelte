@@ -2,9 +2,9 @@
 	import { onMount } from 'svelte';
 	import '../app.css';
 	import { tick } from 'svelte';
-	import ActivityBar from '$lib/components/ActivityBar.svelte';
-	import TerminalHeader from '$lib/components/TerminalHeader.svelte';
-	import ForestBackground from '$lib/components/ForestBackground.svelte';
+	import ActivityBar from '#lib/components/ActivityBar.svelte';
+	import TerminalHeader from '#lib/components/TerminalHeader.svelte';
+	import ForestBackground from '#lib/components/ForestBackground.svelte';
 
 	let { children } = $props();
 

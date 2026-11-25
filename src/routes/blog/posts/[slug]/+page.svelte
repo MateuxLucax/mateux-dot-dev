@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { formatDate } from '$lib/utils';
-	import CodeBlockWrapper from '$lib/components/CodeBlockWrapper.svelte';
+	import { formatDate } from '#lib/utils.ts';
+	import CodeBlockWrapper from '#lib/components/CodeBlockWrapper.svelte';
 
 	let { data } = $props();
 

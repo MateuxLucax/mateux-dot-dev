@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
-import { getSvxPosts } from '$lib/server/posts';
-import { calculateReadingTime, stripFrontmatter } from '$lib/utils';
+import { getSvxPosts } from '#lib/server/posts.ts';
+import { calculateReadingTime, stripFrontmatter } from '#lib/utils.ts';
 import type { EntryGenerator } from './$types';
 
 export const entries: EntryGenerator = () => {

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Commands from '$lib/components/commands/Commands.svelte';
-	import Prompt from '$lib/components/Prompt.svelte';
-	import Row from '$lib/components/Row.svelte';
+	import Commands from '#lib/components/commands/Commands.svelte';
+	import Prompt from '#lib/components/Prompt.svelte';
+	import Row from '#lib/components/Row.svelte';
 
 	let { data } = $props();
 

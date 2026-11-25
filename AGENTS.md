@@ -21,7 +21,7 @@ A personal terminal-themed website and blog built with **SvelteKit**, **Tailwind
 
 | Layer               | Tool                                              |
 | ------------------- | ------------------------------------------------- |
-| Framework           | SvelteKit 2.x with Svelte 5 (runes)               |
+| Framework           | SvelteKit 3.x with Svelte 5 (runes)               |
 | Language            | TypeScript                                        |
 | Styling             | Tailwind CSS 4.x + `@tailwindcss/typography`      |
 | Runtime             | Bun                                               |
@@ -154,9 +154,9 @@ Posts can embed Svelte components directly. For diagrams, use a fenced `mermaid`
 ### Code Blocks
 
 - Use fenced code blocks with language tags.
-- Ensure the language exists in `svelte.config.js` `langs` array.
+- Ensure the language exists in `vite.config.ts` `langs` array.
 - Supported: `javascript`, `typescript`, `java`, `python`, `bash`, `html`, `css`, `json`, `php`, `sql`, `yaml`, `markdown`, `svelte`, `kotlin`, `go`, `dart`, `tsx`, `vue`, `dockerfile`.
-- If you need a new language, add it to `svelte.config.js` and rebuild.
+- If you need a new language, add it to `vite.config.ts` and rebuild.
 
 ---
 
