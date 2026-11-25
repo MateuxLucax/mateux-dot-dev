@@ -6,44 +6,6 @@ tags: [mermaid, documentation, diagrams, software-engineering, markdown]
 description: "Learn how using Mermaid.js can improve your system design, documentation, and communication skills as a software engineer. Includes examples and best practices. Forget static diagrams that get out of sync — use Mermaid to create living documentation that evolves with your codebase."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-
-  const sequenceDiagram = `
-    ---
-    title: User Interaction Sequence Diagram
-    ---
-    sequenceDiagram
-    participant User
-    participant Frontend
-    participant Backend
-
-    User->>Frontend: Clicks "Submit"
-    Frontend->>Backend: Sends API request
-    Backend-->>Frontend: Returns result
-    Frontend-->>User: Shows success message
-  `;
-
-  const classDiagram = `
-    ---
-    title: Car and ElectricCar Class Diagram
-    ---
-    classDiagram
-      class Car {
-        +String brand
-        +start()
-        +stop()
-      }
-
-      class ElectricCar {
-        +int batteryLevel
-        +charge()
-      }
-
-      ElectricCar --|> Car
-  `;
-</script>
-
 I used to avoid diagrams in documentation—external tools, fiddly UIs, and version control issues made them feel like dead weight. That changed when I discovered **Mermaid**.
 
 Mermaid lets me write diagrams as text, commit them alongside code, and render them instantly. No more excuses.
@@ -86,18 +48,16 @@ flowchart TD
   D --> B
 ```
 
-<Mermaid 
-  diagram={`
-    ---
-    title: Is it working?
-    ---
-    flowchart TD
-      A[Start] --> B{{Is it working?}}
-      B -- Yes --> C[Celebrate!]
-      B -- No --> D[Fix it]
-      D --> B
-  `}
-/>
+```mermaid
+---
+title: Is it working?
+---
+flowchart TD
+  A[Start] --> B{{Is it working?}}
+  B -- Yes --> C[Celebrate!]
+  B -- No --> D[Fix it]
+  D --> B
+```
 
 
 That’s all it takes to get a rendered diagram on supported applications.
@@ -115,17 +75,15 @@ flowchart LR
   CI --> Deploy[Production]
 ```
 
-<Mermaid
-  diagram={`
-    ---
-    title: CI/CD Pipeline Flowchart
-    ---
-    flowchart LR
-      Dev[Developer] --> Repo[Git Repo]
-      Repo --> CI[CI/CD Pipeline]
-      CI --> Deploy[Production]
-  `}
-/>
+```mermaid
+---
+title: CI/CD Pipeline Flowchart
+---
+flowchart LR
+  Dev[Developer] --> Repo[Git Repo]
+  Repo --> CI[CI/CD Pipeline]
+  CI --> Deploy[Production]
+```
 
 
 ### Sequence Diagrams (Interactions over time)
@@ -142,7 +100,20 @@ sequenceDiagram
   Frontend-->>User: Shows success message
 ```
 
-<Mermaid diagram={sequenceDiagram} />
+```mermaid
+---
+title: User Interaction Sequence Diagram
+---
+sequenceDiagram
+participant User
+participant Frontend
+participant Backend
+
+User->>Frontend: Clicks "Submit"
+Frontend->>Backend: Sends API request
+Backend-->>Frontend: Returns result
+Frontend-->>User: Shows success message
+```
 
 ### Class Diagrams (Object models)
 
@@ -161,7 +132,24 @@ classDiagram
 
   ElectricCar --|> Car
 ```
-<Mermaid diagram={classDiagram} />
+```mermaid
+---
+title: Car and ElectricCar Class Diagram
+---
+classDiagram
+  class Car {
+    +String brand
+    +start()
+    +stop()
+  }
+
+  class ElectricCar {
+    +int batteryLevel
+    +charge()
+  }
+
+  ElectricCar --|> Car
+```
 
 ### Gantt Charts (Timeline planning)
 
@@ -175,17 +163,15 @@ classDiagram
     QA         :a3, after a2, 2d
 ```
 
-<Mermaid 
-  diagram={`
-    gantt
-      title Feature Rollout
-      dateFormat  YYYY-MM-DD
-      section Frontend
-      Setup      :a1, 2025-06-01, 3d
-      Build UI   :a2, after a1, 5d
-      QA         :a3, after a2, 2d
-  `}
-/>
+```mermaid
+gantt
+  title Feature Rollout
+  dateFormat  YYYY-MM-DD
+  section Frontend
+  Setup      :a1, 2025-06-01, 3d
+  Build UI   :a2, after a1, 5d
+  QA         :a3, after a2, 2d
+```
 
 ## How Mermaid builds your engineering skills
 

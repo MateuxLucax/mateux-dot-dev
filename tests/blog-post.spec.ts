@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { assertMetaTags, assertShikiBlocks, waitForMermaidSVGs, runA11yScan } from './utils';
+import {
+	assertMetaTags,
+	assertShikiBlocks,
+	assertPeleDiagrams,
+	assertPeleTheme,
+	runA11yScan
+} from './utils';
 import { getAllPosts } from './utils/posts';
 
 const allPosts = getAllPosts();
@@ -58,9 +64,18 @@ test.describe('Blog Posts', () => {
 				expect(data.headline).toBe(post.title);
 			});
 
-			if (post.mermaidCount > 0) {
-				test('Mermaid diagrams render as SVG', async ({ page }) => {
-					await waitForMermaidSVGs(page, post.mermaidCount);
+			if (post.diagramCount > 0) {
+				test('Pele diagrams are prerendered as SVG', async ({ page, request }) => {
+					const response = await request.get(`/blog/posts/${post.slug}`);
+					expect((await response.text()).match(/class="pele /g)).toHaveLength(post.diagramCount);
+					await assertPeleDiagrams(page, post.diagramCount);
+				});
+
+				test('Pele diagrams follow the color scheme', async ({ page }) => {
+					for (const scheme of ['light', 'dark'] as const) {
+						await page.emulateMedia({ colorScheme: scheme });
+						await assertPeleTheme(page, scheme);
+					}
 				});
 			}
 

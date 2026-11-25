@@ -6,10 +6,6 @@ tags: [flutter, dart, accessibility, ast, linter, static-analysis]
 description: "A deep dive into my undergraduate thesis: How to analyze Flutter's AST to catch missing accessibility labels before compilation."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-</script>
-
 The current state of mobile app accessibility is tricky. Very often, teams only think about fixing screen readers and color contrasts at the end of a sprint, or worse, after the app is already published. When developing my undergraduate thesis in Software Engineering at UDESC, my motivation was simple: accessibility shouldn't be an afterthought; it should be caught at compile-time.
 
 To solve this problem, I built a custom linter package for Flutter applications using Dart's static analysis tools. Available as `accessibility_lint` on pub.dev, it scans your codebase in real-time, pointing out missing semantic labels directly inside your IDE.
@@ -20,14 +16,14 @@ Flutter renders its own widgets on a canvas rather than relying on native OEM UI
 
 Every time you use an `Image`, an `IconButton`, or a custom widget, Flutter tries to infer its meaning. But for purely visual elements, you usually need to provide explicit properties (like `semanticLabel`) so screen readers can describe the components to visually impaired users.
 
-<Mermaid diagram={`
-    flowchart TD
-        A["Flutter Widget Tree"] -->|Render| B["Canvas (Pixels)"]
-        A -->|Semantics| C["Semantics Tree"]
-        C --> D{"Accessibility Bridge"}
-        D --> E["iOS VoiceOver"]
-        D --> F["Android TalkBack"]
-`} />
+```mermaid
+flowchart TD
+    A["Flutter Widget Tree"] -->|Render| B["Canvas (Pixels)"]
+    A -->|Semantics| C["Semantics Tree"]
+    C --> D{"Accessibility Bridge"}
+    D --> E["iOS VoiceOver"]
+    D --> F["Android TalkBack"]
+```
 
 ## How Linters Work
 

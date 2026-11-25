@@ -6,31 +6,6 @@ tags: [portuguese, rslp, nlp, full-text-search, text-processing, tokenization, l
 description: "Learn how to implement the RSLP stemming algorithm for Portuguese text processing in TypeScript, enabling better search capabilities and natural language processing."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-
-  const rslpFlow = `
-  flowchart TD
-    Start([Begin]) --> wordEndsInPlural{Word ends in &quot;s&quot;?}
-    wordEndsInPlural -- Yes --> pluralReduction[Plural Reduction]
-    wordEndsInPlural -- No --> wordEndsInFeminine{Word ends in &quot;a&quot;?}
-    pluralReduction --> wordEndsInFeminine
-    wordEndsInFeminine -- Yes --> feminineReduction[Feminine Reduction]
-    wordEndsInFeminine -- No --> augmentativeDiminutive{Word ends in &quot;ão&quot; or &quot;inho&quot;?}
-    feminineReduction --> augmentativeDiminutive
-    augmentativeDiminutive --> adverbReduction[Adverb Reduction]
-    adverbReduction --> nounSuffixReduction[Noun Reduction]
-    nounSuffixReduction --> isSuffixRemoved{Suffix removed}
-    isSuffixRemoved -- Yes --> removeAccents[Remove Accent]
-    isSuffixRemoved -- No --> verbSuffixReduction[Verb Reduction]
-    verbSuffixReduction --> isSuffixRemoved2{Suffix removed}
-    isSuffixRemoved2 -- Yes --> removeAccents
-    isSuffixRemoved2 -- No --> removeVowel[Remove Vowel]
-    removeVowel --> removeAccents
-    removeAccents --> final([End])
-`
-</script>
-
 Portuguese is spoken by nearly 270 million people, yet it presents unique challenges for search engines. To effectively tokenize and search Portuguese text, we need robust stemming tools.
 
 I will implement the RSLP (Removedor de Sufixos da Língua Portuguesa) algorithm in vanilla TypeScript, based on the [seminal 2001 paper by Viviane Moreira and C. Huyck](https://www.researchgate.net/publication/3940125_A_Stemming_Algorithmm_for_the_Portuguese_Language).
@@ -51,7 +26,26 @@ RSLP stands for "Removedor de Sufixos da Língua Portuguesa" or "Portuguese Lang
 
 RSLP operates through a series of defined steps in a flow that systematically reduces words to their stems by removing common suffixes. This can be easily visualized in the flowchart below:
 
-<Mermaid diagram={rslpFlow} />
+```mermaid
+flowchart TD
+  Start([Begin]) --> wordEndsInPlural{Word ends in #quot;s#quot;?}
+  wordEndsInPlural -- Yes --> pluralReduction[Plural Reduction]
+  wordEndsInPlural -- No --> wordEndsInFeminine{Word ends in #quot;a#quot;?}
+  pluralReduction --> wordEndsInFeminine
+  wordEndsInFeminine -- Yes --> feminineReduction[Feminine Reduction]
+  wordEndsInFeminine -- No --> augmentativeDiminutive{Word ends in #quot;ão#quot; or #quot;inho#quot;?}
+  feminineReduction --> augmentativeDiminutive
+  augmentativeDiminutive --> adverbReduction[Adverb Reduction]
+  adverbReduction --> nounSuffixReduction[Noun Reduction]
+  nounSuffixReduction --> isSuffixRemoved{Suffix removed}
+  isSuffixRemoved -- Yes --> removeAccents[Remove Accent]
+  isSuffixRemoved -- No --> verbSuffixReduction[Verb Reduction]
+  verbSuffixReduction --> isSuffixRemoved2{Suffix removed}
+  isSuffixRemoved2 -- Yes --> removeAccents
+  isSuffixRemoved2 -- No --> removeVowel[Remove Vowel]
+  removeVowel --> removeAccents
+  removeAccents --> final([End])
+```
 
 ### Defining a Suffix Rule
 
