@@ -128,6 +128,59 @@ test.describe('Site shell', () => {
 		await expect(panel).toBeHidden();
 	});
 
+	test('phone menu matches the reference rows, separators and panel', async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/');
+		await page.getByRole('button', { name: 'Menu' }).click();
+		await page.mouse.move(0, 0);
+
+		const styles = await page.evaluate(() => {
+			const panel = document.querySelector<HTMLElement>('.mobile-menu')!;
+			const items = Array.from(panel.querySelectorAll<HTMLElement>('.mobile-links > *'));
+			const colorFor = (token: string) => {
+				const probe = document.createElement('span');
+				probe.style.color = `var(${token})`;
+				document.body.append(probe);
+				const value = getComputedStyle(probe).color;
+				probe.remove();
+				return value;
+			};
+			const active = items.find((item) => item.hasAttribute('aria-current'))!;
+			const first = items[0];
+			const firstRect = first.getBoundingClientRect();
+			return {
+				backgroundColor: getComputedStyle(panel).backgroundColor,
+				paperColor: colorFor('--paper'),
+				backgroundImage: getComputedStyle(panel).backgroundImage,
+				menuTitleBlockCells: panel.querySelectorAll('.menu-title-block > div').length,
+				labels: items.map((item) => item.textContent?.trim()),
+				separatorWidths: items.map((item) => getComputedStyle(item).borderBottomWidth),
+				separatorColors: items.map((item) => getComputedStyle(item).borderBottomColor),
+				gridColor: colorFor('--grid'),
+				activeTextColor: getComputedStyle(active).color,
+				accentColor: colorFor('--acc'),
+				rowHeights: items.map((item) => item.getBoundingClientRect().height),
+				labelX: firstRect.x + Number.parseFloat(getComputedStyle(first).paddingLeft),
+				labelFontSize: getComputedStyle(first).fontSize,
+				arrowSize: getComputedStyle(first, '::after').fontSize,
+				arrowWeight: getComputedStyle(first, '::after').fontWeight
+			};
+		});
+
+		expect(styles.backgroundColor).toBe(styles.paperColor);
+		expect(styles.backgroundImage).toBe('none');
+		expect(styles.menuTitleBlockCells).toBe(2);
+		expect(styles.labels).toEqual(['Home', 'Writing', 'RSS']);
+		expect(styles.separatorWidths.every((width) => width === '1px')).toBe(true);
+		expect(styles.separatorColors.every((color) => color === styles.gridColor)).toBe(true);
+		expect(styles.activeTextColor).toBe(styles.accentColor);
+		expect(styles.rowHeights.every((height) => height === 65)).toBe(true);
+		expect(styles.labelX).toBeCloseTo(29.5, 0);
+		expect(styles.labelFontSize).toBe('28px');
+		expect(styles.arrowSize).toBe('14px');
+		expect(styles.arrowWeight).toBe('400');
+	});
+
 	test('a11y scan passes with the menu open', async ({ page, isMobile }) => {
 		test.skip(!isMobile, 'menu button only exists on narrow screens');
 		await page.goto('/');

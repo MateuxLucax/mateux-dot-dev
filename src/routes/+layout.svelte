@@ -17,7 +17,6 @@
 		// About will be added when the route is introduced in PR 4.
 		{ label: 'RSS', short: 'RSS', href: '/blog/rss.xml' }
 	];
-
 	function isCurrent(href: string) {
 		if (href === '/') return page.url.pathname === '/';
 		if (href === '/blog') {
@@ -109,7 +108,6 @@
 				<div class="title-block menu-title-block">
 					<div><strong>MATEUX.DEV</strong></div>
 					<div>REV {data.version}</div>
-					<div>{data.buildDate}</div>
 				</div>
 			</nav>
 		{/if}
@@ -282,9 +280,12 @@
 		color: var(--ink);
 	}
 
-	.main-nav a[aria-current='page'],
-	.mobile-links a[aria-current='page'] {
+	.main-nav a[aria-current='page'] {
 		border-color: var(--sig);
+		color: var(--acc);
+	}
+
+	.mobile-links a[aria-current='page'] {
 		color: var(--acc);
 	}
 
@@ -337,7 +338,8 @@
 	.mobile-links a::after {
 		content: '→';
 		color: var(--line);
-		font-size: 18px;
+		font-size: 14px;
+		font-weight: 400;
 	}
 
 	.mobile-links a:hover {
