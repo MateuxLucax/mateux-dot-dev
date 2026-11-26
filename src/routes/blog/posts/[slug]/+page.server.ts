@@ -30,7 +30,8 @@ export async function load({ params }) {
 	const readingTime = raw ? calculateReadingTime(stripFrontmatter(raw)) : 1;
 
 	const post = allPaths[`/src/lib/posts/${params.slug}.svx`] as
-		{ metadata: { tags: string[] } } | undefined;
+		| { metadata: { tags: string[] } }
+		| undefined;
 	const currentTags: string[] = post?.metadata.tags || [];
 	const related: Array<{ title: string; slug: string; date: string }> = [];
 
