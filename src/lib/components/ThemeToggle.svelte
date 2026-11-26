@@ -5,7 +5,39 @@
 	let isDark = $state(false);
 
 	onMount(() => {
-		isDark = document.documentElement.dataset.theme === 'dark';
+		const root = document.documentElement;
+		const hasStoredTheme = () => {
+			try {
+				const stored = localStorage.getItem('theme');
+				return stored === 'light' || stored === 'dark';
+			} catch {
+				return false;
+			}
+		};
+		const updateThemeColor = () => {
+			document
+				.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+				?.setAttribute('content', root.dataset.theme === 'dark' ? '#1e1e2e' : '#eff1f5');
+		};
+		const sync = () => {
+			isDark = root.dataset.theme === 'dark';
+			updateThemeColor();
+		};
+		const observer = new MutationObserver(sync);
+		observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+		const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+		const followSystem = () => {
+			if (hasStoredTheme()) return;
+			root.dataset.theme = systemTheme.matches ? 'dark' : 'light';
+			sync();
+		};
+		systemTheme.addEventListener('change', followSystem);
+		sync();
+
+		return () => {
+			observer.disconnect();
+			systemTheme.removeEventListener('change', followSystem);
+		};
 	});
 
 	function toggleTheme() {
@@ -13,6 +45,9 @@
 		const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 		document.documentElement.dataset.theme = nextTheme;
 		isDark = nextTheme === 'dark';
+		document
+			.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+			?.setAttribute('content', nextTheme === 'dark' ? '#1e1e2e' : '#eff1f5');
 
 		try {
 			if ((nextTheme === 'dark') === systemDark) localStorage.removeItem('theme');

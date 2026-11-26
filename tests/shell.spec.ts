@@ -180,6 +180,25 @@ test.describe('Site shell', () => {
 		expect(styles.arrowWeight).toBe('400');
 	});
 
+	test('mobile menu covers the lower viewport and prevents background scrolling', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/');
+		await page.getByRole('button', { name: 'Menu' }).click();
+		const panel = page.getByRole('navigation', { name: 'Menu' });
+		await expect
+			.poll(() =>
+				page.evaluate(() => {
+					const target = document.elementFromPoint(195, 843);
+					return Boolean(target?.closest('#mobile-menu'));
+				})
+			)
+			.toBe(true);
+		await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+		await expect(panel).toBeVisible();
+	});
+
 	test('a11y scan passes with the menu open', async ({ page, isMobile }) => {
 		test.skip(!isMobile, 'menu button only exists on narrow screens');
 		await page.goto('/');
@@ -195,6 +214,21 @@ test.describe('Theme', () => {
 			matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 		);
 		expect(await theme(page)).toBe(system);
+	});
+
+	test('follows system colour-scheme changes when no theme is stored', async ({ page }) => {
+		await page.addInitScript(() => localStorage.removeItem('theme'));
+		await page.emulateMedia({ colorScheme: 'light' });
+		await page.goto('/');
+		const toggle = page.getByRole('button', { name: 'Dark theme' });
+		await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+		await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+		await page.emulateMedia({ colorScheme: 'dark' });
+		await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+		await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+		await expect(page.locator('meta[name="theme-color"]')).toHaveCount(1);
+		await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#1e1e2e');
 	});
 
 	test('toggle switches theme, persists across reloads and swaps code themes', async ({ page }) => {
