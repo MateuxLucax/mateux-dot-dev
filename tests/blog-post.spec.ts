@@ -32,13 +32,16 @@ test.describe('Blog Posts', () => {
 			});
 
 			test('displays date and reading time', async ({ page }) => {
-				await expect(page.locator('article')).toContainText('Published at');
-				await expect(page.locator('article')).toContainText('min read');
+				await expect(page.locator('.post-meta')).toContainText(post.date);
+				await expect(page.locator('.post-meta')).toContainText(/\d+ min/);
+				await expect(page.locator('.lede')).toContainText(post.description);
 			});
 
 			test('displays tags', async ({ page }) => {
 				for (const tag of post.tags) {
-					await expect(page.locator('article')).toContainText(tag);
+					await expect(page.locator('.post-tags a[href="/blog?tag=' + tag + '"]')).toContainText(
+						tag
+					);
 				}
 			});
 
@@ -50,9 +53,85 @@ test.describe('Blog Posts', () => {
 			});
 
 			test('has back link to blog', async ({ page }) => {
-				const backLink = page.getByRole('link', { name: 'Back to posts' });
+				const backLink = page.getByRole('link', { name: /All writing|Back to posts/ }).first();
 				await expect(backLink).toBeVisible();
-				await expect(backLink).toContainText('Back to posts');
+				await expect(backLink).toHaveAttribute('href', '/blog');
+			});
+
+			test('has valid previous and next navigation', async ({ page }) => {
+				const links = await page
+					.locator('.post-navigation a')
+					.evaluateAll((items) =>
+						items.map((item) => (item as HTMLAnchorElement).getAttribute('href'))
+					);
+				const knownPosts = new Set(allPosts.map((item) => `/blog/posts/${item.slug}`));
+				for (const href of links) {
+					expect(href === '/blog' || knownPosts.has(href ?? '')).toBe(true);
+				}
+			});
+
+			test('shows a heading-matched TOC on wide screens only', async ({ page }) => {
+				await page.setViewportSize({ width: 1920, height: 1080 });
+				const toc = page.getByRole('navigation', { name: 'Contents' });
+				await expect(toc).toBeVisible();
+				const headings = await page.locator('.prose h2').allTextContents();
+				for (const heading of headings) await expect(toc).toContainText(heading.trim());
+				const tocLinks = toc.locator('a[href^="#"]');
+				if ((await tocLinks.count()) > 1) {
+					const targetIndex = Math.max(1, Math.floor((await tocLinks.count()) / 2));
+					const targetLink = tocLinks.nth(targetIndex);
+					const targetHref = await targetLink.getAttribute('href');
+					await page.evaluate((href) => {
+						const heading = document.querySelector<HTMLElement>(href ?? '');
+						if (heading)
+							window.scrollTo(0, heading.getBoundingClientRect().top + window.scrollY - 150);
+					}, targetHref);
+					await expect(targetLink).toHaveAttribute('aria-current', 'location');
+				}
+				await page.setViewportSize({ width: 1440, height: 1000 });
+				await expect(toc).toBeVisible();
+				await expect
+					.poll(() =>
+						page
+							.locator('.prose p')
+							.first()
+							.evaluate((element) => element.getBoundingClientRect().width)
+					)
+					.toBeCloseTo(760, 0);
+				await page.setViewportSize({ width: 1280, height: 800 });
+				await expect(toc).toBeHidden();
+			});
+
+			test('shows the progress bar and fits narrow screens', async ({ page }) => {
+				await page.setViewportSize({ width: 360, height: 800 });
+				await expect(page.locator('h1')).toHaveCSS('font-size', '28px');
+				const progressFill = page.locator('.mobile-progress span');
+				await expect(page.locator('.mobile-progress')).toBeVisible();
+				await page.evaluate(() =>
+					window.scrollTo(0, (document.documentElement.scrollHeight - window.innerHeight) * 0.3)
+				);
+				await expect
+					.poll(() => progressFill.evaluate((element) => element.getBoundingClientRect().width))
+					.toBeGreaterThan(0);
+				const widths = await page.evaluate(() => ({
+					page: document.documentElement.scrollWidth,
+					viewport: document.documentElement.clientWidth
+				}));
+				expect(widths.page).toBe(widths.viewport);
+				const code = page.locator('.shiki-light pre').first();
+				if (await code.count()) {
+					const codeBox = await code.evaluate((el) => ({
+						left: el.getBoundingClientRect().left,
+						right: el.getBoundingClientRect().right
+					}));
+					expect(codeBox.left).toBeGreaterThanOrEqual(0);
+					expect(codeBox.right).toBeLessThanOrEqual(360);
+				}
+			});
+
+			test('does not enable smooth scrolling for reduced motion', async ({ page }) => {
+				await page.emulateMedia({ reducedMotion: 'reduce' });
+				await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'auto');
 			});
 
 			test('has JSON-LD structured data', async ({ page }) => {
@@ -68,6 +147,16 @@ test.describe('Blog Posts', () => {
 				test('Pele diagrams are prerendered as SVG', async ({ page, request }) => {
 					const response = await request.get(`/blog/posts/${post.slug}`);
 					expect((await response.text()).match(/class="pele /g)).toHaveLength(post.diagramCount);
+					const figures = page.locator('figure.pele-diagram');
+					await expect(figures).toHaveCount(post.diagramCount);
+					const figureBox = await figures.first().boundingBox();
+					const captionBox = await figures.first().locator('figcaption').boundingBox();
+					expect(captionBox?.y).toBeLessThanOrEqual((figureBox?.y ?? 0) + 1);
+					const captionLabel = await figures
+						.first()
+						.locator('figcaption')
+						.evaluate((caption) => getComputedStyle(caption, '::before').content);
+					expect(captionLabel).toContain('FIG.');
 					await assertPeleDiagrams(page, post.diagramCount);
 				});
 
@@ -96,8 +185,17 @@ test.describe('Blog Posts', () => {
 				const count = await blocks.count();
 				if (count > 0) {
 					// Copy buttons are dynamically injected; verify at least one exists in DOM
-					const btn = page.locator('button[aria-label="Copy code to clipboard"]');
+					const btn = page.locator('button[aria-label="Copy code to clipboard"]:visible');
 					await expect(btn.first()).toBeAttached();
+					await page.evaluate(() => {
+						Object.defineProperty(navigator, 'clipboard', {
+							configurable: true,
+							value: { writeText: () => Promise.resolve() }
+						});
+					});
+					await btn.first().click();
+					await expect(btn.first()).toHaveText('COPIED');
+					await expect(btn.first()).toHaveText('COPY', { timeout: 3000 });
 				}
 			});
 
@@ -106,4 +204,34 @@ test.describe('Blog Posts', () => {
 			});
 		});
 	}
+
+	test('caps and centres the wide post sheet without overlapping named columns', async ({
+		page
+	}) => {
+		await page.goto('/blog/posts/search-and-tokenize-portuguese-text-with-rslp');
+		for (const width of [2560, 3840]) {
+			await page.setViewportSize({ width, height: 2160 });
+			const sheet = page.locator('.sheet');
+			const box = await sheet.boundingBox();
+			expect(box?.width).toBeLessThanOrEqual(2560);
+			if (width === 3840) expect(Math.abs((box?.x ?? 0) - 640)).toBeLessThan(2);
+			for (const column of ['.toc-column', '.prose-column', '.notes-column']) {
+				await expect(page.locator(column)).toBeVisible();
+			}
+			const boxes = await Promise.all(
+				['.toc-column', '.prose p:first-of-type', '.notes-column'].map((selector) =>
+					page.locator(selector).boundingBox()
+				)
+			);
+			const firstFigure = page.locator('.pele-diagram').first();
+			const figure = await firstFigure.boundingBox();
+			const diagram = await firstFigure.locator('.pele-diagram-art').boundingBox();
+			const caption = await firstFigure.locator('figcaption').boundingBox();
+			expect(boxes[0]!.x + boxes[0]!.width).toBeLessThanOrEqual(boxes[1]!.x);
+			expect(boxes[1]!.width).toBeCloseTo(760, 0);
+			expect(boxes[1]!.x + boxes[1]!.width).toBeLessThanOrEqual(boxes[2]!.x);
+			expect(figure?.width).toBeCloseTo(1832, 0);
+			expect(caption?.y).toBeGreaterThanOrEqual((diagram?.y ?? 0) + (diagram?.height ?? 0));
+		}
+	});
 });
