@@ -17,7 +17,14 @@ test.describe('RSS Feed', () => {
 		expect(body).toContain('<title>mateux.dev blog</title>');
 
 		for (const post of allPosts) {
-			expect(body).toContain(post.title);
+			expect(body).toContain(
+				post.title
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;')
+					.replace(/"/g, '&quot;')
+					.replace(/'/g, '&apos;')
+			);
 			expect(body).toContain(`/blog/posts/${post.slug}`);
 			// RSS XML-escapes descriptions, so we check the escaped version
 			const escapedDesc = post.description
