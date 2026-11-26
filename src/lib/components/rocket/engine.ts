@@ -274,7 +274,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 		betaPitch = Math.sin(0.28);
 		unit =
 			options.mode === 'exploded'
-				? Math.min(height / 15.5, width / 5)
+				? Math.min(height / 18.5, width / 10)
 				: launch
 					? Math.min(height / 15.5, width / 5.4)
 					: Math.min(height / 12, width / 4.4);
@@ -286,7 +286,9 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 				? height / 2 + 4.4 * Math.cos(0.28) * unit
 				: launch
 					? height * 0.45 + 4 * alphaPitch * unit
-					: height - 44 - 0.9 * Math.cos(0.28) * unit;
+					: options.mode === 'exploded'
+						? height / 2 + 6.15 * Math.cos(0.28) * unit
+						: height - 44 - 0.9 * Math.cos(0.28) * unit;
 	};
 
 	const transformPoint = (
@@ -343,8 +345,8 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 			];
 		}
 		if (options.mode === 'tumble') {
-			const angle = frameTime * 0.37 + 0.4;
-			const turn = frameTime * 0.7;
+			const angle = frameTime * 0.37 + 0.9;
+			const turn = frameTime * 0.7 + 0.5;
 			let [x, y, z] = point;
 			y -= 4.4;
 			const rotatedX = x * Math.cos(turn) + z * Math.sin(turn);
@@ -414,15 +416,14 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 		return { global, parts: state, plumes: [], reveal: 1, explode };
 	};
 
-	const sceneTumble = (time: number): Scene => {
+	const sceneTumble = (): Scene => {
 		const body = makePart(2);
-		const pulse = 1.3 + 0.08 * Math.sin(time * 23);
 		const state = {} as Record<PartName, PartState>;
 		for (const part of parts) state[part] = body;
 		return {
 			global: { x: 0, y: 0, tilt: 0, roll: 0 },
 			parts: state,
-			plumes: [[body, -0.75, pulse]],
+			plumes: [],
 			reveal: 1
 		};
 	};
@@ -694,7 +695,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 			drawSeparationChain(scene);
 			drawRocket(scene);
 		} else {
-			const scene = sceneTumble(time);
+			const scene = sceneTumble();
 			drawTumbleGuide();
 			drawRocket(scene);
 		}

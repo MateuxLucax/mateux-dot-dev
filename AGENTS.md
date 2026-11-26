@@ -6,7 +6,7 @@ Agent-facing instructions for working on this SvelteKit static blog.
 
 ## Project Overview
 
-A personal terminal-themed website and blog built with **SvelteKit**, **Tailwind CSS**, and **Bun**. The entire site is statically generated (fully prerendered) and deployed to **Cloudflare Pages** via `adapter-cloudflare`. The blog uses **MDsveX** to render `.svx` Markdown files with embedded Svelte components and static Pele diagrams.
+A personal website and blog with a drawing-sheet design, built with **SvelteKit**, **Tailwind CSS**, and **Bun**. The entire site is statically generated (fully prerendered) and deployed to **Cloudflare Pages** via `adapter-cloudflare`. The blog uses **MDsveX** to render `.svx` Markdown files with embedded Svelte components and static Pele diagrams.
 
 ### Key URLs
 
@@ -41,14 +41,9 @@ src/
 ├── app.d.ts                    # App-level types
 ├── lib/
 │   ├── components/             # Reusable Svelte components
-│   │   ├── Prompt.svelte       # Terminal prompt (mateux@tars)
-│   │   ├── Row.svelte          # Terminal row wrapper
 │   │   ├── Icon.svelte         # Shared typed line icons
 │   │   ├── ThemeToggle.svelte  # Light/dark theme control
-│   │   ├── Cursor.svelte
-│   │   ├── Image.svelte
-│   │   ├── quotes.js           # Random quote array
-│   │   └── commands/           # Terminal command components
+│   │   └── rocket/             # Canvas rocket modes and animation engine
 │   ├── posts/                  # Blog post source files (*.svx)
 │   ├── server/
 │   │   └── posts.ts            # Build-time post loading + reading time
@@ -56,7 +51,9 @@ src/
 └── routes/
     ├── +layout.svelte          # Root layout (site shell)
     ├── +page.svelte            # Homepage
-    ├── typetest/+page.svelte   # Typing speed test game
+    ├── +error.svelte           # Branded error pages
+    ├── about/                  # About page and build-time tag counts
+    ├── rss/                    # Human-readable feed page
     └── blog/
         ├── +layout.svelte      # Blog layout
         ├── +page.svelte        # Blog listing
@@ -89,11 +86,11 @@ src/
 ### Design system
 
 - Shared colors are CSS custom properties in `src/app.css` (`--paper`, `--mantle`, `--grid`, `--ink`, `--text`, `--mute`, `--line`, `--sig`, `--acc`, `--hi`, `--on`, `--shd`, `--mauve`, `--ok`, and `--red`) with light, explicit dark, and system dark fallback values. Tailwind color utilities use the matching `color-*` token names.
-- Body and prose typography use the self-hosted IBM Plex Sans and its size-adjusted fallback. UI chrome uses IBM Plex Mono and its fallback; use `font-sans` for prose and `font-mono` for labels and terminal remnants.
+- Body and prose typography use the self-hosted IBM Plex Sans and its size-adjusted fallback. UI chrome uses IBM Plex Mono and its fallback; use `font-sans` for prose and `font-mono` for labels.
 - Use `Icon.svelte` for the shared 24×24 line icons. Pass an icon name from its TypeScript union, and a `label` only when the icon conveys meaning without adjacent text.
 - Theme state lives in `document.documentElement.dataset.theme` (`light` or `dark`). Use `ThemeToggle.svelte` for the control and read this attribute before falling back to `prefers-color-scheme`.
 - Tailwind's `dark:` variant follows `data-theme` and also supports the no-JavaScript system preference fallback.
-- Pages are being migrated to the design system over redesign PRs 2–4. Preserve page content unless the active task explicitly includes a page redesign.
+- The site uses the drawing-sheet design system throughout. Preserve page content unless the active task explicitly includes a page redesign.
 
 ### Static Site Constraints
 
@@ -205,10 +202,6 @@ bun run build    # Must pass without errors
 bun run check    # Must pass
 bun run format   # Must pass
 ```
-
-### Known Issues to Ignore
-
-- `src/routes/typetest/+page.svelte` has 3 pre-existing TypeScript type comparison errors. Do not try to fix them unless explicitly asked.
 
 ---
 

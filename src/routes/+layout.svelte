@@ -14,8 +14,8 @@
 	const navigation = [
 		{ label: 'Home', short: 'HOME', href: '/' },
 		{ label: 'Writing', short: 'WRITING', href: '/blog' },
-		// About will be added when the route is introduced in PR 4.
-		{ label: 'RSS', short: 'RSS', href: '/blog/rss.xml' }
+		{ label: 'About', short: 'ABOUT', href: '/about' },
+		{ label: 'RSS', short: 'RSS', href: '/rss' }
 	];
 	function isCurrent(href: string) {
 		if (href === '/') return page.url.pathname === '/';
@@ -26,7 +26,7 @@
 				page.url.pathname.startsWith('/blog/posts/')
 			);
 		}
-		return page.url.pathname.startsWith(href);
+		return page.url.pathname === href || page.url.pathname.startsWith(`${href}/`);
 	}
 
 	async function setMenu(open: boolean, restoreFocus = false) {
@@ -111,9 +111,11 @@
 			</nav>
 		{/if}
 		<main id="main">{@render children?.()}</main>
-		<footer class="title-block">
-			<div><strong>MATEUX.DEV</strong></div>
-		</footer>
+		{#if page.status !== 404}
+			<footer class="title-block">
+				<div><strong>MATEUX.DEV</strong></div>
+			</footer>
+		{/if}
 	</div>
 </div>
 

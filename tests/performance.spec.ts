@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Performance', () => {
-	const routes = ['/', '/blog', '/typetest'];
+	const routes = ['/', '/blog', '/about', '/rss'];
 
 	for (const route of routes) {
 		test(`Web Vitals on ${route}`, async ({ page }) => {

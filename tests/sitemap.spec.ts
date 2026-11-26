@@ -18,7 +18,9 @@ test.describe('Sitemap', () => {
 		// Static routes
 		expect(body).toContain('https://mateux.dev</loc>');
 		expect(body).toContain('https://mateux.dev/blog</loc>');
-		expect(body).toContain('https://mateux.dev/typetest</loc>');
+		expect(body).toContain('https://mateux.dev/about</loc>');
+		expect(body).toContain('https://mateux.dev/rss</loc>');
+		expect(body).not.toContain('/typetest');
 
 		// All posts
 		for (const post of allPosts) {
