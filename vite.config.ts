@@ -41,6 +41,42 @@ const diagramFont =
 // Every label is drawn in a monospace font, so each character takes ~0.6em.
 const monospaceMeasurer = { width: (text: string, size: number) => [...text].length * size * 0.6 };
 
+type MdastNode = {
+	type: string;
+	depth?: number;
+	value?: string;
+	children?: MdastNode[];
+	data?: { hProperties?: Record<string, unknown>; [key: string]: unknown };
+};
+
+function headingIds() {
+	return (tree: { children: MdastNode[] }) => {
+		const visit = (nodes: MdastNode[]) => {
+			for (const node of nodes) {
+				if (node.type === 'heading' && node.depth === 2) {
+					const text = (children: MdastNode[]): string =>
+						children
+							.map((child) => child.value ?? (child.children ? text(child.children) : ''))
+							.join('');
+					const slug = text(node.children ?? [])
+						.toLowerCase()
+						.normalize('NFD')
+						.replace(/[\u0300-\u036f]/g, '')
+						.replace(/[^a-z0-9]+/g, '-')
+						.replace(/^-|-$/g, '');
+					const data = node.data ?? {};
+					node.data = {
+						...data,
+						hProperties: { ...(data.hProperties ?? {}), id: `section-${slug}` }
+					};
+				}
+				if (node.children) visit(node.children);
+			}
+		};
+		visit(tree.children);
+	};
+}
+
 /**
  * Renders a ```mermaid fenced block to static SVG with Pele at build time.
  * Colors come from `--pele-*` CSS variables, so light/dark mode needs no re-render.
@@ -55,11 +91,12 @@ function mermaidToSvg(code: string) {
 		measurer: monospaceMeasurer
 	});
 
-	return `<div class="pele-diagram flex w-full grow items-center justify-center">${svg}</div>`;
+	return `<figure class="pele-diagram"><div class="pele-diagram-art">${svg}</div><figcaption>Diagram</figcaption></figure>`;
 }
 
 const mdsvexOptions = {
 	extensions: ['.svx'],
+	remarkPlugins: [headingIds],
 	highlight: {
 		highlighter: async (code: string, lang?: string | null) => {
 			lang ??= 'text';

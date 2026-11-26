@@ -18,24 +18,25 @@
 			if (!pre || pre.parentElement?.querySelector('.copy-btn')) return;
 
 			const btn = document.createElement('button');
-			btn.className =
-				'copy-btn absolute top-2 right-2 hidden rounded bg-gray-200 px-2 py-1 text-xs text-gray-700 group-hover:block dark:bg-gray-700 dark:text-gray-200';
-			btn.textContent = 'copy';
+			btn.className = 'copy-btn';
+			btn.textContent = 'COPY';
 			btn.setAttribute('aria-label', 'Copy code to clipboard');
 
 			btn.addEventListener('click', async () => {
 				const code = pre.textContent || '';
 				try {
 					await navigator.clipboard.writeText(code);
-					btn.textContent = 'copied';
+					btn.classList.add('done');
+					btn.textContent = 'COPIED';
 					setTimeout(() => {
-						btn.textContent = 'copy';
-					}, 1500);
+						btn.classList.remove('done');
+						btn.textContent = 'COPY';
+					}, 1600);
 				} catch {
-					btn.textContent = 'error';
+					btn.textContent = 'ERROR';
 					setTimeout(() => {
-						btn.textContent = 'copy';
-					}, 1500);
+						btn.textContent = 'COPY';
+					}, 1600);
 				}
 			});
 
