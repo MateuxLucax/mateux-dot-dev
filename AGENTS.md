@@ -43,9 +43,8 @@ src/
 │   ├── components/             # Reusable Svelte components
 │   │   ├── Prompt.svelte       # Terminal prompt (mateux@tars)
 │   │   ├── Row.svelte          # Terminal row wrapper
-│   │   ├── TerminalHeader.svelte
-│   │   ├── ActivityBar.svelte
-│   │   ├── ForestBackground.svelte
+│   │   ├── Icon.svelte         # Shared typed line icons
+│   │   ├── ThemeToggle.svelte  # Light/dark theme control
 │   │   ├── Cursor.svelte
 │   │   ├── Image.svelte
 │   │   ├── quotes.js           # Random quote array
@@ -55,7 +54,7 @@ src/
 │   │   └── posts.ts            # Build-time post loading + reading time
 │   └── utils.ts                # formatDate, isDarkMode, calculateReadingTime, stripFrontmatter
 └── routes/
-    ├── +layout.svelte          # Root layout (terminal chrome)
+    ├── +layout.svelte          # Root layout (site shell)
     ├── +page.svelte            # Homepage
     ├── typetest/+page.svelte   # Typing speed test game
     └── blog/
@@ -87,20 +86,14 @@ src/
 - Use `$derived()` for computed values.
 - Always add `<script lang="ts">`.
 
-### Terminal Theme
+### Design system
 
-The entire UI should feel like a terminal:
-
-- Font: `font-mono` everywhere.
-- Prompt: `mateux@tars ~/Path>` rendered via `Prompt.svelte`.
-- Rows: wrapped in `Row.svelte`.
-- Semantic colors:
-  - Links: `text-blue-500` / `dark:text-blue-300`
-  - Paths: `text-yellow-500` / `dark:text-yellow-300`
-  - Prompt user: `text-teal-600` / `dark:text-teal-300`
-  - Prompt host: `text-blue-500` / `dark:text-blue-300`
-  - Commands: `text-pink-400` / `dark:text-pink-300`
-- Avoid rounded cards, shadows, or non-terminal UI outside the `prose` article section.
+- Shared colors are CSS custom properties in `src/app.css` (`--paper`, `--mantle`, `--grid`, `--ink`, `--text`, `--mute`, `--line`, `--sig`, `--acc`, `--hi`, `--on`, `--shd`, `--mauve`, `--ok`, and `--red`) with light, explicit dark, and system dark fallback values. Tailwind color utilities use the matching `color-*` token names.
+- Body and prose typography use the self-hosted IBM Plex Sans and its size-adjusted fallback. UI chrome uses IBM Plex Mono and its fallback; use `font-sans` for prose and `font-mono` for labels and terminal remnants.
+- Use `Icon.svelte` for the shared 24×24 line icons. Pass an icon name from its TypeScript union, and a `label` only when the icon conveys meaning without adjacent text.
+- Theme state lives in `document.documentElement.dataset.theme` (`light` or `dark`). Use `ThemeToggle.svelte` for the control and read this attribute before falling back to `prefers-color-scheme`.
+- Tailwind's `dark:` variant follows `data-theme` and also supports the no-JavaScript system preference fallback.
+- Pages are being migrated to the design system over redesign PRs 2–4. Preserve page content unless the active task explicitly includes a page redesign.
 
 ### Static Site Constraints
 
@@ -165,18 +158,14 @@ Posts can embed Svelte components directly. For diagrams, use a fenced `mermaid`
 ### Tailwind CSS
 
 - Utility-first. No custom CSS files outside component `<style>` blocks.
-- Dark mode uses `prefers-color-scheme: dark` via `dark:` prefixes.
+- Dark mode follows `data-theme='dark'`; `dark:` utilities also support the system preference when JavaScript is unavailable.
 - The `prose` class (from `@tailwindcss/typography`) styles article content.
 - Custom prose variables are set in `+page.svelte` `<style>` for post pages.
 
-### Syntax Highlighting Theme Switching
+### Syntax Highlighting and Diagram Theme Switching
 
-Light/dark Shiki themes toggle via CSS in `src/routes/+layout.svelte`:
-
-- `.shiki-light` visible in light mode
-- `.shiki-dark` visible in dark mode
-
-Do not break this mechanism when adding new code block styles.
+- Shiki `.shiki-light` and `.shiki-dark` blocks follow `[data-theme='dark']` in `src/routes/+layout.svelte`, with a `prefers-color-scheme: dark` fallback when no theme attribute is set. Preserve both blocks when changing code styles.
+- Pele diagram variables are set in `src/routes/blog/posts/[slug]/+page.svelte` for explicit dark theme and the no-JavaScript system fallback. Keep both modes aligned with the design tokens.
 
 ---
 

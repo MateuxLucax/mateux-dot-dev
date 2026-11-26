@@ -459,180 +459,184 @@
 </svelte:head>
 
 <!-- Navigate back -->
-<Row>
-	<Prompt path="/TypeTest" />
-	<button
-		onclick={() => goto('/')}
-		class="cursor-pointer text-pink-400 underline underline-offset-2 hover:opacity-80 dark:text-pink-300"
-	>
-		cd ~
-	</button>
-</Row>
-
-<!-- cat README -->
-<Row>
-	<Prompt path="/TypeTest" />
-	<span class="text-blue-500 dark:text-blue-300">cat</span>
-	<span class="text-pink-400 underline underline-offset-2 dark:text-pink-300">README.md</span>
-</Row>
-<Row>A WPM typing test. Type the words below as fast and accurately as you can.</Row>
-
-<!-- Duration selector as a command -->
-<Row>
-	<Prompt path="/TypeTest" />
-	<span class="text-blue-500 dark:text-blue-300">--duration</span>
-	{#each [15, 30, 60] as d (d)}
-		<button
-			onclick={() => setDuration(d)}
-			disabled={testState === 'running'}
-			class="cursor-pointer transition-colors duration-100 disabled:cursor-not-allowed disabled:opacity-40
-				{duration === d
-				? 'text-teal-600 underline underline-offset-2 dark:text-teal-300'
-				: 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100'}"
-		>
-			{d}s
-		</button>
-	{/each}
-</Row>
-
-<!-- Status row: timer / hint -->
-<Row>
-	<Prompt path="/TypeTest" />
-	{#if testState === 'running'}
-		<span class="text-blue-500 dark:text-blue-300">time</span>
-		<span class="text-teal-600 tabular-nums dark:text-teal-300">{timeLeft}s</span>
-		<span class="text-gray-500 dark:text-gray-500">|</span>
-		<span class="text-gray-700 dark:text-gray-300">wpm</span>
-		<span class="text-yellow-500 tabular-nums dark:text-yellow-300">{wpm}</span>
-		<span class="text-gray-500 dark:text-gray-500">|</span>
-		<span class="text-gray-700 dark:text-gray-300">acc</span>
-		<span class="text-yellow-500 tabular-nums dark:text-yellow-300">{accuracy}%</span>
-	{:else if testState === 'idle'}
-		<span class="text-gray-600 dark:text-gray-300"># start typing to begin the test</span>
-	{:else}
-		<span class="text-green-600 dark:text-green-400">✓ test complete</span>
-	{/if}
-</Row>
-
-{#if testState !== 'finished'}
-	<!-- Words display area -->
+<div class="flex flex-col gap-2 p-4 font-mono md:p-8">
+	<h1 class="sr-only">Typing test</h1>
 	<Row>
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div
-			bind:this={wordsContainer}
-			onclick={handleContainerClick}
-			class="relative max-h-[5.4em] w-full cursor-text overflow-hidden leading-[1.8]"
+		<Prompt path="/TypeTest" />
+		<button
+			onclick={() => goto('/')}
+			class="cursor-pointer text-pink-400 underline underline-offset-2 hover:opacity-80 dark:text-pink-300"
 		>
-			<div class="flex flex-wrap gap-x-2 gap-y-0.5 text-lg">
-				{#each words as word, wordIndex (wordIndex)}
-					{#if wordIndex < currentWordIndex + 80}
-						<span
-							class="relative tracking-wide transition-opacity duration-100"
-							class:opacity-100={wordIndex === currentWordIndex}
-						>
-							{#if wordIndex === currentWordIndex}
-								<!-- Active word: per-char coloring with inline cursor -->
-								{#each word.split('') as char, charIndex (charIndex)}
-									<span
-										class="{charStatuses[charIndex] === 'correct'
-											? 'text-green-600 dark:text-green-400'
-											: charStatuses[charIndex] === 'incorrect'
-												? 'text-red-500 dark:text-red-400'
-												: 'text-gray-800 dark:text-gray-200'}
-										{charIndex === currentInput.length ? 'cursor-char' : ''}">{char}</span
-									>
-								{/each}
-								<!-- Extra typed chars beyond word -->
-								{#if currentInput.length > word.length}
-									{#each currentInput
-										.slice(word.length)
-										.split('') as extraChar, extraIndex (extraIndex)}
-										<span class="text-red-500/70 dark:text-red-400/70">{extraChar}</span>
-									{/each}
-								{/if}
-								<!-- Cursor at end of word (when all chars typed or beyond) -->
-								{#if currentInput.length >= word.length}
-									<span class="cursor-end"></span>
-								{/if}
-							{:else if wordStatuses[wordIndex] === 'correct'}
-								<span class="text-green-600 dark:text-green-400">{word}</span>
-							{:else if wordStatuses[wordIndex] === 'incorrect'}
-								<span class="text-red-500 underline underline-offset-2 dark:text-red-400"
-									>{word}</span
-								>
-							{:else}
-								<span class="text-gray-600 dark:text-gray-300">{word}</span>
-							{/if}
-						</span>
-					{/if}
-				{/each}
-			</div>
-
-			<!-- Hidden input -->
-			<input
-				bind:this={inputElement}
-				bind:value={currentInput}
-				oninput={handleInput}
-				onkeydown={handleKeyDown}
-				type="text"
-				autocomplete="off"
-				autocorrect="off"
-				autocapitalize="off"
-				spellcheck="false"
-				aria-label="Typing test input"
-				class="absolute top-0 left-0 h-full w-full opacity-0"
-			/>
-		</div>
+			cd ~
+		</button>
 	</Row>
-{:else}
-	<!-- Results as stdout -->
+
+	<!-- cat README -->
 	<Row>
 		<Prompt path="/TypeTest" />
 		<span class="text-blue-500 dark:text-blue-300">cat</span>
-		<span class="text-pink-400 underline underline-offset-2 dark:text-pink-300">results.json</span>
+		<span class="text-pink-400 underline underline-offset-2 dark:text-pink-300">README.md</span>
 	</Row>
-	<Row>
-		<pre class="w-full text-sm leading-relaxed"><!--
--->&#123;
-  <span class="text-pink-400 dark:text-pink-300">"wpm"</span>:         <span
-				class="text-teal-600 dark:text-teal-300">{wpm}</span
-			>,
-  <span class="text-pink-400 dark:text-pink-300">"accuracy"</span>:    <span
-				class="text-teal-600 dark:text-teal-300">{accuracy}%</span
-			>,
-  <span class="text-pink-400 dark:text-pink-300">"raw_wpm"</span>:     <span
-				class="text-teal-600 dark:text-teal-300">{rawWpm}</span
-			>,
-  <span class="text-pink-400 dark:text-pink-300">"correct"</span>:     <span
-				class="text-green-600 dark:text-green-400">{correctWords}</span
-			>,
-  <span class="text-pink-400 dark:text-pink-300">"incorrect"</span>:   <span
-				class="text-red-500 dark:text-red-400">{incorrectWords}</span
-			>,
-  <span class="text-pink-400 dark:text-pink-300">"total"</span>:       <span
-				class="text-yellow-500 dark:text-yellow-300">{correctWords + incorrectWords}</span
-			>,
-  <span class="text-pink-400 dark:text-pink-300">"duration"</span>:    <span
-				class="text-yellow-500 dark:text-yellow-300">{duration}s</span
-			>,
-  <span class="text-pink-400 dark:text-pink-300">"keystrokes"</span>:  <span
-				class="text-yellow-500 dark:text-yellow-300">{totalKeystrokes}</span
-			>
-&#125;</pre>
-	</Row>
+	<Row>A WPM typing test. Type the words below as fast and accurately as you can.</Row>
 
-	<!-- Restart command -->
+	<!-- Duration selector as a command -->
 	<Row>
 		<Prompt path="/TypeTest" />
-		<button
-			onclick={initTest}
-			class="cursor-pointer text-blue-500 underline underline-offset-2 hover:opacity-80 dark:text-blue-300"
-		>
-			./restart
-		</button>
+		<span class="text-blue-500 dark:text-blue-300">--duration</span>
+		{#each [15, 30, 60] as d (d)}
+			<button
+				onclick={() => setDuration(d)}
+				disabled={testState === 'running'}
+				class="cursor-pointer transition-colors duration-100 disabled:cursor-not-allowed disabled:opacity-40
+				{duration === d
+					? 'text-teal-600 underline underline-offset-2 dark:text-teal-300'
+					: 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100'}"
+			>
+				{d}s
+			</button>
+		{/each}
 	</Row>
-{/if}
+
+	<!-- Status row: timer / hint -->
+	<Row>
+		<Prompt path="/TypeTest" />
+		{#if testState === 'running'}
+			<span class="text-blue-500 dark:text-blue-300">time</span>
+			<span class="text-teal-600 tabular-nums dark:text-teal-300">{timeLeft}s</span>
+			<span class="text-gray-500 dark:text-gray-500">|</span>
+			<span class="text-gray-700 dark:text-gray-300">wpm</span>
+			<span class="text-yellow-500 tabular-nums dark:text-yellow-300">{wpm}</span>
+			<span class="text-gray-500 dark:text-gray-500">|</span>
+			<span class="text-gray-700 dark:text-gray-300">acc</span>
+			<span class="text-yellow-500 tabular-nums dark:text-yellow-300">{accuracy}%</span>
+		{:else if testState === 'idle'}
+			<span class="text-gray-600 dark:text-gray-300"># start typing to begin the test</span>
+		{:else}
+			<span class="text-green-600 dark:text-green-400">✓ test complete</span>
+		{/if}
+	</Row>
+
+	{#if testState !== 'finished'}
+		<!-- Words display area -->
+		<Row>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				bind:this={wordsContainer}
+				onclick={handleContainerClick}
+				class="relative max-h-[5.4em] w-full cursor-text overflow-hidden leading-[1.8]"
+			>
+				<div class="flex flex-wrap gap-x-2 gap-y-0.5 text-lg">
+					{#each words as word, wordIndex (wordIndex)}
+						{#if wordIndex < currentWordIndex + 80}
+							<span
+								class="relative tracking-wide transition-opacity duration-100"
+								class:opacity-100={wordIndex === currentWordIndex}
+							>
+								{#if wordIndex === currentWordIndex}
+									<!-- Active word: per-char coloring with inline cursor -->
+									{#each word.split('') as char, charIndex (charIndex)}
+										<span
+											class="{charStatuses[charIndex] === 'correct'
+												? 'text-green-600 dark:text-green-400'
+												: charStatuses[charIndex] === 'incorrect'
+													? 'text-red-500 dark:text-red-400'
+													: 'text-gray-800 dark:text-gray-200'}
+										{charIndex === currentInput.length ? 'cursor-char' : ''}">{char}</span
+										>
+									{/each}
+									<!-- Extra typed chars beyond word -->
+									{#if currentInput.length > word.length}
+										{#each currentInput
+											.slice(word.length)
+											.split('') as extraChar, extraIndex (extraIndex)}
+											<span class="text-red-500/70 dark:text-red-400/70">{extraChar}</span>
+										{/each}
+									{/if}
+									<!-- Cursor at end of word (when all chars typed or beyond) -->
+									{#if currentInput.length >= word.length}
+										<span class="cursor-end"></span>
+									{/if}
+								{:else if wordStatuses[wordIndex] === 'correct'}
+									<span class="text-green-600 dark:text-green-400">{word}</span>
+								{:else if wordStatuses[wordIndex] === 'incorrect'}
+									<span class="text-red-500 underline underline-offset-2 dark:text-red-400"
+										>{word}</span
+									>
+								{:else}
+									<span class="text-gray-600 dark:text-gray-300">{word}</span>
+								{/if}
+							</span>
+						{/if}
+					{/each}
+				</div>
+
+				<!-- Hidden input -->
+				<input
+					bind:this={inputElement}
+					bind:value={currentInput}
+					oninput={handleInput}
+					onkeydown={handleKeyDown}
+					type="text"
+					autocomplete="off"
+					autocorrect="off"
+					autocapitalize="off"
+					spellcheck="false"
+					aria-label="Typing test input"
+					class="absolute top-0 left-0 h-full w-full opacity-0"
+				/>
+			</div>
+		</Row>
+	{:else}
+		<!-- Results as stdout -->
+		<Row>
+			<Prompt path="/TypeTest" />
+			<span class="text-blue-500 dark:text-blue-300">cat</span>
+			<span class="text-pink-400 underline underline-offset-2 dark:text-pink-300">results.json</span
+			>
+		</Row>
+		<Row>
+			<pre class="w-full text-sm leading-relaxed"><!--
+-->&#123;
+  <span class="text-pink-400 dark:text-pink-300">"wpm"</span>:         <span
+					class="text-teal-600 dark:text-teal-300">{wpm}</span
+				>,
+  <span class="text-pink-400 dark:text-pink-300">"accuracy"</span>:    <span
+					class="text-teal-600 dark:text-teal-300">{accuracy}%</span
+				>,
+  <span class="text-pink-400 dark:text-pink-300">"raw_wpm"</span>:     <span
+					class="text-teal-600 dark:text-teal-300">{rawWpm}</span
+				>,
+  <span class="text-pink-400 dark:text-pink-300">"correct"</span>:     <span
+					class="text-green-600 dark:text-green-400">{correctWords}</span
+				>,
+  <span class="text-pink-400 dark:text-pink-300">"incorrect"</span>:   <span
+					class="text-red-500 dark:text-red-400">{incorrectWords}</span
+				>,
+  <span class="text-pink-400 dark:text-pink-300">"total"</span>:       <span
+					class="text-yellow-500 dark:text-yellow-300">{correctWords + incorrectWords}</span
+				>,
+  <span class="text-pink-400 dark:text-pink-300">"duration"</span>:    <span
+					class="text-yellow-500 dark:text-yellow-300">{duration}s</span
+				>,
+  <span class="text-pink-400 dark:text-pink-300">"keystrokes"</span>:  <span
+					class="text-yellow-500 dark:text-yellow-300">{totalKeystrokes}</span
+				>
+&#125;</pre>
+		</Row>
+
+		<!-- Restart command -->
+		<Row>
+			<Prompt path="/TypeTest" />
+			<button
+				onclick={initTest}
+				class="cursor-pointer text-blue-500 underline underline-offset-2 hover:opacity-80 dark:text-blue-300"
+			>
+				./restart
+			</button>
+		</Row>
+	{/if}
+</div>
 
 <style>
 	@keyframes blink {

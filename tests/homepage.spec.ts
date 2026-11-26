@@ -9,16 +9,8 @@ test.describe('Homepage', () => {
 		await page.goto('/');
 	});
 
-	test('has correct title and terminal header', async ({ page }) => {
+	test('has the correct title', async ({ page }) => {
 		await expect(page).toHaveTitle(/mateux@tars/);
-
-		const terminalHeader = page.locator('header', { hasText: 'mateux@tars' });
-		await expect(terminalHeader).toBeVisible();
-
-		// Terminal dots
-		await expect(terminalHeader.locator('span.bg-red-400')).toBeVisible();
-		await expect(terminalHeader.locator('span.bg-yellow-400')).toBeVisible();
-		await expect(terminalHeader.locator('span.bg-green-400')).toBeVisible();
 	});
 
 	test('displays About section', async ({ page }) => {
@@ -39,7 +31,7 @@ test.describe('Homepage', () => {
 	});
 
 	test('has navigation link to blog', async ({ page }) => {
-		const blogLink = page.locator('a[href="/blog"]').first();
+		const blogLink = page.locator('main a[href="/blog"]').first();
 		await expect(blogLink).toBeVisible();
 	});
 

@@ -16,31 +16,34 @@
 	/>
 </svelte:head>
 
-<Row><Prompt /> cd <span class="text-yellow-500 dark:text-yellow-300">~/Blog</span></Row>
-<Row
-	><Prompt path="/Blog" />
-	<span class="text-gray-700 dark:text-gray-300"
-		># <a
-			href="/blog/rss.xml"
-			class="text-blue-500 underline hover:text-blue-300 dark:text-blue-300 dark:hover:text-blue-100"
-			>rss.xml</a
-		></span
-	></Row
->
-{#if data.posts.length > 0}
-	<Row><Prompt path="/Blog" /> ls -1</Row>
-	<Row>total {data.posts.length}</Row>
-	{#each data.posts as post (post.slug)}
-		<Row>
-			<a
-				href={`/blog/posts/${post.slug}`}
-				class="text-blue-500 underline underline-offset-2 hover:bg-gray-200 focus:bg-gray-300 active:bg-gray-300 dark:text-blue-300 dark:hover:bg-gray-700 dark:focus:bg-gray-600 dark:active:bg-gray-600"
-			>
-				{post.title}/
-			</a>
-			<span class="text-gray-700 dark:text-gray-300">
-				# {formatDate(post.date)} &middot; {post.readingTime} min read &middot; {post.description}
-			</span>
-		</Row>
-	{/each}
-{/if}
+<div class="flex flex-col gap-2 p-4 font-mono md:p-8">
+	<h1 class="sr-only">Writing</h1>
+	<Row><Prompt /> cd <span class="text-yellow-500 dark:text-yellow-300">~/Blog</span></Row>
+	<Row
+		><Prompt path="/Blog" />
+		<span class="text-gray-700 dark:text-gray-300"
+			># <a
+				href="/blog/rss.xml"
+				class="text-blue-500 underline hover:text-blue-300 dark:text-blue-300 dark:hover:text-blue-100"
+				>rss.xml</a
+			></span
+		></Row
+	>
+	{#if data.posts.length > 0}
+		<Row><Prompt path="/Blog" /> ls -1</Row>
+		<Row>total {data.posts.length}</Row>
+		{#each data.posts as post (post.slug)}
+			<Row>
+				<a
+					href={`/blog/posts/${post.slug}`}
+					class="text-blue-500 underline underline-offset-2 hover:bg-gray-200 focus:bg-gray-300 active:bg-gray-300 dark:text-blue-300 dark:hover:bg-gray-700 dark:focus:bg-gray-600 dark:active:bg-gray-600"
+				>
+					{post.title}/
+				</a>
+				<span class="text-gray-700 dark:text-gray-300">
+					# {formatDate(post.date)} &middot; {post.readingTime} min read &middot; {post.description}
+				</span>
+			</Row>
+		{/each}
+	{/if}
+</div>

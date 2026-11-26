@@ -2,7 +2,40 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<script>
+			(() => {
+				const root = document.documentElement;
+				const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+				const apply = () => {
+					let stored;
+					try {
+						stored = localStorage.getItem('theme');
+					} catch {
+						stored = null;
+					}
+					root.dataset.theme =
+						stored === 'light' || stored === 'dark'
+							? stored
+							: systemTheme.matches
+								? 'dark'
+								: 'light';
+				};
+				apply();
+				systemTheme.addEventListener('change', () => {
+					try {
+						if (localStorage.getItem('theme')) return;
+					} catch {}
+					apply();
+				});
+			})();
+		</script>
+		<link rel="preload" href="/fonts/plex-mono-400.woff2" as="font" type="font/woff2" crossorigin />
+		<link rel="preload" href="/fonts/plex-sans-400.woff2" as="font" type="font/woff2" crossorigin />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<meta name="theme-color" content="#eff1f5" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#1e1e2e" media="(prefers-color-scheme: dark)" />
 		<meta
 			name="description"
 			content="This website is my personal space. I'm still working on it, but feel free to play around"
