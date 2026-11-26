@@ -1,12 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-export async function assertPrompt(page: Page, path = '') {
-	const promptText = `mateux@tars ~${path}>`;
-	const prompt = page.locator('text=' + promptText).first();
-	await expect(prompt).toBeVisible();
-}
-
 export async function assertMetaTags(
 	page: Page,
 	opts: {
