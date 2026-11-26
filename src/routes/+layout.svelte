@@ -4,6 +4,7 @@
 	import { onMount, tick } from 'svelte';
 	import '../app.css';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
+	import RocketFlightLayer from '#lib/components/rocket/RocketFlightLayer.svelte';
 
 	let { children } = $props();
 	let menuOpen = $state(false);
@@ -111,6 +112,9 @@
 			</nav>
 		{/if}
 		<main id="main">{@render children?.()}</main>
+		{#if page.url.pathname === '/'}
+			<RocketFlightLayer />
+		{/if}
 		<footer class="title-block">
 			<div><strong>MATEUX.DEV</strong></div>
 		</footer>
@@ -353,6 +357,11 @@
 		font-size: 11px;
 	}
 
+	footer.title-block {
+		position: relative;
+		z-index: 2;
+	}
+
 	.title-block > div {
 		padding: 6px 10px;
 		border-right: 1px solid var(--line);
@@ -367,6 +376,8 @@
 	}
 
 	#main {
+		position: relative;
+		z-index: 1;
 		display: flex;
 		flex-direction: column;
 		flex: 1;

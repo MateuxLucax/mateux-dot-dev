@@ -44,7 +44,11 @@
 </script>
 
 <!-- svelte-ignore a11y_no_interactive_element_to_noninteractive_role -->
-<canvas bind:this={canvas} class={className} role="img" aria-label={label ?? defaultLabels[mode]}
+<canvas
+	bind:this={canvas}
+	class={mode === 'launch' ? `rocket-ground-canvas ${className}` : className}
+	role="img"
+	aria-label={label ?? defaultLabels[mode]}
 ></canvas>
 
 <style>

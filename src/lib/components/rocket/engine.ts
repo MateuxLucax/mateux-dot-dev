@@ -4,11 +4,28 @@ export interface RocketOptions {
 	mode: RocketMode;
 	still?: boolean;
 	time?: number;
+	launchLayer?: 'ground' | 'flight';
+	placement?: LaunchPlacement;
+}
+
+export interface LaunchPlacement {
+	x: number;
+	y: number;
+	unit: number;
+}
+
+export interface LaunchPose {
+	x: number;
+	y: number;
+	vx: number;
+	vy: number;
+	bodyAngle: number;
 }
 
 export interface RocketEngine {
 	destroy(): void;
 	setTime(time: number): void;
+	setLaunchPlacement(placement: LaunchPlacement): void;
 	redraw(): void;
 }
 
@@ -28,10 +45,12 @@ type Transform = { x: number; y: number; tilt: number; roll: number };
 type Scene = {
 	global: Transform;
 	parts: Record<PartName, PartState>;
+	partGlobal?: Partial<Record<PartName, Transform>>;
 	plumes: Array<[PartState, number, number]>;
 	reveal: number;
 	separated?: boolean;
 	explode?: number;
+	partAlpha?: Partial<Record<PartName, number>>;
 };
 type Projection = [number, number, number, number?];
 
@@ -39,6 +58,67 @@ const TAU = 6.2832;
 const RADIUS = 0.6;
 const SEGMENTS = 24;
 const PROFILE_SEGMENTS = 8;
+const LIFTOFF_TIME = 4.2;
+const STAGE_SEPARATION_TIME = 8;
+const LAUNCH_CYCLE_DURATION = 12.5;
+const LAUNCH_ACCELERATION = 1.5;
+const LAUNCH_TURN_START = 0.45;
+const LAUNCH_TURN_DURATION = 4.5;
+const LAUNCH_MAX_ANGLE = 0.88;
+const LAUNCH_POSE_STEP = 1 / 120;
+
+function flightAngle(elapsed: number): number {
+	return LAUNCH_MAX_ANGLE * smooth((elapsed - LAUNCH_TURN_START) / LAUNCH_TURN_DURATION);
+}
+
+function buildLaunchPoses(): LaunchPose[] {
+	const count = Math.ceil((LAUNCH_CYCLE_DURATION - LIFTOFF_TIME) / LAUNCH_POSE_STEP);
+	const poses: LaunchPose[] = [{ x: 0, y: 0, vx: 0, vy: 0, bodyAngle: 0 }];
+	let x = 0;
+	let y = 0;
+	for (let index = 1; index <= count; index++) {
+		const elapsed = index * LAUNCH_POSE_STEP;
+		const midpoint = elapsed - LAUNCH_POSE_STEP / 2;
+		const angle = flightAngle(midpoint);
+		const speed = LAUNCH_ACCELERATION * midpoint;
+		x += Math.sin(angle) * speed * LAUNCH_POSE_STEP;
+		y += Math.cos(angle) * speed * LAUNCH_POSE_STEP;
+		const currentAngle = flightAngle(elapsed);
+		const currentSpeed = LAUNCH_ACCELERATION * elapsed;
+		poses.push({
+			x,
+			y,
+			vx: Math.sin(currentAngle) * currentSpeed,
+			vy: Math.cos(currentAngle) * currentSpeed,
+			bodyAngle: currentAngle
+		});
+	}
+	return poses;
+}
+
+const LAUNCH_POSES = buildLaunchPoses();
+
+export function getLaunchPose(time: number): LaunchPose {
+	const elapsed = Math.max(
+		0,
+		Math.min(time - LIFTOFF_TIME, (LAUNCH_POSES.length - 1) * LAUNCH_POSE_STEP)
+	);
+	const position = elapsed / LAUNCH_POSE_STEP;
+	const index = Math.min(Math.floor(position), LAUNCH_POSES.length - 1);
+	const next = Math.min(index + 1, LAUNCH_POSES.length - 1);
+	const fraction = position - index;
+	const start = LAUNCH_POSES[index];
+	const end = LAUNCH_POSES[next];
+	const bodyAngle = flightAngle(elapsed);
+	const speed = LAUNCH_ACCELERATION * elapsed;
+	return {
+		x: start.x + (end.x - start.x) * fraction,
+		y: start.y + (end.y - start.y) * fraction,
+		vx: Math.sin(bodyAngle) * speed,
+		vy: Math.cos(bodyAngle) * speed,
+		bodyAngle
+	};
+}
 
 function smooth(value: number): number {
 	const t = Math.max(0, Math.min(1, value));
@@ -141,6 +221,7 @@ const GEOMETRY = makeGeometry();
 function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): RocketEngine {
 	const context = canvas.getContext('2d');
 	if (!context) throw new Error('Rocket canvas requires a 2D rendering context');
+	const launchLayer = options.launchLayer ?? 'ground';
 
 	const media = window.matchMedia('(prefers-reduced-motion: reduce)');
 	const colorScheme = window.matchMedia('(prefers-color-scheme: dark)');
@@ -155,6 +236,10 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 	let alphaPitch = Math.cos(0.28);
 	let betaPitch = Math.sin(0.28);
 	let frameTime = 0;
+	let placement = options.placement;
+	let frameBounds: { left: number; top: number; right: number; bottom: number } | null = null;
+	let debugNozzle: [number, number] | null = null;
+	let debugPlumeOrigin: [number, number] | null = null;
 	const startedAt = performance.now();
 	let frozenTime = Number.isFinite(options.time) ? options.time : undefined;
 	let frameId: number | null = null;
@@ -180,6 +265,14 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 		canvas.height = Math.round(height * scale);
 		context.setTransform(scale, 0, 0, scale, 0, 0);
 		const launch = options.mode === 'launch';
+		if (launch && launchLayer === 'flight') {
+			unit = placement?.unit ?? Math.min(height / 13.5, width / 6.4);
+			centerX = placement?.x ?? width * 0.5;
+			centerY = placement?.y ?? height - 44;
+			alphaPitch = Math.cos(0.28);
+			betaPitch = Math.sin(0.28);
+			return;
+		}
 		unit =
 			options.mode === 'exploded'
 				? Math.min(height / 15.5, width / 5)
@@ -240,6 +333,14 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 	};
 
 	const project = (point: Vector3): Projection => {
+		if (options.mode === 'launch' && launchLayer === 'flight') {
+			return [
+				centerX + point[0] * unit,
+				centerY - (point[1] * alphaPitch - point[2] * betaPitch) * unit,
+				point[1] * betaPitch + point[2] * alphaPitch,
+				point[0]
+			];
+		}
 		if (options.mode === 'tumble') {
 			const angle = frameTime * 0.37 + 0.4;
 			const turn = frameTime * 0.7;
@@ -266,6 +367,17 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 	};
 
 	const screenPoint = (x: number, y: number, z = 0): Projection => project([x, y, z]);
+	const includeProjected = (point: Projection) => {
+		if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) return;
+		if (!frameBounds) {
+			frameBounds = { left: point[0], top: point[1], right: point[0], bottom: point[1] };
+			return;
+		}
+		frameBounds.left = Math.min(frameBounds.left, point[0]);
+		frameBounds.top = Math.min(frameBounds.top, point[1]);
+		frameBounds.right = Math.max(frameBounds.right, point[0]);
+		frameBounds.bottom = Math.max(frameBounds.bottom, point[1]);
+	};
 	const line = (a: [number, number], b: [number, number]) => {
 		context.beginPath();
 		context.moveTo(a[0], a[1]);
@@ -313,6 +425,42 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 		};
 	};
 
+	const flightScene = (time: number): Scene => {
+		const pose = getLaunchPose(time);
+		const separated = time >= STAGE_SEPARATION_TIME;
+		const booster = makePart(2);
+		const upper = makePart(7);
+		const global: Transform = {
+			x: pose.x,
+			y: pose.y,
+			tilt: -pose.bodyAngle,
+			roll: 0.6 + time * 0.25
+		};
+		const boosterGlobal: Transform = { ...global };
+		let boosterAlpha = 1;
+		if (separated) {
+			const separationPose = getLaunchPose(STAGE_SEPARATION_TIME);
+			const elapsed = time - STAGE_SEPARATION_TIME;
+			boosterGlobal.x = separationPose.x + separationPose.vx * elapsed;
+			boosterGlobal.y =
+				separationPose.y + separationPose.vy * elapsed - 0.5 * 2.8 * elapsed * elapsed;
+			boosterGlobal.tilt = -separationPose.bodyAngle + elapsed * 0.12;
+			boosterGlobal.roll = 0.6 + STAGE_SEPARATION_TIME * 0.25 + elapsed * 0.16;
+			booster.a = elapsed * 0.1;
+			booster.c = elapsed * 0.13;
+			boosterAlpha = 1 - smooth((time - 9.8) / 0.8);
+		}
+		return {
+			global,
+			partGlobal: separated ? { b: boosterGlobal, f: boosterGlobal, z: boosterGlobal } : undefined,
+			parts: { b: booster, f: booster, z: booster, u: upper, n: upper },
+			plumes: [],
+			reveal: 1,
+			separated,
+			partAlpha: separated ? { b: boosterAlpha, f: boosterAlpha, z: boosterAlpha } : undefined
+		};
+	};
+
 	const sceneB = (time: number): Scene => {
 		const global: Transform = { x: 0, y: 0, tilt: 0, roll: 0.6 + time * 0.45 };
 		const explode = smooth((time - 2.6) / 1.4) - smooth((time - 7.2) / 1.4);
@@ -347,6 +495,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 
 	const drawPlume = (part: PartState, global: Transform, y: number, strength: number) => {
 		if (strength <= 0) return;
+		const baseAlpha = context.globalAlpha;
 		const start = project(transformPoint([0, y, 0], part, global, null));
 		const end = project(transformPoint([0, y - 1, 0], part, global, null));
 		let dx = end[0] - start[0];
@@ -364,27 +513,97 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 			const vy = dx * sin + dy * cos;
 			const jitter = 1 + 1.4 * (0.5 + 0.5 * Math.sin(i * 12.9898 + frameTime * 19.17));
 			const distance = strength * unit * jitter * (1 - Math.abs(i - 4) * 0.12);
-			context.globalAlpha = 0.9 - Math.abs(i - 4) * 0.12;
+			context.globalAlpha = baseAlpha * (0.9 - Math.abs(i - 4) * 0.12);
 			context.setLineDash(i % 2 ? [3, 3] : []);
 			line([start[0], start[1]], [start[0] + vx * distance, start[1] + vy * distance]);
 		}
 		context.setLineDash([]);
-		context.globalAlpha = 1;
+		context.globalAlpha = baseAlpha;
+	};
+
+	const nozzleProjection = (time: number): Projection => {
+		const scene = flightScene(time);
+		const upperStage = time >= STAGE_SEPARATION_TIME;
+		const part = upperStage ? scene.parts.u : scene.parts.b;
+		const nozzleY = upperStage ? 4.2 : -0.75;
+		const global = upperStage ? scene.global : (scene.partGlobal?.b ?? scene.global);
+		return project(transformPoint([0, nozzleY, 0], part, global, null));
+	};
+
+	const drawFlightPlume = (time: number, scene: Scene, alpha: number) => {
+		const upperStage = time >= STAGE_SEPARATION_TIME;
+		const nozzleY = upperStage ? 4.2 : -0.75;
+		const part = upperStage ? scene.parts.u : scene.parts.b;
+		const global = upperStage ? scene.global : (scene.partGlobal?.b ?? scene.global);
+		const strength = upperStage
+			? smooth((time - STAGE_SEPARATION_TIME - 0.45) / 0.3)
+			: smooth((time - 3.4) / 0.8);
+		const nozzle = project(transformPoint([0, nozzleY, 0], part, global, null));
+		debugNozzle = [nozzle[0], nozzle[1]];
+		if (strength <= 0) return;
+		debugPlumeOrigin = [nozzle[0], nozzle[1]];
+		const nose = project(transformPoint([0, nozzleY + 1, 0], part, global, null));
+		const axisLength = Math.hypot(nose[0] - nozzle[0], nose[1] - nozzle[1]) || 1;
+		const axisX = (nose[0] - nozzle[0]) / axisLength;
+		const axisY = (nose[1] - nozzle[1]) / axisLength;
+		const plumeLength = unit * (0.85 + strength * 0.25);
+		const tail: [number, number] = [
+			nozzle[0] - axisX * plumeLength,
+			nozzle[1] - axisY * plumeLength
+		];
+		includeProjected([nozzle[0], nozzle[1], nozzle[2]]);
+		includeProjected([tail[0], tail[1], nozzle[2]]);
+		context.save();
+		context.globalAlpha = alpha * strength;
+		context.strokeStyle = palette.accent;
+		context.lineWidth = 1.4;
+		context.setLineDash([2, 2]);
+		line([nozzle[0], nozzle[1]], tail);
+		context.setLineDash([]);
+		context.fillStyle = palette.accent;
+		const firstEmission = Math.max(LIFTOFF_TIME, time - 0.72);
+		for (let emitted = firstEmission; emitted < time; emitted += 0.09) {
+			if (emitted < STAGE_SEPARATION_TIME && upperStage) continue;
+			if (emitted >= STAGE_SEPARATION_TIME && !upperStage) continue;
+			if (emitted >= STAGE_SEPARATION_TIME && emitted < STAGE_SEPARATION_TIME + 0.45) continue;
+			const origin = nozzleProjection(emitted);
+			const emittedScene = flightScene(emitted);
+			const emittedUpper = emitted >= STAGE_SEPARATION_TIME;
+			const emittedNozzleY = emittedUpper ? 4.2 : -0.75;
+			const emittedPart = emittedUpper ? emittedScene.parts.u : emittedScene.parts.b;
+			const emittedGlobal = emittedUpper
+				? emittedScene.global
+				: (emittedScene.partGlobal?.b ?? emittedScene.global);
+			const emittedNose = project(
+				transformPoint([0, emittedNozzleY + 1, 0], emittedPart, emittedGlobal, null)
+			);
+			const emittedAxisLength = Math.hypot(emittedNose[0] - origin[0], emittedNose[1] - origin[1]);
+			const age = time - emitted;
+			const drift = age * unit * 0.34;
+			const x = origin[0] - ((emittedNose[0] - origin[0]) / emittedAxisLength) * drift;
+			const y = origin[1] - ((emittedNose[1] - origin[1]) / emittedAxisLength) * drift;
+			context.globalAlpha = alpha * (1 - age / 0.72) * 0.75;
+			context.fillRect(x - 0.7, y - 0.7, 1.4, 1.4);
+		}
+		context.restore();
 	};
 
 	const drawRocket = (scene: Scene) => {
 		const revealY = -0.75 + scene.reveal * 10.4;
+		const baseAlpha = context.globalAlpha;
 		for (let pass = 0; pass < 2; pass++) {
 			for (const segment of GEOMETRY) {
 				if (segment.middleY > revealY) continue;
+				if (baseAlpha * (scene.partAlpha?.[segment.part] ?? 1) <= 0.01) continue;
 				const part = scene.parts[segment.part];
-				const a = project(transformPoint(segment.a, part, scene.global, segment.finDirection));
-				const b = project(transformPoint(segment.b, part, scene.global, segment.finDirection));
+				const partGlobal = scene.partGlobal?.[segment.part] ?? scene.global;
+				const a = project(transformPoint(segment.a, part, partGlobal, segment.finDirection));
+				const b = project(transformPoint(segment.b, part, partGlobal, segment.finDirection));
+				includeProjected(a);
+				includeProjected(b);
 				const middle: Projection = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
-				const axisA = project(transformPoint([0, segment.middleY, 0], part, scene.global, null));
-				const axisB = project(
-					transformPoint([0, segment.middleY + 1, 0], part, scene.global, null)
-				);
+				const axisA = project(transformPoint([0, segment.middleY, 0], part, partGlobal, null));
+				const axisB = project(transformPoint([0, segment.middleY + 1, 0], part, partGlobal, null));
 				const axisX = axisB[0] - axisA[0];
 				const axisY = axisB[1] - axisA[1];
 				const axisLength = Math.hypot(axisX, axisY) || 1;
@@ -393,7 +612,8 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 				const hidden = middle[2] < axisA[2] - 0.02 && distance < segment.radius * unit * 0.97;
 				if ((pass === 0) !== hidden) continue;
 				context.setLineDash(hidden ? [2, 3] : []);
-				context.globalAlpha = hidden ? 0.55 : 1;
+				context.globalAlpha =
+					baseAlpha * (scene.partAlpha?.[segment.part] ?? 1) * (hidden ? 0.55 : 1);
 				context.strokeStyle = hidden
 					? palette.mute
 					: segment.accent
@@ -404,16 +624,27 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 			}
 		}
 		context.setLineDash([]);
-		context.globalAlpha = 1;
+		context.globalAlpha = baseAlpha;
 		if (scene.reveal < 1) {
 			const scan = project(transformPoint([0, revealY, 0], scene.parts.u, scene.global, null));
 			context.strokeStyle = palette.accent;
 			context.lineWidth = 1.5;
+			includeProjected([scan[0] - 1.1 * unit, scan[1], scan[2]]);
+			includeProjected([scan[0] + 1.1 * unit, scan[1], scan[2]]);
 			line([scan[0] - 1.1 * unit, scan[1]], [scan[0] + 1.1 * unit, scan[1]]);
 			context.fillStyle = palette.accent;
 			context.fillRect(scan[0] + 1.1 * unit - 2, scan[1] - 2, 4, 4);
 		}
-		for (const [part, y, strength] of scene.plumes) drawPlume(part, scene.global, y, strength);
+		context.globalAlpha = baseAlpha;
+		for (const [part, y, strength] of scene.plumes) {
+			const partGlobal =
+				part === scene.parts.b ? (scene.partGlobal?.b ?? scene.global) : scene.global;
+			const origin = project(transformPoint([0, y, 0], part, partGlobal, null));
+			if (!debugNozzle && strength > 0) debugNozzle = [origin[0], origin[1]];
+			if (!debugPlumeOrigin && strength > 0) debugPlumeOrigin = [origin[0], origin[1]];
+			drawPlume(part, partGlobal, y, strength);
+		}
+		context.globalAlpha = baseAlpha;
 	};
 
 	const drawGround = (alpha: number) => {
@@ -485,21 +716,32 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 	};
 
 	const drawTrail = (time: number, alpha: number) => {
-		if (time < 4.3) return;
+		if (time < LIFTOFF_TIME) return;
+		const segments: Array<[number, number]> =
+			time < STAGE_SEPARATION_TIME
+				? [[LIFTOFF_TIME, time]]
+				: [
+						[LIFTOFF_TIME, STAGE_SEPARATION_TIME - 0.001],
+						[STAGE_SEPARATION_TIME, time]
+					];
+		context.save();
 		context.strokeStyle = palette.line;
 		context.globalAlpha = alpha * 0.55;
 		context.setLineDash([3, 4]);
-		context.beginPath();
-		for (let t = 4.25; t <= Math.min(time, 12); t += 0.06) {
-			const scene = sceneA(t);
-			const part = t > 8 ? scene.parts.u : scene.parts.b;
-			const p = project(transformPoint([0, t > 8 ? 4.2 : -0.75, 0], part, scene.global, null));
-			if (t === 4.25) context.moveTo(p[0], p[1]);
-			else context.lineTo(p[0], p[1]);
+		for (const [start, end] of segments) {
+			context.beginPath();
+			const span = Math.max(0, end - start);
+			const steps = Math.ceil(span / 0.05);
+			for (let index = 0; index <= steps; index++) {
+				const t = index === steps ? end : start + (span * index) / Math.max(steps, 1);
+				const point = nozzleProjection(t);
+				if (index === 0) context.moveTo(point[0], point[1]);
+				else context.lineTo(point[0], point[1]);
+			}
+			context.stroke();
 		}
-		context.stroke();
 		context.setLineDash([]);
-		context.globalAlpha = 1;
+		context.restore();
 	};
 
 	const drawSeparationChain = (scene: Scene) => {
@@ -535,27 +777,70 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 		context.globalAlpha = 1;
 	};
 
+	const writeDebugFrame = (time: number) => {
+		if (!window.location.hash.slice(1).split('&').includes('debug')) return;
+		const rect = canvas.getBoundingClientRect();
+		const toPagePoint = (point: [number, number] | null) =>
+			point ? { x: rect.left + point[0], y: rect.top + point[1] } : null;
+		const bounds = frameBounds
+			? {
+					left: rect.left + frameBounds.left,
+					top: rect.top + frameBounds.top,
+					right: rect.left + frameBounds.right,
+					bottom: rect.top + frameBounds.bottom
+				}
+			: null;
+		const pose = getLaunchPose(time);
+		canvas.dataset.rocketFrame = JSON.stringify({
+			time,
+			bounds,
+			nozzle: toPagePoint(debugNozzle),
+			plumeOrigin: toPagePoint(debugPlumeOrigin),
+			bodyAngle: pose.bodyAngle,
+			velocityAngle: Math.atan2(pose.vx, pose.vy)
+		});
+	};
+
 	const drawFrame = (time: number) => {
 		if (destroyed || !width || !height) return;
 		frameTime = time;
+		frameBounds = null;
+		debugNozzle = null;
+		debugPlumeOrigin = null;
 		context.clearRect(0, 0, width, height);
 		cameraX = 0;
 		cameraY = 0;
-		if (options.mode === 'launch') {
-			const scene = sceneA(time);
-			const camera = sceneA(Math.min(time, 10.6));
-			cameraY = Math.max(0, camera.global.y - 2.2);
-			cameraX = camera.global.x * 0.8;
-			const alpha = 1 - smooth((time - 11) / 1);
-			const groundAlpha = Math.min(1, scene.reveal * 1.6) * alpha;
+		if (options.mode === 'launch' && launchLayer === 'ground') {
+			const stationary = (forcedStill || media.matches) && frozenTime === undefined;
+			const groundTime = stationary ? stillTime() : Math.min(time, LIFTOFF_TIME);
+			const scene = sceneA(groundTime);
+			if (!stationary && time >= LIFTOFF_TIME) scene.plumes = [];
+			const groundAlpha = stationary ? 1 : 1 - smooth((time - 11) / 1);
+			const rocketAlpha = stationary
+				? 1
+				: time <= LIFTOFF_TIME
+					? 1
+					: 1 - smooth((time - LIFTOFF_TIME) / 0.3);
 			drawRuler(groundAlpha);
 			drawGround(groundAlpha);
 			drawTower(time, groundAlpha);
-			drawTrail(time, alpha);
-			context.save();
-			context.globalAlpha = alpha;
-			drawRocket(scene);
-			context.restore();
+			if (rocketAlpha > 0.01) {
+				context.save();
+				context.globalAlpha = rocketAlpha;
+				drawRocket(scene);
+				context.restore();
+			}
+		} else if (options.mode === 'launch') {
+			const stationary = (forcedStill || media.matches) && frozenTime === undefined;
+			if (!stationary && time >= LIFTOFF_TIME) {
+				const scene = flightScene(time);
+				const alpha = 1 - smooth((time - 10.8) / 1.3);
+				drawTrail(time, alpha);
+				if (alpha > 0.01) {
+					drawRocket(scene);
+					drawFlightPlume(time, scene, alpha);
+				}
+			}
 		} else if (options.mode === 'exploded') {
 			const scene = sceneB(time);
 			drawGround(1);
@@ -569,6 +854,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 		// The read values are kept here so all four runtime tokens are refreshed with the theme.
 		void palette.mute;
 		void palette.paper;
+		writeDebugFrame(time);
 	};
 
 	const stillTime = () => (options.mode === 'launch' ? 4.35 : options.mode === 'exploded' ? 5 : 0);
@@ -589,7 +875,12 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 			return;
 		}
 		const elapsed = (now - startedAt) / 1000;
-		const duration = options.mode === 'launch' ? 12.5 : options.mode === 'exploded' ? 10 : Infinity;
+		const duration =
+			options.mode === 'launch'
+				? LAUNCH_CYCLE_DURATION
+				: options.mode === 'exploded'
+					? 10
+					: Infinity;
 		drawFrame(Number.isFinite(duration) ? elapsed % duration : elapsed);
 		frameId = requestAnimationFrame(tick);
 	};
@@ -640,6 +931,15 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 		setTime(time: number) {
 			frozenTime = Number.isFinite(time) ? Math.max(0, time) : undefined;
 			update();
+		},
+		setLaunchPlacement(nextPlacement: LaunchPlacement) {
+			placement = nextPlacement;
+			if (options.mode === 'launch' && launchLayer === 'flight') {
+				centerX = placement.x;
+				centerY = placement.y;
+				unit = placement.unit;
+				update();
+			}
 		},
 		redraw() {
 			readColors();

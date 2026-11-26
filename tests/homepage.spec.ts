@@ -6,7 +6,7 @@ const lede = 'Software engineer in Brazil. I take things apart and write down ho
 const latestPosts = getAllPosts().slice(0, 3);
 
 async function canvasPixels(page: Page) {
-	return page.locator('canvas').evaluate((canvas) => {
+	return page.locator('.rocket-ground-canvas').evaluate((canvas) => {
 		const element = canvas as HTMLCanvasElement;
 		const context = element.getContext('2d');
 		if (!context) throw new Error('Canvas 2D context is unavailable');
@@ -99,6 +99,29 @@ test.describe('Homepage', () => {
 		expect(sizes.content).toBe(sizes.viewport);
 	});
 
+	test('keeps the full-sheet flight canvas out of layout flow', async ({ page }, testInfo) => {
+		test.skip(testInfo.project.name !== 'chromium-desktop', 'Runs the layout-shift check once');
+		await page.addInitScript(() => {
+			document.documentElement.dataset.launchLayoutShiftScore = '0';
+			new PerformanceObserver((entries) => {
+				let score = Number(document.documentElement.dataset.launchLayoutShiftScore ?? '0');
+				for (const entry of entries.getEntries() as Array<
+					PerformanceEntry & { hadRecentInput?: boolean; value?: number }
+				>) {
+					if (!entry.hadRecentInput) score += entry.value ?? 0;
+				}
+				document.documentElement.dataset.launchLayoutShiftScore = String(score);
+			}).observe({ type: 'layout-shift', buffered: true });
+		});
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto('/');
+		await page.waitForTimeout(500);
+		const score = await page.evaluate(() =>
+			Number(document.documentElement.dataset.launchLayoutShiftScore ?? '0')
+		);
+		expect(score).toBe(0);
+	});
+
 	for (const viewport of [
 		{ label: 'desktop', width: 1280, height: 800 },
 		{ label: 'phone', width: 390, height: 844 }
@@ -109,6 +132,71 @@ test.describe('Homepage', () => {
 			await assertNoRocketOverlap(page);
 		});
 	}
+
+	test('keeps the projected rocket clear of the text throughout launch at supported widths', async ({
+		page
+	}, testInfo) => {
+		test.skip(
+			testInfo.project.name !== 'chromium-desktop',
+			'Runs the explicit viewport matrix once'
+		);
+		const viewports = [
+			{ width: 1280, height: 800 },
+			{ width: 1440, height: 900 },
+			{ width: 390, height: 844 },
+			{ width: 2560, height: 1440 },
+			{ width: 3840, height: 2160 }
+		];
+
+		for (const viewport of viewports) {
+			await page.setViewportSize(viewport);
+			await page.goto('/#debug&t=0');
+			for (let time = 0; time <= 12.5; time += 0.25) {
+				const roundedTime = Number(time.toFixed(2));
+				await page.evaluate((value) => {
+					window.location.hash = `#debug&t=${value}`;
+				}, roundedTime);
+				await expect
+					.poll(async () => {
+						const frame = await page
+							.locator('.rocket-flight-canvas')
+							.getAttribute('data-rocket-frame');
+						return frame ? JSON.parse(frame).time : null;
+					})
+					.toBe(roundedTime);
+
+				const bounds = await page.evaluate(() => {
+					const parse = (selector: string) => {
+						const raw = document.querySelector<HTMLCanvasElement>(selector)?.dataset.rocketFrame;
+						return raw ? JSON.parse(raw).bounds : null;
+					};
+					const rocket = [parse('.rocket-ground-canvas'), parse('.rocket-flight-canvas')].filter(
+						(value) => value !== null
+					);
+					const text = ['main h1', '.lede', '.latest', '.cta-wrap'].map((selector) => {
+						const { left, top, right, bottom } = document
+							.querySelector(selector)!
+							.getBoundingClientRect();
+						return { left, top, right, bottom, selector };
+					});
+					return { rocket, text };
+				});
+				for (const rocket of bounds.rocket) {
+					for (const text of bounds.text) {
+						const intersects =
+							rocket.left < text.right &&
+							rocket.right > text.left &&
+							rocket.top < text.bottom &&
+							rocket.bottom > text.top;
+						expect(
+							intersects,
+							`rocket ${JSON.stringify(rocket)} intersects ${text.selector} at ${viewport.width}x${viewport.height}, t=${roundedTime}`
+						).toBe(false);
+					}
+				}
+			}
+		}
+	});
 
 	test('passes accessibility scans in light and dark themes', async ({ page }) => {
 		await page.goto('/');
