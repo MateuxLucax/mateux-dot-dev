@@ -321,7 +321,7 @@
 	}
 	.row-title {
 		color: var(--ink);
-		font-family: var(--font-sans);
+		font-family: var(--font-mono);
 	}
 	.row-reading {
 		text-align: right;

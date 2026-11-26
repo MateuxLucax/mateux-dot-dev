@@ -52,6 +52,33 @@ test.describe('Blog Posts', () => {
 				expect(text?.trim().length).toBeGreaterThan(0);
 			});
 
+			if (post.slug === 'timemore-dot-ble') {
+				test('inline code has no decorative backticks', async ({ page }) => {
+					const inlineCode = page.locator('.prose code:not(pre code)').first();
+					await expect(inlineCode).toBeVisible();
+					const pseudoContent = await inlineCode.evaluate((element) => ({
+						before: getComputedStyle(element, '::before').content,
+						after: getComputedStyle(element, '::after').content
+					}));
+					expect(pseudoContent).toEqual({ before: 'none', after: 'none' });
+					await expect(inlineCode).toHaveCSS('font-weight', '400');
+				});
+
+				test('sequence diagram fills the wide figure track', async ({ page }) => {
+					const figure = page.locator('.pele-sequence-diagram');
+					for (const width of [1440, 3840]) {
+						await page.setViewportSize({ width, height: 2160 });
+						const figureBox = await figure.boundingBox();
+						const artBox = await figure.locator('.pele-diagram-art').boundingBox();
+						const svgBox = await figure.locator('.pele-sequence').boundingBox();
+						expect(figureBox?.width).toBeGreaterThan(760);
+						if (width === 3840) expect(figureBox?.width).toBeCloseTo(1832, 0);
+						expect(svgBox?.width).toBeCloseTo(artBox?.width ?? 0, 0);
+						expect((svgBox?.height ?? 0) / (svgBox?.width ?? 1)).toBeCloseTo(574 / 1880, 2);
+					}
+				});
+			}
+
 			test('has back link to blog', async ({ page }) => {
 				const backLink = page.getByRole('link', { name: /All writing|Back to posts/ }).first();
 				await expect(backLink).toBeVisible();
@@ -156,7 +183,8 @@ test.describe('Blog Posts', () => {
 						.first()
 						.locator('figcaption')
 						.evaluate((caption) => getComputedStyle(caption, '::before').content);
-					expect(captionLabel).toContain('FIG.');
+					expect(captionLabel).toBe('"FIG. " counter(figure)');
+					await expect(figures.first().locator('figcaption')).toHaveText('');
 					await assertPeleDiagrams(page, post.diagramCount);
 				});
 
