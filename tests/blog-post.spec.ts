@@ -64,17 +64,36 @@ test.describe('Blog Posts', () => {
 					await expect(inlineCode).toHaveCSS('font-weight', '400');
 				});
 
-				test('sequence diagram fills the wide figure track', async ({ page }) => {
+				test('sequence diagram scales uniformly inside wide figure tracks', async ({ page }) => {
 					const figure = page.locator('.pele-sequence-diagram');
-					for (const width of [1440, 3840]) {
+					const svg = figure.locator('.pele-sequence');
+					for (const width of [1280, 2560, 3840]) {
 						await page.setViewportSize({ width, height: 2160 });
-						const figureBox = await figure.boundingBox();
-						const artBox = await figure.locator('.pele-diagram-art').boundingBox();
-						const svgBox = await figure.locator('.pele-sequence').boundingBox();
-						expect(figureBox?.width).toBeGreaterThan(760);
-						if (width === 3840) expect(figureBox?.width).toBeCloseTo(1832, 0);
-						expect(svgBox?.width).toBeCloseTo(artBox?.width ?? 0, 0);
-						expect((svgBox?.height ?? 0) / (svgBox?.width ?? 1)).toBeCloseTo(574 / 1880, 2);
+						const metrics = await svg.evaluate((element) => {
+							const {
+								width: renderedWidth,
+								height: renderedHeight,
+								x
+							} = element.getBoundingClientRect();
+							const viewBox = element.getAttribute('viewBox')!.split(/[ ,]+/).map(Number);
+							const parent = element.parentElement!.getBoundingClientRect();
+							return {
+								renderedRatio: renderedWidth / renderedHeight,
+								viewBoxRatio: viewBox[2] / viewBox[3],
+								width: renderedWidth,
+								centerOffset: Math.abs(x + renderedWidth / 2 - (parent.x + parent.width / 2)),
+								preserveAspectRatio: element.getAttribute('preserveAspectRatio')
+							};
+						});
+						expect(Math.abs(metrics.renderedRatio / metrics.viewBoxRatio - 1)).toBeLessThan(0.02);
+						expect(metrics.centerOffset).toBeLessThan(1);
+						expect(metrics.preserveAspectRatio).toBeNull();
+						if (width >= 1440) {
+							const figureBox = await figure.boundingBox();
+							expect(figureBox?.width).toBeGreaterThan(760);
+							if (width === 3840) expect(figureBox?.width).toBeCloseTo(1832, 0);
+							expect(metrics.width).toBeCloseTo(470, 0);
+						}
 					}
 				});
 			}

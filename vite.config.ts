@@ -92,10 +92,9 @@ function mermaidToSvg(code: string) {
 		measurer: monospaceMeasurer,
 		responsive: !isSequence
 	});
-	const diagramSvg = isSequence ? svg.replace('<svg ', '<svg preserveAspectRatio="none" ') : svg;
 	const figureClass = isSequence ? 'pele-diagram pele-sequence-diagram' : 'pele-diagram';
 
-	return `<figure class="${figureClass}"><div class="pele-diagram-art">${diagramSvg}</div><figcaption></figcaption></figure>`;
+	return `<figure class="${figureClass}"><div class="pele-diagram-art">${svg}</div><figcaption></figcaption></figure>`;
 }
 
 const mdsvexOptions = {
