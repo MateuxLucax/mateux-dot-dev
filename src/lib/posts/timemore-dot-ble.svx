@@ -6,27 +6,23 @@ tags: [android, bluetooth, ble, reverse-engineering, kotlin]
 description: "Reverse-engineering the Timemore Dot coffee scale's BLE protocol from captures: GATT from zero, an A5 5A frame with a CRC you only half-trust, and recorded sessions replayed by a test."
 ---
 
-<script>
-  import Mermaid from '$lib/components/Mermaid.svelte';
-</script>
-
-My Timemore Dot coffee scale has no screen, no SDK, and no protocol documentation. To read the weight, I decoded the BLE traffic myself.
+My Timemore Dot coffee scale has no screen or SDK. I decoded its BLE traffic to read the weight and cross-checked the result against [Timemore's official protocol documentation](https://github.com/TIMEMORE-COFFEE/open-scale-protocol), which also covers the Dot.
 
 ## BLE for people who never touched it
 
-A BLE device is a GATT server: it exposes a table of services, each holding characteristics, each optionally with descriptors. The phone is the client. You call `connectGatt()` to get a `BluetoothGatt`, `discoverServices()` to see the table, and then you read characteristics, write them, or subscribe to notifications.
+This scale acts as a GATT server: it exposes a table of services, each holding characteristics, each optionally with descriptors. The phone is the client. You call `connectGatt()` to get a `BluetoothGatt`, `discoverServices()` to see the table, and then you read characteristics, write them, or subscribe to notifications.
 
 Notifications are opt-in twice. You call `setCharacteristicNotification()` on the phone, and you write the Client Characteristic Configuration descriptor (`0x2902`) so the device knows to push. Data then shows up in `onCharacteristicChanged()`.
 
-Bonding is `createBond()`: an OS-level pairing that stores a key and gives you link encryption, separate from GATT. MTU is the packet size, and the default is 23 bytes, which leaves 20 bytes of payload. If you expect more, you ask for it with `requestMtu()`. The [Android BLE guide](https://developer.android.com/develop/connectivity/bluetooth/ble/connect-gatt-server) covers the rest.
+Bonding is `createBond()`: an OS-level pairing that stores a key and gives you link encryption, separate from GATT. The ATT MTU limits the size of an ATT PDU; the default of 23 bytes leaves 20 bytes for a notification value. `requestMtu()` starts an asynchronous negotiation: `onMtuChanged` reports the result, which may differ from the requested value. Starting with Android 14, the first request on a connection asks for 517 regardless of the requested value. The [Android BLE guide](https://developer.android.com/develop/connectivity/bluetooth/ble/connect-gatt-server) covers the rest.
 
-This scale exposes one service, `fff0`, with two characteristics: `fff1` notifies (scale to app) and `fff2` writes without response (app to scale).
+This scale exposes one custom service, `fff0`, with two characteristics (alongside a Device Information Service): `fff1` notifies (scale to app) and `fff2` writes without response (app to scale).
 
 ## The handshake
 
 The working order is:
 
-<Mermaid diagram={`
+```mermaid
 sequenceDiagram
     participant App
     participant Scale
@@ -40,15 +36,15 @@ sequenceDiagram
     Note over App: 200 ms
     App->>Scale: standard mode, battery query
     Scale-->>App: weight notifications
-`} />
+```
 
-The scale only streams over an encrypted link, so if you skip bonding you get silence. Bonding is also one-slot: the scale remembers a single bonded device and drops any other with an HCI `0x3E` error, so re-pairing means holding the button until the LED blinks fast. The first connect after a long idle often fails with status 133, so I retry instead of declaring it broken. I request an MTU of 247 because real notifications carry several frames: the largest capture was 36 bytes, and 15 of 3,419 idle notifications exceed the 20-byte default, so they would have been split.
+On my unit, streaming required an encrypted link. It appeared to remember one bonded phone; attempts from another were associated with an HCI `0x3E` error, and holding the button until the LED blinked fast allowed re-pairing. I also encountered status 133 on connection after idle, so the app retries; I did not measure how often it happens. I request an MTU of 247 because real notifications carry several frames: the largest capture was 36 bytes, and 15 of 3,419 idle notifications exceed the 20-byte default, so they would have been split.
 
 ## Framing: `A5 5A`
 
 Every frame looks like this:
 
-```plaintext
+```
 A5 5A <type> <cmd> <len_hi> <len_lo> <payload…> <crc_hi> <crc_lo>
 ```
 
@@ -56,13 +52,13 @@ A5 5A <type> <cmd> <len_hi> <len_lo> <payload…> <crc_hi> <crc_lo>
 
 Outgoing frames carry a CRC-16/MODBUS checksum (init `0xFFFF`, reflected polynomial `0xA001`) over every byte before it, big-endian. That big-endian order already deviates from the MODBUS convention, which sends the CRC low byte first, and you only notice by computing the value. The "set unit to grams" frame `A5 5A 03 06 00 01 00` checksums to `E8 A7`, so the app sends `A5 5A 03 06 00 01 00 E8 A7`.
 
-Incoming frames are the opposite. Every one of the 3,931 received frames in my two real captures ends in `00 00`: the scale never fills in the checksum. A valid incoming weight body would checksum to `0x82E6`, and it still arrives as `00 00`. If you validate the received CRC, you drop every valid reading. So the rule is: validate what you send, never what you receive.
+Incoming frames are the opposite. Every one of the 3,931 received frames in my two real captures ends in `00 00`: the scale never fills in the checksum. For example, `A5 5A 01 01 00 09 00 00 01 DA 00 00 00 00 00` computes to `09 53`, but the received frame ends in `00 00`. Timemore calls these bytes reserved for device-to-app frames. The app therefore does not validate incoming CRCs on the tested firmware.
 
-The layout came from community notes, and I confirmed each field against the device.
+I compared the layout with the official protocol and checked the fields used by the app against captures.
 
 ## One notification is not one frame
 
-A single notification can hold several frames (I saw an ack, a battery read, and a weight update packed into one 36-byte notification), and a frame can be split across two notifications. So the decoder's job is mostly resynchronization, not parsing.
+A single notification can hold several frames (I saw an ack, a battery read, and a weight update packed into one 36-byte notification), and a frame could be split across notifications; the decoder handles that case in a test, although I did not find a split frame in these two captures. So the decoder's job is mostly resynchronization, not parsing.
 
 The loop: append to a buffer, scan for `A5 5A`, read the declared length, drop anything above 64 as out of sync, wait for the whole frame, emit it, repeat. I keep a trailing `A5` because its `5A` might arrive in the next chunk. The buffer is capped at 512 bytes so a garbage stream cannot grow forever, and I reset it on reconnect.
 
@@ -71,18 +67,26 @@ The loop: append to a buffer, scan for `A5 5A`, read the declared length, drop a
 The `01 01` frame is the weight update, measured at 10.01 Hz on my unit. It is 9 bytes:
 
 ```kotlin
-weightGrams = int32(p, 0) / 10.0         // int32 big-endian, ÷10 g
-flowGramsPerSecond = int16(p, 4) / 10.0  // int16 big-endian, ÷10 g/s
-timerSeconds = uint16(p, 6)              // uint16 seconds
-overload = p.size > 8 && p[8] != 0       // overload flag in byte 8
+fun uint16(p: ByteArray, at: Int): Int =
+    ((p[at].toInt() and 0xFF) shl 8) or (p[at + 1].toInt() and 0xFF)
+fun int16(p: ByteArray, at: Int): Int = uint16(p, at).toShort().toInt()
+fun int32(p: ByteArray, at: Int): Int = (uint16(p, at) shl 16) or uint16(p, at + 2)
+
+fun decode(p: ByteArray) {
+    require(p.size >= 8)
+    val weightGrams = int32(p, 0) / 10.0
+    val flowGramsPerSecond = int16(p, 4) / 10.0
+    val timerSeconds = uint16(p, 6)
+    val overload = p.size > 8 && p[8] != 0.toByte()
+}
 ```
 
 A real frame `00 00 04 DA 02 24 00 00 00` decodes to 124.2 g at 54.8 g/s with the timer at 0.
 
-Battery is read with `02 05`, and it comes back as two bytes `[bars, percent]` (`03 64` is 3 bars, 100 %). The scale also pushes that payload on its own, but not on a reliable schedule, so the app polls every 60 seconds and takes the push whenever it shows up. Commands are writes: `03 0D` tare, `03 02 [01|02|03]` timer start/pause/reset, `03 06 [00]` set grams, `03 08 [01 00]` standard mode, `02 13` read model. Each is acknowledged with `03 <cmd> 00 01 01`.
+Battery is read with `02 05`, and it comes back as two bytes `[bars, percent]` (`03 64` is 3 bars, 100 %). The scale also pushes that payload on its own, but not on a reliable schedule, so the app polls every 60 seconds and takes the push whenever it shows up. Writes include `03 0D` tare, `03 02 [01|02|03]` timer start/pause/reset, `03 06 [00]` set grams and `03 08 [01 00]` standard mode. The capture contains acknowledgements `03 <cmd> 00 01 01` for the unit and mode writes. `02 13` is a read request, with model data in its reply.
 
 ## Trusting the numbers
 
-The raw flow saturates on a sudden load (99.9 g/s on my unit), so I clamp it to 0–25 g/s and smooth it. That clamp is a decision in the app, not a limit of the scale, which reports higher. There is no stability flag at all, so stability has to be computed in the app. That is where "just read the weight" turns into a data problem. The overload flag turned on around 1300 g on this unit, and an idle session stayed connected for 5 min 42 s with no keep-alive. Both of those are measurements on one device, not a datasheet.
+The raw flow saturates on a sudden load (99.9 g/s on my unit), so I clamp it to 0–25 g/s and smooth it. That clamp is a decision in the app, not a limit of the scale, which reports higher. I found no stability flag in the decoded weight payload, so stability is computed in the app. That is where "just read the weight" turns into a data problem. The overload flag turned on around 1300 g on this unit, and an idle session stayed connected for 5 min 42 s with no keep-alive. Both of those are measurements on one device, not a datasheet.
 
 I keep the recorded notifications as JSONL and replay them through the decoder in `RecordedSessionTest`, which asserts no unknown frames, the overload event, the unit and mode acknowledgements, and about 3,400 weight readings in the idle capture. What the app does with those readings after that is a whole other post.
