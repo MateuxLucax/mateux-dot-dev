@@ -71,12 +71,20 @@ export async function assertPeleDiagrams(page: Page, count: number) {
 }
 
 export async function assertPeleTheme(page: Page, scheme: 'light' | 'dark') {
-	const fg = await page
+	const colors = await page
 		.locator('.pele-diagram svg.pele')
 		.first()
-		.evaluate((el) => getComputedStyle(el).getPropertyValue('--pele-fg').trim().toLowerCase());
-	// Catppuccin Latte / Mocha text colors, matching the Shiki themes.
-	expect(fg).toBe(scheme === 'dark' ? '#cdd6f4' : '#4c4f69');
+		.evaluate((el) => {
+			const diagramStyle = getComputedStyle(el);
+			const themeStyle = getComputedStyle(document.documentElement);
+			return {
+				fg: diagramStyle.getPropertyValue('--pele-fg').trim(),
+				ink: themeStyle.getPropertyValue('--ink').trim(),
+				text: themeStyle.getPropertyValue('--text').trim(),
+				sequence: el.classList.contains('pele-sequence')
+			};
+		});
+	expect(colors.fg).toBe(scheme === 'dark' && !colors.sequence ? colors.ink : colors.text);
 }
 
 export async function runA11yScan(page: Page) {

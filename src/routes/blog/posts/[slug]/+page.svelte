@@ -337,11 +337,16 @@
 		background: var(--hi);
 	}
 	.prose :global(code:not(pre code)) {
-		padding: 1px 4px;
+		padding: 1px 5px;
 		background: var(--mantle);
 		color: var(--ink);
 		font-family: var(--font-mono);
-		font-size: 0.85em;
+		font-size: 0.88em;
+		font-weight: 400;
+	}
+	.prose :global(code:not(pre code)::before),
+	.prose :global(code:not(pre code)::after) {
+		content: none;
 	}
 	.prose :global(blockquote) {
 		margin: 20px 0;
@@ -405,7 +410,7 @@
 		height: auto;
 	}
 	.prose :global(.pele-diagram figcaption::before) {
-		content: 'FIG. ' counter(figure) ' · ';
+		content: 'FIG. ' counter(figure);
 	}
 	.prose :global(.pele-diagram .pele) {
 		--pele-bg: var(--paper);
@@ -420,7 +425,43 @@
 		--pele-accent: var(--line);
 		--pele-critical: var(--red);
 	}
-	:global(:root[data-theme='dark'] .pele-diagram .pele) {
+	.prose :global(.pele-diagram .pele-sequence) {
+		--pele-fg: var(--text);
+		--pele-line: var(--ink);
+		--pele-surface: var(--paper);
+		--pele-surface-alt: var(--hi);
+		--pele-border: var(--line);
+		--pele-radius: 0px;
+	}
+	.prose :global(.pele-sequence .pele-actor-participant rect) {
+		fill: var(--paper);
+		stroke: var(--line);
+		stroke-width: 1.5px;
+	}
+	.prose :global(.pele-sequence .pele-actor-participant .pele-label) {
+		fill: var(--ink);
+		font-weight: 700;
+	}
+	.prose :global(.pele-sequence .pele-lifeline) {
+		stroke: var(--line);
+		stroke-dasharray: 6 5;
+	}
+	.prose :global(.pele-sequence .pele-edges) {
+		stroke: var(--ink);
+		stroke-width: 1.5px;
+	}
+	.prose :global(.pele-sequence .pele-edge-labels text) {
+		fill: var(--text);
+	}
+	.prose :global(.pele-sequence .pele-note rect) {
+		fill: var(--hi);
+		stroke: var(--sig);
+		stroke-width: 1.5px;
+	}
+	.prose :global(.pele-sequence .pele-note .pele-label) {
+		fill: var(--acc);
+	}
+	:global(:root[data-theme='dark'] .pele-diagram .pele:not(.pele-sequence)) {
 		--pele-fg: var(--ink);
 		--pele-fg-on-light: var(--paper);
 		--pele-fg-on-dark: var(--ink);
@@ -428,7 +469,7 @@
 		--pele-surface-alt: var(--mantle);
 	}
 	@media (prefers-color-scheme: dark) {
-		:global(:root:not([data-theme]) .pele-diagram .pele) {
+		:global(:root:not([data-theme]) .pele-diagram .pele:not(.pele-sequence)) {
 			--pele-fg: var(--ink);
 			--pele-fg-on-light: var(--paper);
 			--pele-fg-on-dark: var(--ink);
@@ -778,6 +819,14 @@
 			background: transparent;
 			font-size: 12px;
 			line-height: 1.5;
+		}
+		.prose :global(.pele-sequence-diagram .pele-diagram-art) {
+			aspect-ratio: 1880 / 574;
+		}
+		.prose :global(.pele-sequence-diagram .pele-diagram-art .pele-sequence) {
+			width: 100%;
+			height: 100%;
+			max-width: none;
 		}
 		.prose :global(.footnotes) {
 			grid-column: notes-start / notes-end;

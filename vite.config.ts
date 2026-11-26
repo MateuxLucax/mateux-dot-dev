@@ -83,15 +83,19 @@ function headingIds() {
  */
 function mermaidToSvg(code: string) {
 	const idPrefix = `pele-${createHash('sha1').update(code).digest('hex').slice(0, 8)}`;
+	const isSequence = /^\s*sequenceDiagram\b/.test(code);
 
 	const { svg } = renderDiagram(code, {
 		idPrefix,
 		fontFamily: diagramFont,
 		fontFamilyMono: diagramFont,
-		measurer: monospaceMeasurer
+		measurer: monospaceMeasurer,
+		responsive: !isSequence
 	});
+	const diagramSvg = isSequence ? svg.replace('<svg ', '<svg preserveAspectRatio="none" ') : svg;
+	const figureClass = isSequence ? 'pele-diagram pele-sequence-diagram' : 'pele-diagram';
 
-	return `<figure class="pele-diagram"><div class="pele-diagram-art">${svg}</div><figcaption>Diagram</figcaption></figure>`;
+	return `<figure class="${figureClass}"><div class="pele-diagram-art">${diagramSvg}</div><figcaption></figcaption></figure>`;
 }
 
 const mdsvexOptions = {
