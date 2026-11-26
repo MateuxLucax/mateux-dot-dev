@@ -20,6 +20,9 @@ test.describe('Sitemap', () => {
 		expect(body).toContain('https://mateux.dev/blog</loc>');
 		expect(body).toContain('https://mateux.dev/typetest</loc>');
 
+		// Development preview is deliberately omitted from the sitemap.
+		expect(body).not.toContain('https://mateux.dev/dev/rocket');
+
 		// All posts
 		for (const post of allPosts) {
 			expect(body).toContain(`https://mateux.dev/blog/posts/${post.slug}`);
