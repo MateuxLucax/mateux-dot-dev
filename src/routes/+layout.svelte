@@ -306,7 +306,7 @@
 		z-index: 4;
 		top: 68px;
 		right: 13.5px;
-		bottom: 0;
+		bottom: 13.5px;
 		left: 13.5px;
 		display: flex;
 		flex-direction: column;

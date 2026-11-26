@@ -180,21 +180,28 @@ test.describe('Site shell', () => {
 		expect(styles.arrowWeight).toBe('400');
 	});
 
-	test('mobile menu covers the lower viewport and prevents background scrolling', async ({
+	test('mobile menu leaves the sheet bottom margin and prevents background scrolling', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto('/');
 		await page.getByRole('button', { name: 'Menu' }).click();
 		const panel = page.getByRole('navigation', { name: 'Menu' });
-		await expect
-			.poll(() =>
-				page.evaluate(() => {
-					const target = document.elementFromPoint(195, 843);
-					return Boolean(target?.closest('#mobile-menu'));
-				})
-			)
-			.toBe(true);
+		const geometry = await page.evaluate(() => {
+			const menu = document.querySelector<HTMLElement>('#mobile-menu')!;
+			const sheet = document.querySelector<HTMLElement>('.sheet')!;
+			const point = document.elementFromPoint(195, 823);
+			return {
+				menuContainsPoint: Boolean(point?.closest('#mobile-menu')),
+				menuBottom: menu.getBoundingClientRect().bottom,
+				sheetBottom: sheet.getBoundingClientRect().bottom,
+				sheetBorderBottomWidth: getComputedStyle(sheet).borderBottomWidth
+			};
+		});
+		expect(geometry.menuContainsPoint).toBe(true);
+		expect(geometry.menuBottom).toBeCloseTo(830.5, 1);
+		expect(geometry.sheetBottom).toBeCloseTo(832, 1);
+		expect(Number.parseFloat(geometry.sheetBorderBottomWidth)).toBeGreaterThan(0);
 		await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
 		await expect(panel).toBeVisible();
 	});
