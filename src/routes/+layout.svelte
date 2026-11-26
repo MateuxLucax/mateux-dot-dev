@@ -74,23 +74,25 @@
 		</div>
 		<header class="bar">
 			<a class="brand" href="/">MATEUX.DEV</a>
-			<nav class="main-nav" aria-label="Main">
-				{#each navigation as item (item.href)}
-					<a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}
-						>{item.short}</a
+			<div class="bar-right">
+				<nav class="main-nav" aria-label="Main">
+					{#each navigation as item (item.href)}
+						<a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}
+							>{item.short}</a
+						>
+					{/each}
+				</nav>
+				<div class="bar-actions">
+					<ThemeToggle />
+					<button
+						class="menu-button"
+						bind:this={menuButton}
+						aria-label={menuOpen ? 'Close menu' : 'Menu'}
+						aria-expanded={menuOpen}
+						aria-controls="mobile-menu"
+						onclick={() => void setMenu(!menuOpen)}>{menuOpen ? 'CLOSE' : 'MENU'}</button
 					>
-				{/each}
-			</nav>
-			<div class="bar-actions">
-				<ThemeToggle />
-				<button
-					class="menu-button"
-					bind:this={menuButton}
-					aria-label={menuOpen ? 'Close menu' : 'Menu'}
-					aria-expanded={menuOpen}
-					aria-controls="mobile-menu"
-					onclick={() => void setMenu(!menuOpen)}>{menuOpen ? 'CLOSE' : 'MENU'}</button
-				>
+				</div>
 			</div>
 		</header>
 		{#if menuOpen}
@@ -208,9 +210,9 @@
 	}
 
 	.zone-top {
-		top: -14px;
+		top: -13px;
 		left: 0;
-		width: 100%;
+		right: 0;
 	}
 
 	.zone-left {
@@ -244,7 +246,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 16px;
-		padding: 10px 16px;
+		padding: 12px 16px;
 		border-bottom: 1px solid var(--line);
 		background: var(--paper);
 		font-size: 12px;
@@ -257,11 +259,16 @@
 		font-weight: 700;
 	}
 
+	.bar-right,
 	.main-nav,
 	.bar-actions {
 		display: flex;
 		align-items: center;
 		gap: 20px;
+	}
+
+	.bar-right {
+		margin-left: auto;
 	}
 
 	.main-nav a {
@@ -299,7 +306,7 @@
 	.mobile-menu {
 		position: fixed;
 		z-index: 4;
-		top: 62px;
+		top: 68px;
 		right: 13.5px;
 		bottom: 13.5px;
 		left: 13.5px;
@@ -421,12 +428,6 @@
 		.menu-title-block {
 			display: flex;
 			margin-top: auto;
-		}
-	}
-
-	@media (min-width: 640px) {
-		.sheet {
-			width: calc(100% - 112px);
 		}
 	}
 </style>

@@ -27,6 +27,65 @@ test.describe('Site shell', () => {
 		}
 	});
 
+	test('matches the desktop sheet inset and right-aligns the navigation', async ({
+		page,
+		isMobile
+	}) => {
+		test.skip(isMobile, 'desktop shell geometry');
+		await page.setViewportSize({ width: 1440, height: 1000 });
+		await page.goto('/');
+
+		const geometry = await page.evaluate(() => {
+			const sheet = document.querySelector('.sheet')!.getBoundingClientRect();
+			const nav = document.querySelector('.main-nav')!.getBoundingClientRect();
+			const theme = document.querySelector('.theme-toggle')!.getBoundingClientRect();
+			return {
+				sheetX: sheet.x,
+				sheetWidth: sheet.width,
+				navThemeGap: theme.x - nav.right,
+				themeRightInset: sheet.right - theme.right
+			};
+		});
+
+		expect(geometry.sheetX).toBeCloseTo(12, 0);
+		expect(geometry.sheetWidth).toBeCloseTo(1416, 0);
+		expect(geometry.navThemeGap).toBeCloseTo(20, 0);
+		expect(geometry.themeRightInset).toBeGreaterThanOrEqual(16.5);
+		expect(geometry.themeRightInset).toBeLessThanOrEqual(18.5);
+	});
+
+	test('keeps the mobile sheet inset and aligns actions after the brand', async ({
+		page,
+		isMobile
+	}) => {
+		test.skip(!isMobile, 'mobile shell geometry');
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/');
+
+		const geometry = await page.evaluate(() => {
+			const rect = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
+			const sheet = rect('.sheet');
+			const brand = rect('.brand');
+			const theme = rect('.theme-toggle');
+			const menu = rect('.menu-button');
+			const actions = rect('.bar-actions');
+			return {
+				sheetX: sheet.x,
+				sheetWidth: sheet.width,
+				themeAfterBrand: theme.x > brand.right,
+				menuAfterTheme: menu.x > theme.right,
+				actionsRightInset: sheet.right - actions.right
+			};
+		});
+
+		expect(geometry.sheetX).toBeCloseTo(12, 0);
+		expect(geometry.sheetWidth).toBeCloseTo(366, 0);
+		expect(geometry.themeAfterBrand).toBe(true);
+		expect(geometry.menuAfterTheme).toBe(true);
+		expect(geometry.actionsRightInset).toBeGreaterThanOrEqual(16.5);
+		expect(geometry.actionsRightInset).toBeLessThanOrEqual(18.5);
+	});
+
 	test('marks the current section in the navigation', async ({ page, isMobile }) => {
 		const cases: [string, string][] = [
 			['/', 'Home'],
