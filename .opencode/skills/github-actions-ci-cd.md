@@ -194,15 +194,16 @@ EOF
 ```
 
 **Rules explained**:
-| Rule | Effect |
-|------|--------|
-| `pull_request` | No direct pushes; all changes via PR |
-| `required_status_checks` | CI must pass before merge |
-| `strict_required_status_checks_policy` | Branch must be up-to-date with `main` |
-| `non_fast_forward` | Blocks force pushes |
-| `deletion` | Blocks branch deletion |
-| `required_signatures` | All commits must be GPG signed |
-| `required_linear_history` | No merge commits; rebase or squash only |
+
+| Rule                                   | Effect                                  |
+| -------------------------------------- | --------------------------------------- |
+| `pull_request`                         | No direct pushes; all changes via PR    |
+| `required_status_checks`               | CI must pass before merge               |
+| `strict_required_status_checks_policy` | Branch must be up-to-date with `main`   |
+| `non_fast_forward`                     | Blocks force pushes                     |
+| `deletion`                             | Blocks branch deletion                  |
+| `required_signatures`                  | All commits must be GPG signed          |
+| `required_linear_history`              | No merge commits; rebase or squash only |
 
 ## TDD Workflow in CI
 
