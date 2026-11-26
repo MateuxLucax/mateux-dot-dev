@@ -821,12 +821,12 @@
 			line-height: 1.5;
 		}
 		.prose :global(.pele-sequence-diagram .pele-diagram-art) {
-			aspect-ratio: 1880 / 574;
+			width: 100%;
 		}
 		.prose :global(.pele-sequence-diagram .pele-diagram-art .pele-sequence) {
 			width: 100%;
-			height: 100%;
-			max-width: none;
+			height: auto;
+			max-width: 470px;
 		}
 		.prose :global(.footnotes) {
 			grid-column: notes-start / notes-end;
