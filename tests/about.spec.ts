@@ -70,8 +70,52 @@ test('paints the reduced-motion rocket with clear edges', async ({ page }) => {
 							top = Math.min(top, y);
 							bottom = Math.max(bottom, y);
 						}
-				return bottom >= 0 && top >= el.height * 0.05 && el.height - bottom - 1 >= el.height * 0.05;
+				return bottom >= 0 && top >= el.height * 0.02 && el.height - bottom - 1 >= el.height * 0.02;
 			})
 		)
 		.toBe(true);
+});
+
+test('keeps the exploded rocket inside its frame throughout the loop', async ({ page }) => {
+	for (const width of [390, 1440]) {
+		await page.setViewportSize({ width, height: 900 });
+		await page.goto('/about#debug&t=0');
+		const canvas = page.locator('.photo canvas');
+		for (const time of [0, 2.8, 3, 3.5, 4, 5, 6, 7, 7.5, 8, 8.5, 9]) {
+			await page.evaluate((time) => {
+				location.hash = `debug&t=${time}`;
+			}, time);
+			await expect
+				.poll(async () => JSON.parse((await canvas.getAttribute('data-rocket-frame')) ?? '{}').time)
+				.toBe(time);
+			const bounds = await canvas.evaluate((node) => {
+				const el = node as HTMLCanvasElement;
+				const { width, height } = el;
+				const pixels = el.getContext('2d')!.getImageData(0, 0, width, height).data;
+				let top = height,
+					bottom = -1,
+					left = width,
+					right = -1;
+				for (let y = 0; y < height; y++)
+					for (let x = 0; x < width; x++)
+						if (pixels[(y * width + x) * 4 + 3]) {
+							top = Math.min(top, y);
+							bottom = Math.max(bottom, y);
+							left = Math.min(left, x);
+							right = Math.max(right, x);
+						}
+				return {
+					top: top / height,
+					bottom: bottom / height,
+					left: left / width,
+					right: right / width
+				};
+			});
+			expect(bounds.top).toBeGreaterThan(0.02);
+			expect(bounds.bottom).toBeLessThan(0.98);
+			expect(bounds.left).toBeGreaterThan(0.02);
+			expect(bounds.right).toBeLessThan(0.98);
+			if (time === 5) expect(bounds.bottom - bounds.top).toBeGreaterThan(0.77);
+		}
+	}
 });

@@ -32,7 +32,7 @@
 					<a href={`/blog/posts/${post.slug}`}
 						><span class="tags">{post.tags.slice(0, 2).join(' · ')}</span><strong
 							>{post.title}</strong
-						><Icon name="external" /></a
+						></a
 					>
 				{/each}
 			</div>
@@ -59,7 +59,6 @@
 	.about {
 		flex: 1;
 		width: 100%;
-		max-width: 1100px;
 		padding: 64px 32px 80px;
 	}
 	h1 {
@@ -79,7 +78,7 @@
 	}
 	.columns {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 240px;
+		grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
 		gap: 64px;
 	}
 	h2 {
@@ -98,7 +97,7 @@
 	}
 	.posts a {
 		display: grid;
-		grid-template-columns: 130px minmax(0, 1fr) auto;
+		grid-template-columns: 130px minmax(0, 1fr);
 		gap: 18px;
 		align-items: start;
 		padding: 22px 6px;
@@ -117,9 +116,6 @@
 	.posts strong {
 		font: 700 17px/1.5 var(--font-sans);
 	}
-	.posts a :global(svg) {
-		color: var(--line);
-	}
 	.all {
 		display: inline-block;
 		margin-top: 24px;
@@ -129,7 +125,7 @@
 	}
 	.photo {
 		position: relative;
-		height: 220px;
+		aspect-ratio: 4 / 5;
 		border: 1.5px solid var(--line);
 		background: var(--paper);
 	}
@@ -162,7 +158,7 @@
 			gap: 42px;
 		}
 		.posts a {
-			grid-template-columns: minmax(0, 1fr) auto;
+			grid-template-columns: minmax(0, 1fr);
 		}
 		.tags {
 			grid-column: 1 / -1;
