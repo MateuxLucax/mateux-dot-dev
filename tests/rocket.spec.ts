@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { getLaunchPose } from '../src/lib/components/rocket/engine';
+import {
+	AMBIENT_LAUNCH_PERIOD_SECONDS,
+	AMBIENT_SCROLL_CYCLE,
+	getAmbientLaunchState,
+	getRocketGeometry
+} from '../src/lib/components/rocket/engine';
 
 async function snapshot(page: import('@playwright/test').Page, selector: string) {
 	return page.locator(selector).evaluate((canvas) => {
@@ -17,6 +22,46 @@ async function snapshot(page: import('@playwright/test').Page, selector: string)
 	});
 }
 
+// Largest change allowed between two frames 1/60 s apart. Roll and scroll wrap by exact
+// multiples (a full turn, a full scroll cycle) at the period boundary, so they are compared
+// modulo that wrap.
+const stepLimits = {
+	x: 0.0013,
+	y: 0.0009,
+	bodyAngle: 0.0002,
+	roll: 0.0045,
+	plumeStrength: 0.0075,
+	scroll: 0.021
+} as const;
+const wraps: Partial<Record<keyof typeof stepLimits, number>> = {
+	roll: Math.PI * 2,
+	scroll: AMBIENT_SCROLL_CYCLE
+};
+
+function wrappedDelta(delta: number, wrap?: number) {
+	if (!wrap) return Math.abs(delta);
+	const value = ((delta % wrap) + wrap) % wrap;
+	return Math.min(value, wrap - value);
+}
+
+function assertContinuousSamples(times: number[]) {
+	let previous: ReturnType<typeof getAmbientLaunchState> | undefined;
+	for (const time of times) {
+		const state = getAmbientLaunchState(time);
+		expect(state.plumeStrength).toBeGreaterThan(0.85);
+		expect(Math.abs(state.bodyAngle - 0.2)).toBeLessThanOrEqual(0.03);
+		if (previous) {
+			for (const key of Object.keys(stepLimits) as Array<keyof typeof stepLimits>) {
+				expect(
+					wrappedDelta(state[key] - previous[key], wraps[key]),
+					`${key} jumped between t=${time - 1 / 60} and t=${time}`
+				).toBeLessThanOrEqual(stepLimits[key]);
+			}
+		}
+		previous = state;
+	}
+}
+
 test.describe('Home launch animation', () => {
 	test('renders a labelled, non-blank canvas without console errors', async ({ page }) => {
 		const errors: string[] = [];
@@ -26,109 +71,145 @@ test.describe('Home launch animation', () => {
 		});
 
 		await page.goto('/');
-		const canvas = page.locator('.rocket-ground-canvas');
+		const canvas = page.locator('.rocket-launch-canvas');
 		await expect(canvas).toHaveAttribute('role', 'img');
-		await expect(canvas).toHaveAttribute('aria-label', /rocket launching/i);
+		await expect(canvas).toHaveAttribute('aria-label', /rocket ascending/i);
 		await expect
-			.poll(async () => (await snapshot(page, '.rocket-ground-canvas')).visiblePixels)
+			.poll(async () => (await snapshot(page, '.rocket-launch-canvas')).visiblePixels)
 			.toBeGreaterThan(0);
 		await expect.poll(() => errors).toEqual([]);
 	});
 
-	test('reduced motion holds a representative frame steady', async ({ page }) => {
+	test('reduced motion renders a steady, lit still frame', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.goto('/');
-		const before = await snapshot(page, '.rocket-ground-canvas');
+		const before = await snapshot(page, '.rocket-launch-canvas');
+		expect(before.visiblePixels).toBeGreaterThan(0);
 		await page.waitForTimeout(500);
-		expect(await snapshot(page, '.rocket-ground-canvas')).toEqual(before);
+		expect(await snapshot(page, '.rocket-launch-canvas')).toEqual(before);
 	});
 
 	test('animates when reduced motion is not requested', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'no-preference' });
 		await page.goto('/');
-		const before = await snapshot(page, '.rocket-ground-canvas');
+		const before = await snapshot(page, '.rocket-launch-canvas');
 		await page.waitForTimeout(500);
-		expect(await snapshot(page, '.rocket-ground-canvas')).not.toEqual(before);
+		expect(await snapshot(page, '.rocket-launch-canvas')).not.toEqual(before);
 	});
 
 	test('freezes at the time in the URL hash', async ({ page }) => {
-		await page.goto('/#t=5');
-		const before = await snapshot(page, '.rocket-flight-canvas');
+		await page.goto('/#debug&t=5');
+		const canvas = page.locator('.rocket-launch-canvas');
+		await expect
+			.poll(
+				async () => JSON.parse((await canvas.getAttribute('data-rocket-frame')) ?? 'null')?.time
+			)
+			.toBe(5);
+		const before = await snapshot(page, '.rocket-launch-canvas');
 		await page.waitForTimeout(500);
-		expect(await snapshot(page, '.rocket-flight-canvas')).toEqual(before);
+		expect(await snapshot(page, '.rocket-launch-canvas')).toEqual(before);
 	});
 
-	test('keeps the body aligned with the flight velocity and plume on the nozzle', () => {
-		for (let index = 0; index < 20; index++) {
-			const time = 4.25 + index * 0.25;
-			const pose = getLaunchPose(time);
-			const velocityAngle = Math.atan2(pose.vx, pose.vy);
-			const angleError = Math.atan2(
-				Math.sin(pose.bodyAngle - velocityAngle),
-				Math.cos(pose.bodyAngle - velocityAngle)
-			);
-			expect(Math.abs(angleError), `body angle at t=${time}`).toBeLessThan((2 * Math.PI) / 180);
+	test('keeps attitude, roll and scroll continuous over a minute and across the period boundary', () => {
+		const minute = Array.from({ length: 3601 }, (_, index) => index / 60);
+		assertContinuousSamples(minute);
+		assertContinuousSamples([
+			AMBIENT_LAUNCH_PERIOD_SECONDS - 1 / 60,
+			AMBIENT_LAUNCH_PERIOD_SECONDS,
+			AMBIENT_LAUNCH_PERIOD_SECONDS + 1 / 60
+		]);
+	});
+
+	test('closes the nose with a payload fairing and its seam', () => {
+		const fairing = getRocketGeometry().filter((segment) => segment.part === 'n');
+		const points = fairing.flatMap((segment) => [segment.a, segment.b]);
+		const tipY = Math.max(...points.map((point) => point[1]));
+		const tip = points.filter((point) => point[1] === tipY);
+		// Every meridian meets at one point on the axis, so the tip is closed.
+		for (const point of tip) {
+			expect(Math.hypot(point[0], point[2])).toBeLessThan(1e-9);
 		}
+		expect(tip.length).toBeGreaterThanOrEqual(8);
+		// The fairing is wider than the upper stage it sits on.
+		const upperRadius = Math.max(
+			...getRocketGeometry()
+				.filter((segment) => segment.part === 'u')
+				.map((segment) => segment.radius)
+		);
+		expect(Math.max(...fairing.map((segment) => segment.radius))).toBeGreaterThan(upperRadius);
+		// Two accent seams run from the cylinder to the tip.
+		const seam = fairing.filter((segment) => segment.accent);
+		expect(seam.length).toBeGreaterThan(10);
+		expect(Math.max(...seam.flatMap((segment) => [segment.a[1], segment.b[1]]))).toBe(tipY);
 	});
 
-	test('keeps the plume origin on the nozzle exit', async ({ page }) => {
+	test('renders the same pixels one period later', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
-		await page.goto('/#debug&t=6.5');
-		const points = await page.locator('.rocket-flight-canvas').evaluate((canvas) => {
-			const frame = JSON.parse((canvas as HTMLCanvasElement).dataset.rocketFrame ?? 'null');
-			return { nozzle: frame?.nozzle, plumeOrigin: frame?.plumeOrigin };
-		});
-		expect(points.nozzle).toBeDefined();
-		expect(points.plumeOrigin).toBeDefined();
-		expect(
-			Math.hypot(points.nozzle.x - points.plumeOrigin.x, points.nozzle.y - points.plumeOrigin.y)
-		).toBeLessThanOrEqual(1);
+		const canvas = page.locator('.rocket-launch-canvas');
+		await page.goto('/#debug&t=7.5');
+		await expect
+			.poll(
+				async () => JSON.parse((await canvas.getAttribute('data-rocket-frame')) ?? 'null')?.time
+			)
+			.toBe(7.5);
+		const firstFrame = await snapshot(page, '.rocket-launch-canvas');
+
+		const nextPeriod = 7.5 + AMBIENT_LAUNCH_PERIOD_SECONDS;
+		await page.evaluate((time) => (window.location.hash = `#debug&t=${time}`), nextPeriod);
+		await expect
+			.poll(
+				async () => JSON.parse((await canvas.getAttribute('data-rocket-frame')) ?? 'null')?.time
+			)
+			.toBe(nextPeriod);
+		expect(await snapshot(page, '.rocket-launch-canvas')).toEqual(firstFrame);
 	});
 
-	test('draws flight pixels beyond the former figure box but inside the sheet', async ({
+	test('pauses in a hidden tab and resumes without a time jump', async ({ page }) => {
+		await page.goto('/#debug');
+		const canvas = page.locator('.rocket-launch-canvas');
+		const readTime = () =>
+			canvas
+				.getAttribute('data-rocket-frame')
+				.then((raw) => JSON.parse(raw ?? 'null')?.time as number);
+		await expect.poll(readTime).toBeGreaterThan(0);
+
+		await page.evaluate(() => {
+			Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+			document.dispatchEvent(new Event('visibilitychange'));
+		});
+		const pausedAt = await readTime();
+		await page.waitForTimeout(300);
+		expect(await readTime()).toBe(pausedAt);
+
+		await page.evaluate(() => {
+			Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+			document.dispatchEvent(new Event('visibilitychange'));
+		});
+		await expect.poll(readTime).toBeGreaterThan(pausedAt);
+		// The tab was hidden for 300 ms; a jump would add at least that much.
+		expect((await readTime()) - pausedAt).toBeLessThan(0.25);
+	});
+
+	test('keeps the rocket in its clipped slot without a sheet-wide flight layer', async ({
 		page
 	}) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await page.goto('/#debug&t=6.5');
-		const result = await page.locator('.rocket-flight-canvas').evaluate((canvas) => {
-			const element = canvas as HTMLCanvasElement;
-			const canvasRect = element.getBoundingClientRect();
-			const figureRect = document.querySelector('.rocket-figure')!.getBoundingClientRect();
-			const sheet = document.querySelector('.sheet')!.getBoundingClientRect();
-			const pixels = element
-				.getContext('2d')!
-				.getImageData(0, 0, element.width, element.height).data;
-			const scaleX = element.width / canvasRect.width;
-			const scaleY = element.height / canvasRect.height;
-			const left = Math.max(0, Math.floor((figureRect.left - canvasRect.left) * scaleX));
-			const right = Math.min(
-				element.width,
-				Math.ceil((figureRect.right - canvasRect.left) * scaleX)
-			);
-			const top = Math.max(0, Math.floor((figureRect.top - canvasRect.top) * scaleY));
-			const bottom = Math.min(
-				element.height,
-				Math.ceil((figureRect.bottom - canvasRect.top) * scaleY)
-			);
-			let outsideFigurePixels = 0;
-			for (let y = 0; y < element.height; y++) {
-				for (let x = 0; x < element.width; x++) {
-					if (x >= left && x < right && y >= top && y < bottom) continue;
-					if (pixels[(y * element.width + x) * 4 + 3]) outsideFigurePixels++;
-				}
-			}
+		await expect(page.locator('.rocket-flight-canvas')).toHaveCount(0);
+		const result = await page.locator('.rocket-launch-canvas').evaluate((canvas) => {
+			const canvasRect = canvas.getBoundingClientRect();
+			const figure = document.querySelector('.rocket-figure')!;
+			const figureRect = figure.getBoundingClientRect();
 			return {
-				outsideFigurePixels,
-				canvasInsideSheet:
-					canvasRect.left >= sheet.left + 1 &&
-					canvasRect.top >= sheet.top + 1 &&
-					canvasRect.right <= sheet.right - 1 &&
-					canvasRect.bottom <= sheet.bottom - 1,
-				clipsOverflow: getComputedStyle(element.parentElement!).overflow === 'hidden'
+				insideFigure:
+					canvasRect.left >= figureRect.left &&
+					canvasRect.top >= figureRect.top &&
+					canvasRect.right <= figureRect.right &&
+					canvasRect.bottom <= figureRect.bottom,
+				clips: getComputedStyle(figure).overflow === 'hidden'
 			};
 		});
-		expect(result.outsideFigurePixels).toBeGreaterThan(0);
-		expect(result.canvasInsideSheet).toBe(true);
-		expect(result.clipsOverflow).toBe(true);
+		expect(result.insideFigure).toBe(true);
+		expect(result.clips).toBe(true);
 	});
 });

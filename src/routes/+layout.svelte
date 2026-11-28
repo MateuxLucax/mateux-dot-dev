@@ -4,7 +4,6 @@
 	import { onMount, tick } from 'svelte';
 	import '../app.css';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
-	import RocketFlightLayer from '#lib/components/rocket/RocketFlightLayer.svelte';
 
 	let { children } = $props();
 	let menuOpen = $state(false);
@@ -112,9 +111,6 @@
 			</nav>
 		{/if}
 		<main id="main">{@render children?.()}</main>
-		{#if page.url.pathname === '/'}
-			<RocketFlightLayer />
-		{/if}
 		<footer class="title-block">
 			<div><strong>MATEUX.DEV</strong></div>
 		</footer>

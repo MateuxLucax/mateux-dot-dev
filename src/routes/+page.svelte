@@ -46,8 +46,8 @@
 		display: grid;
 		flex: 1;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
-		grid-template-areas: 'n r' 'l r' 'p r' 'c r';
-		align-content: center;
+		grid-template-rows: 1fr auto auto auto auto 1fr;
+		grid-template-areas: '. r' 'n r' 'l r' 'p r' 'c r' '. r';
 		column-gap: 32px;
 		padding: 56px 32px 40px;
 	}
@@ -134,6 +134,7 @@
 		position: relative;
 		grid-area: r;
 		min-height: 360px;
+		overflow: hidden;
 	}
 
 	.rocket-figure :global(canvas) {
@@ -146,6 +147,7 @@
 	@media (max-width: 639px) {
 		.home {
 			grid-template-columns: minmax(0, 1fr) 96px;
+			grid-template-rows: none;
 			grid-template-areas: 'n r' 'l r' 'p p' 'c c';
 			align-content: start;
 			column-gap: 8px;

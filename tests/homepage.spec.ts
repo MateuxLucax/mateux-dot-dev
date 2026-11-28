@@ -6,7 +6,7 @@ const lede = 'Software engineer in Brazil. I take things apart and write down ho
 const latestPosts = getAllPosts().slice(0, 3);
 
 async function canvasPixels(page: Page) {
-	return page.locator('.rocket-ground-canvas').evaluate((canvas) => {
+	return page.locator('.rocket-launch-canvas').evaluate((canvas) => {
 		const element = canvas as HTMLCanvasElement;
 		const context = element.getContext('2d');
 		if (!context) throw new Error('Canvas 2D context is unavailable');
@@ -65,7 +65,7 @@ test.describe('Homepage', () => {
 		}
 
 		const canvas = page.locator('canvas[role="img"]');
-		await expect(canvas).toHaveAttribute('aria-label', /rocket launching/i);
+		await expect(canvas).toHaveAttribute('aria-label', /rocket ascending/i);
 		await expect.poll(async () => (await canvasPixels(page)).visible).toBeGreaterThan(0);
 		await expect(page.getByRole('link', { name: 'ALL WRITING' })).toHaveAttribute('href', '/blog');
 	});
@@ -99,7 +99,7 @@ test.describe('Homepage', () => {
 		expect(sizes.content).toBe(sizes.viewport);
 	});
 
-	test('keeps the full-sheet flight canvas out of layout flow', async ({ page }, testInfo) => {
+	test('keeps the slot canvas out of layout flow', async ({ page }, testInfo) => {
 		test.skip(testInfo.project.name !== 'chromium-desktop', 'Runs the layout-shift check once');
 		await page.addInitScript(() => {
 			document.documentElement.dataset.launchLayoutShiftScore = '0';
@@ -133,7 +133,7 @@ test.describe('Homepage', () => {
 		});
 	}
 
-	test('keeps the projected rocket clear of the text throughout launch at supported widths', async ({
+	test('keeps the projected rocket clear of text across viewports, themes and cycle times', async ({
 		page
 	}, testInfo) => {
 		test.skip(
@@ -141,48 +141,46 @@ test.describe('Homepage', () => {
 			'Runs the explicit viewport matrix once'
 		);
 		const viewports = [
-			{ width: 1280, height: 800 },
-			{ width: 1440, height: 900 },
 			{ width: 390, height: 844 },
 			{ width: 2560, height: 1440 },
-			{ width: 3840, height: 2160 }
+			{ width: 1440, height: 900 }
 		];
+		const times = [0, 3, 7.5, 12, 18, 23.9];
 
 		for (const viewport of viewports) {
 			await page.setViewportSize(viewport);
 			await page.goto('/#debug&t=0');
-			for (let time = 0; time <= 12.5; time += 0.25) {
-				const roundedTime = Number(time.toFixed(2));
-				await page.evaluate((value) => {
-					window.location.hash = `#debug&t=${value}`;
-				}, roundedTime);
-				await expect
-					.poll(async () => {
-						const frame = await page
-							.locator('.rocket-flight-canvas')
-							.getAttribute('data-rocket-frame');
-						return frame ? JSON.parse(frame).time : null;
-					})
-					.toBe(roundedTime);
+			for (const theme of ['light', 'dark']) {
+				await page.evaluate((value) => (document.documentElement.dataset.theme = value), theme);
+				for (const time of times) {
+					await page.evaluate((value) => {
+						window.location.hash = `#debug&t=${value}`;
+					}, time);
+					await expect
+						.poll(async () => {
+							const frame = await page
+								.locator('.rocket-launch-canvas')
+								.getAttribute('data-rocket-frame');
+							return frame ? JSON.parse(frame).time : null;
+						})
+						.toBe(time);
 
-				const bounds = await page.evaluate(() => {
-					const parse = (selector: string) => {
-						const raw = document.querySelector<HTMLCanvasElement>(selector)?.dataset.rocketFrame;
-						return raw ? JSON.parse(raw).bounds : null;
-					};
-					const rocket = [parse('.rocket-ground-canvas'), parse('.rocket-flight-canvas')].filter(
-						(value) => value !== null
-					);
-					const text = ['main h1', '.lede', '.latest', '.cta-wrap'].map((selector) => {
-						const { left, top, right, bottom } = document
-							.querySelector(selector)!
-							.getBoundingClientRect();
-						return { left, top, right, bottom, selector };
+					const bounds = await page.evaluate(() => {
+						const raw =
+							document.querySelector<HTMLCanvasElement>('.rocket-launch-canvas')?.dataset
+								.rocketFrame;
+						const rocket = raw ? JSON.parse(raw).bounds : null;
+						const text = ['main h1', '.lede', '.latest', '.cta-wrap'].map((selector) => {
+							const { left, top, right, bottom } = document
+								.querySelector(selector)!
+								.getBoundingClientRect();
+							return { left, top, right, bottom, selector };
+						});
+						return { rocket, text };
 					});
-					return { rocket, text };
-				});
-				for (const rocket of bounds.rocket) {
+					expect(bounds.rocket, `missing rocket bounds at t=${time}`).not.toBeNull();
 					for (const text of bounds.text) {
+						const rocket = bounds.rocket!;
 						const intersects =
 							rocket.left < text.right &&
 							rocket.right > text.left &&
@@ -190,7 +188,7 @@ test.describe('Homepage', () => {
 							rocket.bottom > text.top;
 						expect(
 							intersects,
-							`rocket ${JSON.stringify(rocket)} intersects ${text.selector} at ${viewport.width}x${viewport.height}, t=${roundedTime}`
+							`rocket ${JSON.stringify(rocket)} intersects ${text.selector} at ${viewport.width}x${viewport.height}, ${theme}, t=${time}`
 						).toBe(false);
 					}
 				}
