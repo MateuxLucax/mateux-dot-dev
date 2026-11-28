@@ -46,6 +46,19 @@
 		if (event.key === 'Escape' && menuOpen) {
 			event.preventDefault();
 			void setMenu(false, true);
+		} else if (event.key === 'Tab' && menuOpen) {
+			const controls = [
+				menuButton,
+				...document.querySelectorAll<HTMLAnchorElement>('#mobile-menu a')
+			];
+			const index = controls.indexOf(document.activeElement as HTMLButtonElement);
+			if (event.shiftKey && index <= 0) {
+				event.preventDefault();
+				controls[controls.length - 1]?.focus();
+			} else if (!event.shiftKey && (index === -1 || index === controls.length - 1)) {
+				event.preventDefault();
+				controls[0]?.focus();
+			}
 		}
 	}
 
@@ -110,7 +123,7 @@
 				</div>
 			</nav>
 		{/if}
-		<main id="main">{@render children?.()}</main>
+		<main id="main" tabindex="-1" inert={menuOpen}>{@render children?.()}</main>
 		{#if page.status !== 404}
 			<footer class="title-block">
 				<div><strong>MATEUX.DEV</strong></div>
@@ -129,6 +142,10 @@
 		min-height: 100%;
 		margin: 0;
 		background: var(--paper);
+	}
+
+	:global(html) {
+		scroll-padding-top: 6rem;
 	}
 
 	:global(body) {
@@ -280,7 +297,7 @@
 	}
 
 	.main-nav a[aria-current='page'] {
-		border-color: var(--sig);
+		border-color: var(--acc);
 		color: var(--acc);
 	}
 

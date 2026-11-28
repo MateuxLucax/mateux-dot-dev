@@ -22,6 +22,7 @@ export interface AmbientLaunchState {
 export interface RocketEngine {
 	destroy(): void;
 	setTime(time: number): void;
+	setPaused(paused: boolean): void;
 	redraw(): void;
 }
 
@@ -249,6 +250,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 	let frozenTime = Number.isFinite(options.time) ? options.time : undefined;
 	let frameId: number | null = null;
 	let visible = true;
+	let paused = false;
 	let destroyed = false;
 	const forcedStill = options.still ?? false;
 	const palette = { line: '#1e66f5', accent: '#fe640b', mute: '#5c5f77', paper: '#eff1f5' };
@@ -710,6 +712,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 	const shouldAnimate = () =>
 		!destroyed &&
 		!forcedStill &&
+		!paused &&
 		!media.matches &&
 		frozenTime === undefined &&
 		visible &&
@@ -734,6 +737,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 		lastFrameAt = null;
 		if (frozenTime !== undefined) drawFrame(frozenTime);
 		else if (forcedStill || media.matches) drawFrame(stillTime());
+		else if (paused) drawFrame(frameTime);
 		else if (shouldAnimate()) frameId = requestAnimationFrame(tick);
 	};
 	const onVisibility = () => update();
@@ -778,10 +782,15 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 			frozenTime = Number.isFinite(time) ? Math.max(0, time) : undefined;
 			update();
 		},
+		setPaused(value: boolean) {
+			paused = value;
+			update();
+		},
 		redraw() {
 			readColors();
 			if (frozenTime !== undefined) drawFrame(frozenTime);
 			else if (forcedStill || media.matches) drawFrame(stillTime());
+			else if (paused) drawFrame(frameTime);
 			else if (!shouldAnimate()) drawFrame(options.mode === 'launch' ? elapsedTime : 0);
 		}
 	};

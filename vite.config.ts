@@ -34,6 +34,25 @@ const langs = [
 const themes = { dark: 'catppuccin-mocha', light: 'catppuccin-latte' };
 let highlighterPromise: ReturnType<typeof createHighlighter> | null = null;
 
+// Shiki's light palette is rendered on the darker --mantle code background.
+function accessibleLightSyntax(html: string) {
+	const background = [230, 233, 239];
+	const luminance = (rgb: number[]) =>
+		rgb.reduce((sum, value, index) => {
+			const v = value / 255;
+			return (
+				sum +
+				(v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4) * [0.2126, 0.7152, 0.0722][index]
+			);
+		}, 0);
+	return html.replace(/(<span style="color:)#([0-9a-f]{6})/gi, (_, prefix: string, hex: string) => {
+		let rgb = hex.match(/../g)!.map((part) => parseInt(part, 16));
+		while ((luminance(background) + 0.05) / (luminance(rgb) + 0.05) < 4.6)
+			rgb = rgb.map((v) => Math.floor(v * 0.98));
+		return prefix + '#' + rgb.map((v) => v.toString(16).padStart(2, '0')).join('');
+	});
+}
+
 // Matches Tailwind's `font-mono` stack so diagrams follow the terminal theme.
 const diagramFont =
 	'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
@@ -119,7 +138,7 @@ const mdsvexOptions = {
 
 			const highlighterInstance = await highlighterPromise;
 			const html = escapeSvelte(
-				`<div class="shiki-light">${highlighterInstance.codeToHtml(code, { lang, theme: themes.light })}</div>` +
+				`<div class="shiki-light">${accessibleLightSyntax(highlighterInstance.codeToHtml(code, { lang, theme: themes.light }))}</div>` +
 					`<div class="shiki-dark">${highlighterInstance.codeToHtml(code, { lang, theme: themes.dark })}</div>`
 			);
 

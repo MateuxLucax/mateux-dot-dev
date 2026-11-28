@@ -82,6 +82,8 @@ export async function assertPeleTheme(page: Page, scheme: 'light' | 'dark') {
 }
 
 export async function runA11yScan(page: Page) {
-	const results = await new AxeBuilder({ page }).disableRules(['color-contrast']).analyze();
+	const results = await new AxeBuilder({ page })
+		.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+		.analyze();
 	expect(results.violations).toEqual([]);
 }

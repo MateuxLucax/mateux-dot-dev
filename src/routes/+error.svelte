@@ -24,7 +24,7 @@
 			<a class="button primary" href="/">HOME</a><a class="button" href="/blog">WRITING</a>
 		</div>
 	</div>
-	{#if missing}<figure class="rocket-box" aria-hidden="true"><Rocket mode="tumble" /></figure>{/if}
+	{#if missing}<figure class="rocket-box"><Rocket mode="tumble" /></figure>{/if}
 </div>
 
 <style>
@@ -37,7 +37,7 @@
 		padding: 40px 32px;
 	}
 	.lost h1 {
-		color: var(--sig);
+		color: var(--acc);
 		font: 700 clamp(56px, 12vw, 96px)/1 var(--font-mono);
 		letter-spacing: -0.05em;
 	}

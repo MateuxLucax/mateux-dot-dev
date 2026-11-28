@@ -118,6 +118,12 @@ test.describe('Site shell', () => {
 		const panel = page.getByRole('navigation', { name: 'Menu' });
 		await expect(panel).toBeVisible();
 		await expect(panel.getByRole('link', { name: 'Home' })).toBeFocused();
+		await page.keyboard.press('Shift+Tab');
+		await expect(button).toBeFocused();
+		await page.keyboard.press('Shift+Tab');
+		await expect(panel.getByRole('link', { name: 'RSS' })).toBeFocused();
+		await page.keyboard.press('Tab');
+		await expect(button).toBeFocused();
 
 		await page.keyboard.press('Escape');
 		await expect(panel).toBeHidden();

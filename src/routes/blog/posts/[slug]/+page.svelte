@@ -74,6 +74,13 @@
 </script>
 
 <svelte:head>
+	<link
+		rel="preload"
+		href="/fonts/plex-sans-700.woff2"
+		as="font"
+		type="font/woff2"
+		crossorigin="anonymous"
+	/>
 	<title>{data.meta.title}</title>
 	<meta name="description" content={data.meta.description} />
 	<link rel="canonical" href={canonicalUrl} />
@@ -526,6 +533,8 @@
 		top: 8px;
 		right: 8px;
 		display: block;
+		min-width: 24px;
+		min-height: 24px;
 		padding: 3px 8px;
 		border: 1px solid var(--line);
 		background: var(--paper);
@@ -594,6 +603,8 @@
 		padding-left: 20px;
 	}
 	.related-posts a {
+		display: inline-block;
+		min-height: 24px;
 		color: var(--ink);
 		text-decoration: underline;
 		text-decoration-color: var(--sig);

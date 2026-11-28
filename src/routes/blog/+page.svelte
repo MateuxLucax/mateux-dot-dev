@@ -249,7 +249,7 @@
 		background: var(--hi);
 	}
 	.chip[aria-pressed='true'] {
-		border-color: var(--sig);
+		border-color: var(--line);
 		background: var(--sig);
 		color: var(--on);
 		font-weight: 700;

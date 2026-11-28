@@ -31,6 +31,38 @@ jobs:
       - name: Build site
         run: bun run build
 
+  lighthouse:
+    runs-on: ubuntu-24.04
+    needs: check-and-build
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.5
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - name: Start preview
+        run: |
+          bun run preview --host 127.0.0.1 &
+          for i in {1..30}; do
+            curl -sf http://127.0.0.1:4173/ && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Audit every page
+        run: LIGHTHOUSE_RUNS=1 node scripts/lighthouse.mjs /tmp/mateux-perf/ci --assert
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: /tmp/mateux-perf/ci/
+          retention-days: 7
+
   e2e:
     runs-on: ubuntu-24.04
     needs: check-and-build
