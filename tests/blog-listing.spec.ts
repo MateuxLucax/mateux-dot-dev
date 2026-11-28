@@ -69,9 +69,13 @@ test.describe('Blog Listing', () => {
 		if ((page.viewportSize()?.width ?? 1280) < 640) {
 			await page.getByRole('button', { name: 'Menu' }).click();
 		}
-		const rssLink = page.getByRole('link', { name: /RSS/ }).last();
+		const nav =
+			(page.viewportSize()?.width ?? 1280) < 640
+				? page.getByRole('navigation', { name: 'Menu' })
+				: page.getByRole('navigation', { name: 'Main' });
+		const rssLink = nav.getByRole('link', { name: /RSS/ });
 		await expect(rssLink).toBeVisible();
-		await expect(rssLink).toHaveAttribute('href', '/blog/rss.xml');
+		await expect(rssLink).toHaveAttribute('href', '/rss');
 		const response = await page.request.get('/blog/rss.xml');
 		await expect(response).toBeOK();
 		expect(response.headers()['content-type']).toContain('xml');
