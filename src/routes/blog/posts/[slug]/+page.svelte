@@ -15,11 +15,9 @@
 				tags: string[];
 				readingTime: number;
 			};
-			words: number;
 			headings: Heading[];
 			previous: Neighbor;
 			next: Neighbor;
-			postCount: number;
 			related?: Array<{ title: string; slug: string; date: string }>;
 		};
 	};
@@ -124,20 +122,6 @@
 						</li>{/each}
 				</ul>
 			</div>
-			<dl class="post-facts notes-column">
-				<div>
-					<dt>Published</dt>
-					<dd>{data.meta.date}</dd>
-				</div>
-				<div>
-					<dt>Reading</dt>
-					<dd>{data.meta.readingTime} min</dd>
-				</div>
-				<div>
-					<dt>Words</dt>
-					<dd>{data.words.toLocaleString('en-US')}</dd>
-				</div>
-			</dl>
 		</header>
 
 		<nav class="toc-column contents" aria-label="Contents">
@@ -157,7 +141,6 @@
 					</li>
 				{/each}
 			</ol>
-			<a class="toc-back" href="/blog">← All writing</a>
 		</nav>
 
 		<section class="r prose prose-column" aria-label="Post content">
@@ -177,7 +160,7 @@
 					><small>NEXT →</small><span>{data.next.title}</span></a
 				>
 			{:else}
-				<a href="/blog"><small>ALL WRITING →</small><span>{data.postCount} posts</span></a>
+				<a href="/blog"><small>ALL WRITING →</small></a>
 			{/if}
 		</nav>
 		{#if data.related?.length}
@@ -295,9 +278,6 @@
 	}
 	.post-tags a:hover {
 		background: var(--hi);
-	}
-	.post-facts {
-		display: none;
 	}
 	.contents {
 		display: none;
@@ -678,15 +658,18 @@
 			display: contents;
 		}
 		.compact-back {
-			display: none;
+			grid-column: wide-start / wide-end;
+			grid-row: 1;
+			align-self: start;
 		}
+
 		.r {
 			grid-column: full;
 			display: grid;
 			grid-template-columns: subgrid;
 		}
 		.post-header {
-			grid-row: 1;
+			grid-row: 2;
 			margin: 0;
 			padding: 0;
 			border: 0;
@@ -706,39 +689,12 @@
 			max-width: 56ch;
 			font-size: 22px;
 		}
-		.post-facts {
-			grid-column: notes-start;
-			align-self: end;
-			display: block;
-			margin: 0 0 48px;
-			border: 1.5px solid var(--line);
-			background: var(--paper);
-			font-size: 13px;
-		}
-		.post-facts div {
-			display: flex;
-			justify-content: space-between;
-			gap: 12px;
-			padding: 8px 12px;
-			border-bottom: 1px solid var(--grid);
-		}
-		.post-facts div:last-child {
-			border-bottom: 0;
-		}
-		.post-facts dt {
-			color: var(--mute);
-		}
-		.post-facts dd {
-			margin: 0;
-			color: var(--ink);
-			font-variant-numeric: tabular-nums;
-		}
 		.contents {
 			position: sticky;
 			top: 24px;
 			align-self: start;
 			grid-column: toc-start;
-			grid-row: 2;
+			grid-row: 3;
 			display: grid;
 			grid-template-columns: 2px minmax(0, 1fr);
 			gap: 0 18px;
@@ -754,7 +710,7 @@
 		.toc-progress {
 			position: relative;
 			grid-column: 1;
-			grid-row: 2;
+			grid-row: 3;
 			min-height: 100%;
 			background: var(--grid);
 		}
@@ -766,7 +722,7 @@
 		}
 		.contents ol {
 			grid-column: 2;
-			grid-row: 2;
+			grid-row: 3;
 			margin: 0;
 			padding: 0;
 			list-style: none;
@@ -780,14 +736,9 @@
 		.contents a[aria-current='location'] {
 			color: var(--acc);
 		}
-		.toc-back {
-			grid-column: 1 / -1;
-			margin-top: 28px;
-			color: var(--ink) !important;
-		}
 		.prose {
 			grid-column: full;
-			grid-row: 2;
+			grid-row: 3;
 			display: grid;
 			grid-template-columns: subgrid;
 			max-width: none;

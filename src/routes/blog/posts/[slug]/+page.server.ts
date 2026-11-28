@@ -29,7 +29,6 @@ export async function load({ params }) {
 	const raw = rawFiles[`/src/lib/posts/${params.slug}.svx`] as string | undefined;
 	const body = raw ? stripFrontmatter(raw) : '';
 	const readingTime = raw ? calculateReadingTime(body) : 1;
-	const words = body.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu)?.length ?? 0;
 	const headings = [...body.matchAll(/^##\s+(.+)$/gm)].map((match) => {
 		const title = match[1]
 			.replace(/[`*_]/g, '')
@@ -75,11 +74,9 @@ export async function load({ params }) {
 
 	return {
 		readingTime,
-		words,
 		headings,
 		previous,
 		next,
-		postCount: posts.length,
 		related: topRelated
 	};
 }

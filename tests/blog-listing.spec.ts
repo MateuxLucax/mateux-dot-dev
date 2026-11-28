@@ -9,6 +9,10 @@ test.describe('Blog Listing', () => {
 		await page.goto('/blog', { waitUntil: 'networkidle' });
 	});
 
+	test('has the writing page title', async ({ page }) => {
+		await expect(page).toHaveTitle('Writing · Mateus Brandt');
+	});
+
 	test('shows the writing heading, count, newest-first rows and chart', async ({ page }) => {
 		await expect(page.getByRole('heading', { name: 'Writing', level: 1 })).toBeVisible();
 		await expect(page.getByRole('status')).toContainText(`${allPosts.length} posts`);
