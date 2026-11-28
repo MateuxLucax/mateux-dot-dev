@@ -1,9 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
 import { runA11yScan } from './utils';
 import { getAllPosts } from './utils/posts';
 
-const { version } = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string };
 const post = getAllPosts().find((p) => p.slug === 'building-a-simple-blog')!;
 
 const theme = (page: Page) => page.locator('html').getAttribute('data-theme');
@@ -23,7 +21,8 @@ test.describe('Site shell', () => {
 			await expect(header.getByRole('link', { name: 'mateux.dev' })).toHaveAttribute('href', '/');
 			await expect(page.getByRole('main')).toBeVisible();
 			const footer = page.getByRole('contentinfo');
-			await expect(footer).toContainText(`REV ${version}`);
+			await expect(footer.locator('div')).toHaveCount(1);
+			await expect(footer).toHaveText('MATEUX.DEV');
 		}
 	});
 
@@ -169,7 +168,7 @@ test.describe('Site shell', () => {
 
 		expect(styles.backgroundColor).toBe(styles.paperColor);
 		expect(styles.backgroundImage).toBe('none');
-		expect(styles.menuTitleBlockCells).toBe(2);
+		expect(styles.menuTitleBlockCells).toBe(1);
 		expect(styles.labels).toEqual(['Home', 'Writing', 'RSS']);
 		expect(styles.separatorWidths.every((width) => width === '1px')).toBe(true);
 		expect(styles.separatorColors.every((color) => color === styles.gridColor)).toBe(true);

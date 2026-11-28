@@ -5,7 +5,7 @@
 	import '../app.css';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 
-	let { children, data } = $props();
+	let { children } = $props();
 	let menuOpen = $state(false);
 	let menuButton: HTMLButtonElement;
 	let previousOverflow = '';
@@ -107,15 +107,12 @@
 				</div>
 				<div class="title-block menu-title-block">
 					<div><strong>MATEUX.DEV</strong></div>
-					<div>REV {data.version}</div>
 				</div>
 			</nav>
 		{/if}
 		<main id="main">{@render children?.()}</main>
 		<footer class="title-block">
 			<div><strong>MATEUX.DEV</strong></div>
-			<div>REV {data.version}</div>
-			<div>{data.buildDate}</div>
 		</footer>
 	</div>
 </div>
