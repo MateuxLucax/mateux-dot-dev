@@ -37,14 +37,14 @@
 	<p class="lede">{description}</p>
 	<div class="url-box">
 		<code>{feedUrl}</code>
-		<button class:ok={copied} onclick={copyFeedUrl} aria-label={copied ? 'COPIED' : 'COPY'}>
-			<Icon name={copied ? 'check' : 'copy'} /><span>{copied ? 'COPIED' : 'COPY'}</span>
+		<button class:ok={copied} onclick={copyFeedUrl}>
+			<Icon name={copied ? 'check' : 'copy'} /><span>{copied ? 'Copied' : 'Copy'}</span>
 		</button>
 	</div>
 	<p class="live" aria-live="polite" aria-atomic="true">
 		{copied ? 'Copied feed address to clipboard.' : ''}
 	</p>
-	<p class="note">Atom · {data.count} posts · updated {data.updated}</p>
+	<p class="note">Updated {data.updated}</p>
 	<ol class="feed-list">
 		{#each data.latestPosts as post (post.slug)}
 			<li>
