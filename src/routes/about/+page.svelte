@@ -19,70 +19,48 @@
 </svelte:head>
 
 <div class="about">
-	<aside class="side">
-		<div class="top">
-			<h1>About<i>.</i></h1>
+	<h1>About<i>.</i></h1>
+	<p class="lede">I’m Mateus Brandt, a software engineer in Brazil.</p>
+	<div class="columns">
+		<section>
+			<h2>Things I’ve taken apart</h2>
+			<p class="intro">
+				I write it down here when I get something working, mostly so I remember how.
+			</p>
+			<div class="posts">
+				{#each data.featured as post (post.slug)}
+					<a href={`/blog/posts/${post.slug}`}
+						><span class="tags">{post.tags.slice(0, 2).join(' · ')}</span><strong
+							>{post.title}</strong
+						><Icon name="external" /></a
+					>
+				{/each}
+			</div>
+			<a class="all" href="/blog">All writing →</a>
+		</section>
+		<aside class="side">
 			<figure class="photo" aria-hidden="true"><Rocket mode="exploded" /></figure>
-		</div>
-		<nav class="elsewhere" aria-label="Elsewhere">
-			<a href="https://github.com/mateuxlucax" rel="me"
-				><span>GitHub</span><small>mateuxlucax</small><Icon name="external" /></a
-			>
-			<a href="https://www.linkedin.com/in/mateusbrandt" rel="me"
-				><span>LinkedIn</span><small>mateusbrandt</small><Icon name="external" /></a
-			>
-			<a href="/rss"><span>RSS</span><small>/blog/rss.xml</small><Icon name="rss" /></a>
-		</nav>
-	</aside>
-	<div class="content">
-		<p class="lede">I’m Mateus Brandt, a software engineer in Brazil.</p>
-		<div class="bio">
 			<p>
-				Most of my day is backend systems. The rest goes into taking things apart to see how they
-				work: a coffee scale’s Bluetooth protocol, my ISP’s uptime, the AST of a Flutter app.
+				Most of my day is backend systems, mostly Kotlin. On the side: Dart, Go, Svelte and Rust.
 			</p>
-			<p>
-				I write it down here when I get something working, mostly so I remember how. If a post saved
-				you an afternoon, <a href="https://www.linkedin.com/in/mateusbrandt">tell me</a>.
-			</p>
-			<p>The rocket is there because I always wanted to be an aerospace engineer.</p>
-		</div>
-		<dl class="spec">
-			<dt>Based in</dt>
-			<dd>Brazil</dd>
-			<dt>Day to day</dt>
-			<dd>Backend, Kotlin</dd>
-			<dt>On the side</dt>
-			<dd>Dart, Go, Svelte, Rust</dd>
-			<dt>This site</dt>
-			<dd>SvelteKit on Cloudflare Pages</dd>
-		</dl>
-		<h2>WRITES ABOUT</h2>
-		<div class="chips">
-			{#each data.tags as tag (tag)}<a class="chip" href={`/blog?tag=${tag}`}>{tag}</a>{/each}
-		</div>
+			<p>The rest goes into taking things apart to see how they work.</p>
+			<nav class="elsewhere" aria-label="Elsewhere">
+				<a href="https://github.com/mateuxlucax" rel="me">GitHub <Icon name="external" /></a>
+				<a href="https://www.linkedin.com/in/mateusbrandt" rel="me"
+					>LinkedIn <Icon name="external" /></a
+				>
+				<a href="/rss">RSS <Icon name="rss" /></a>
+			</nav>
+		</aside>
 	</div>
 </div>
 
 <style>
 	.about {
-		display: grid;
-		grid-template-columns: 240px minmax(0, 1fr);
-		gap: 48px;
 		flex: 1;
 		width: 100%;
-		max-width: 1040px;
-		padding: 48px 32px 40px;
-	}
-	.side {
-		display: flex;
-		flex-direction: column;
-		gap: 24px;
-	}
-	.top {
-		display: flex;
-		flex-direction: column;
-		gap: 28px;
+		max-width: 1100px;
+		padding: 64px 32px 80px;
 	}
 	h1 {
 		color: var(--ink);
@@ -93,9 +71,65 @@
 		color: var(--sig);
 		font-style: normal;
 	}
+	.lede {
+		max-width: 28ch;
+		margin: 36px 0;
+		color: var(--ink);
+		font: 400 clamp(24px, 3vw, 36px)/1.3 var(--font-sans);
+	}
+	.columns {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 240px;
+		gap: 64px;
+	}
+	h2 {
+		color: var(--ink);
+		font: 700 18px var(--font-mono);
+	}
+	.intro,
+	.side p {
+		margin: 20px 0;
+		color: var(--text);
+		font: 16px/1.7 var(--font-sans);
+	}
+	.posts {
+		margin-top: 32px;
+		border-top: 1px solid var(--line);
+	}
+	.posts a {
+		display: grid;
+		grid-template-columns: 130px minmax(0, 1fr) auto;
+		gap: 18px;
+		align-items: start;
+		padding: 22px 6px;
+		border-bottom: 1px solid var(--grid);
+		color: var(--ink);
+	}
+	.posts a:hover,
+	.elsewhere a:hover {
+		background: var(--hi);
+	}
+	.tags {
+		color: var(--mute);
+		font: 12px/1.5 var(--font-mono);
+		overflow-wrap: anywhere;
+	}
+	.posts strong {
+		font: 700 17px/1.5 var(--font-sans);
+	}
+	.posts a :global(svg) {
+		color: var(--line);
+	}
+	.all {
+		display: inline-block;
+		margin-top: 24px;
+		color: var(--ink);
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
 	.photo {
 		position: relative;
-		aspect-ratio: 4/5;
+		height: 220px;
 		border: 1.5px solid var(--line);
 		background: var(--paper);
 	}
@@ -106,122 +140,32 @@
 		height: 100%;
 	}
 	.elsewhere {
-		border-top: 1px solid var(--line);
-		background: var(--paper);
-	}
-	.elsewhere a {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 10px 6px;
-		border-bottom: 1px solid var(--grid);
-		color: var(--ink);
-		font-size: 13px;
-	}
-	.elsewhere a span {
-		flex: 1;
-	}
-	.elsewhere small {
-		color: var(--mute);
-		font-size: 12px;
-	}
-	.elsewhere a :global(svg) {
-		color: var(--line);
-		flex: none;
-	}
-	.elsewhere a:hover,
-	.chip:hover {
-		background: var(--hi);
-	}
-	.lede {
-		max-width: 44ch;
-		margin: 8px 0 16px;
-		color: var(--ink);
-		font: 19px/1.55 var(--font-sans);
-	}
-	.bio p {
-		max-width: 62ch;
-		margin-bottom: 14px;
-		color: var(--text);
-		font: 17px/1.7 var(--font-sans);
-	}
-	.bio a {
-		color: var(--ink);
-		text-decoration: underline;
-		text-decoration-color: var(--sig);
-		text-decoration-thickness: 1.5px;
-		text-underline-offset: 3px;
-	}
-	.spec {
-		display: grid;
-		grid-template-columns: 120px 1fr;
-		max-width: 62ch;
-		margin: 24px 0;
-		border-top: 1px solid var(--line);
-		background: var(--paper);
-	}
-	.spec dt,
-	.spec dd {
-		padding: 8px 6px;
-		border-bottom: 1px solid var(--grid);
-		font-size: 13px;
-	}
-	.spec dt {
-		color: var(--mute);
-	}
-	.spec dd {
-		color: var(--ink);
-	}
-	h2 {
-		margin: 0 0 10px;
-		color: var(--mute);
-		font-size: 12px;
-		font-weight: 400;
-		letter-spacing: 0.08em;
-	}
-	.chips {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 8px;
+		gap: 16px;
 	}
-	.chip {
-		padding: 4px 10px;
-		border: 1px solid var(--line);
-		background: var(--paper);
-		color: var(--text);
-		font-size: 12px;
+	.elsewhere a {
+		display: inline-flex;
+		gap: 4px;
+		align-items: center;
+		color: var(--ink);
+		font: 13px var(--font-mono);
+		text-decoration: underline;
+		text-underline-offset: 4px;
 	}
-	@media (max-width: 639px) {
+	@media (max-width: 700px) {
 		.about {
+			padding: 36px 16px 48px;
+		}
+		.columns {
 			grid-template-columns: minmax(0, 1fr);
-			gap: 0;
-			padding: 28px 16px 32px;
+			gap: 42px;
 		}
-		.side {
-			display: contents;
+		.posts a {
+			grid-template-columns: minmax(0, 1fr) auto;
 		}
-		.top {
-			display: grid;
-			grid-template-columns: minmax(0, 1fr) 88px;
-			gap: 16px;
-			align-items: end;
-		}
-		.photo {
-			width: 88px;
-		}
-		.lede {
-			margin: 16px 0 12px;
-			font-size: 17px;
-		}
-		.bio p {
-			font-size: 16px;
-		}
-		.spec {
-			grid-template-columns: 112px 1fr;
-		}
-		.elsewhere {
-			order: 9;
-			margin-top: 24px;
+		.tags {
+			grid-column: 1 / -1;
 		}
 	}
 </style>

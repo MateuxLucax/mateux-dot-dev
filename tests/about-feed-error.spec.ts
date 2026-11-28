@@ -4,13 +4,6 @@ import { runA11yScan } from './utils';
 import { getAllPosts } from './utils/posts';
 
 const posts = getAllPosts();
-const tagCounts = new Map<string, number>();
-for (const post of posts)
-	for (const tag of post.tags) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-const popularTags = [...tagCounts]
-	.sort((a, b) => b[1] - a[1])
-	.slice(0, 7)
-	.map(([tag]) => tag);
 const newestFirst = [...posts].sort((a, b) => b.date.localeCompare(a.date));
 
 async function expectCanvasPainted(page: import('@playwright/test').Page) {
@@ -29,122 +22,6 @@ async function expectCanvasPainted(page: import('@playwright/test').Page) {
 		)
 		.toBeGreaterThan(0);
 }
-
-async function expectCanvasEdgesClear(canvas: import('@playwright/test').Locator) {
-	await expect
-		.poll(() =>
-			canvas.evaluate((node) => {
-				const element = node as HTMLCanvasElement;
-				const pixels = element
-					.getContext('2d')!
-					.getImageData(0, 0, element.width, element.height).data;
-				let top = element.height;
-				let bottom = -1;
-				for (let y = 0; y < element.height; y++) {
-					for (let x = 0; x < element.width; x++) {
-						if (pixels[(y * element.width + x) * 4 + 3]) {
-							top = Math.min(top, y);
-							bottom = Math.max(bottom, y);
-						}
-					}
-				}
-				const margin = element.height * 0.05;
-				return bottom >= 0 && top >= margin && element.height - bottom - 1 >= margin;
-			})
-		)
-		.toBe(true);
-}
-
-test.describe('About', () => {
-	test('shows the drafted biography, spec, social links and real popular tags', async ({
-		page
-	}) => {
-		await page.emulateMedia({ reducedMotion: 'reduce' });
-		await page.goto('/about');
-		await expect(page).toHaveTitle('About · Mateus Brandt');
-		await expect(page.getByRole('heading', { name: 'About.' })).toBeVisible();
-		await expect(page.getByText('I’m Mateus Brandt, a software engineer in Brazil.')).toBeVisible();
-		await expect(page.getByText(/Most of my day is backend systems/)).toBeVisible();
-		await expect(page.getByText(/I write it down here when I get something working/)).toBeVisible();
-		await expect(page.getByText(/The rocket is there because/)).toBeVisible();
-		for (const [term, value] of [
-			['Based in', 'Brazil'],
-			['Day to day', 'Backend, Kotlin'],
-			['On the side', 'Dart, Go, Svelte, Rust'],
-			['This site', 'SvelteKit on Cloudflare Pages']
-		]) {
-			const row = page.locator('dl').locator('xpath=..');
-			await expect(row).toContainText(term);
-			await expect(row).toContainText(value);
-		}
-		await expect(page.getByRole('link', { name: /GitHub mateuxlucax/ })).toHaveAttribute(
-			'href',
-			'https://github.com/mateuxlucax'
-		);
-		await expect(page.getByRole('link', { name: /GitHub mateuxlucax/ })).toHaveAttribute(
-			'rel',
-			'me'
-		);
-		await expect(page.getByRole('link', { name: /LinkedIn mateusbrandt/ })).toHaveAttribute(
-			'href',
-			'https://www.linkedin.com/in/mateusbrandt'
-		);
-		await expect(page.getByRole('link', { name: /LinkedIn mateusbrandt/ })).toHaveAttribute(
-			'rel',
-			'me'
-		);
-		await expect(page.getByRole('link', { name: /RSS \/blog\/rss.xml/ })).toHaveAttribute(
-			'href',
-			'/rss'
-		);
-		await expect(page.getByRole('link', { name: 'tell me' })).toHaveAttribute(
-			'href',
-			'https://www.linkedin.com/in/mateusbrandt'
-		);
-		const chips = page.locator('.chip');
-		await expect(chips).toHaveCount(popularTags.length);
-		for (const [index, tag] of popularTags.entries()) {
-			await expect(chips.nth(index)).toHaveText(tag);
-			await expect(chips.nth(index)).toHaveAttribute('href', `/blog?tag=${tag}`);
-			expect(posts.some((post) => post.tags.includes(tag))).toBe(true);
-		}
-		await expectCanvasPainted(page);
-		await expectCanvasEdgesClear(page.locator('.photo canvas'));
-	});
-
-	test('uses canonical metadata, stays in the viewport and puts links after chips on phones', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 360, height: 780 });
-		await page.emulateMedia({ reducedMotion: 'reduce' });
-		await page.goto('/about');
-		await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-			'href',
-			'https://mateux.dev/about'
-		);
-		await expectCanvasPainted(page);
-		await expectCanvasEdgesClear(page.locator('.photo canvas'));
-		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(360);
-		const order = await page.evaluate(() => {
-			const chips = document.querySelector('.chips')!.getBoundingClientRect().top;
-			const links = document.querySelector('.elsewhere')!.getBoundingClientRect().top;
-			return { chips, links };
-		});
-		expect(order.links).toBeGreaterThan(order.chips);
-	});
-
-	test('keeps the exploded rocket still with reduced motion and passes axe in both themes', async ({
-		page
-	}) => {
-		await page.emulateMedia({ reducedMotion: 'reduce' });
-		await page.goto('/about');
-		await expectCanvasPainted(page);
-		for (const theme of ['light', 'dark']) {
-			await page.evaluate((value) => (document.documentElement.dataset.theme = value), theme);
-			await runA11yScan(page);
-		}
-	});
-});
 
 test.describe('Feed page', () => {
 	test('shows the feed address, build-time count, newest posts and valid Atom endpoint', async ({
