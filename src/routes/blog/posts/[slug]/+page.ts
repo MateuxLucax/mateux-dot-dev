@@ -12,11 +12,9 @@ export async function load({ params, data }) {
 			content: post.default,
 			meta: { ...post.metadata, readingTime: data.readingTime },
 			related: data.related,
-			words: data.words,
 			headings: data.headings,
 			previous: data.previous,
-			next: data.next,
-			postCount: data.postCount
+			next: data.next
 		};
 	} catch {
 		error(404, `Could not find ${params.slug}`);

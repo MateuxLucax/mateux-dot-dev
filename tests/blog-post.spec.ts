@@ -37,6 +37,12 @@ test.describe('Blog Posts', () => {
 				await expect(page.locator('.lede')).toContainText(post.description);
 			});
 
+			test('shows only the essential post metadata', async ({ page }) => {
+				await expect(page.locator('.post-header dl')).toHaveCount(0);
+				await expect(page.locator('.post-navigation')).not.toContainText(/\d+ posts/);
+				await expect(page.getByRole('link', { name: '← All writing', exact: true })).toHaveCount(1);
+			});
+
 			test('displays tags', async ({ page }) => {
 				for (const tag of post.tags) {
 					await expect(page.locator('.post-tags a[href="/blog?tag=' + tag + '"]')).toContainText(
@@ -262,11 +268,11 @@ test.describe('Blog Posts', () => {
 			const box = await sheet.boundingBox();
 			expect(box?.width).toBeLessThanOrEqual(2560);
 			if (width === 3840) expect(Math.abs((box?.x ?? 0) - 640)).toBeLessThan(2);
-			for (const column of ['.toc-column', '.prose-column', '.notes-column']) {
+			for (const column of ['.toc-column', '.prose-column']) {
 				await expect(page.locator(column)).toBeVisible();
 			}
 			const boxes = await Promise.all(
-				['.toc-column', '.prose p:first-of-type', '.notes-column'].map((selector) =>
+				['.toc-column', '.prose p:first-of-type'].map((selector) =>
 					page.locator(selector).boundingBox()
 				)
 			);
@@ -276,7 +282,6 @@ test.describe('Blog Posts', () => {
 			const caption = await firstFigure.locator('figcaption').boundingBox();
 			expect(boxes[0]!.x + boxes[0]!.width).toBeLessThanOrEqual(boxes[1]!.x);
 			expect(boxes[1]!.width).toBeCloseTo(760, 0);
-			expect(boxes[1]!.x + boxes[1]!.width).toBeLessThanOrEqual(boxes[2]!.x);
 			expect(figure?.width).toBeCloseTo(1832, 0);
 			expect(caption?.y).toBeGreaterThanOrEqual((diagram?.y ?? 0) + (diagram?.height ?? 0));
 		}

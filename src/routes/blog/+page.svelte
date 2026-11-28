@@ -158,7 +158,7 @@
 </script>
 
 <svelte:head>
-	<title>mateux@tars ~/Blog</title>
+	<title>Writing · Mateus Brandt</title>
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="mateux.dev blog" />
 	<meta
