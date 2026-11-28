@@ -27,11 +27,32 @@ export async function load({ params }) {
 	const allPaths = import.meta.glob('/src/lib/posts/*.svx', { eager: true });
 
 	const raw = rawFiles[`/src/lib/posts/${params.slug}.svx`] as string | undefined;
-	const readingTime = raw ? calculateReadingTime(stripFrontmatter(raw)) : 1;
+	const body = raw ? stripFrontmatter(raw) : '';
+	const readingTime = raw ? calculateReadingTime(body) : 1;
+	const headings = [...body.matchAll(/^##\s+(.+)$/gm)].map((match) => {
+		const title = match[1]
+			.replace(/[`*_]/g, '')
+			.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+			.trim();
+		const id = `section-${title
+			.toLowerCase()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-|-$/g, '')}`;
+		return { id, title };
+	});
+	const posts = getSvxPosts();
+	const postIndex = posts.findIndex((post) => post.slug === params.slug);
+	const previous = posts[postIndex + 1]
+		? { title: posts[postIndex + 1].title, slug: posts[postIndex + 1].slug }
+		: null;
+	const next = posts[postIndex - 1]
+		? { title: posts[postIndex - 1].title, slug: posts[postIndex - 1].slug }
+		: null;
 
 	const post = allPaths[`/src/lib/posts/${params.slug}.svx`] as
-		| { metadata: { tags: string[] } }
-		| undefined;
+		{ metadata: { tags: string[] } } | undefined;
 	const currentTags: string[] = post?.metadata.tags || [];
 	const related: Array<{ title: string; slug: string; date: string }> = [];
 
@@ -53,6 +74,9 @@ export async function load({ params }) {
 
 	return {
 		readingTime,
+		headings,
+		previous,
+		next,
 		related: topRelated
 	};
 }
