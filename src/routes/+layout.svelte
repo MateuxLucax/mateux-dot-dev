@@ -63,9 +63,23 @@
 	}
 
 	onMount(() => {
+		const revealFocused = (event: FocusEvent) => {
+			const target = event.target;
+			if (!(target instanceof HTMLElement) || !target.closest('main')) return;
+			requestAnimationFrame(() => {
+				if (document.activeElement !== target) return;
+				const bar = document.querySelector<HTMLElement>('.bar');
+				if (!bar) return;
+				const top = target.getBoundingClientRect().top;
+				const bottom = bar.getBoundingClientRect().bottom;
+				if (top < bottom) window.scrollBy({ top: top - bottom - 8, behavior: 'instant' });
+			});
+		};
 		window.addEventListener('keydown', handleKeydown);
+		document.addEventListener('focusin', revealFocused);
 		return () => {
 			window.removeEventListener('keydown', handleKeydown);
+			document.removeEventListener('focusin', revealFocused);
 			document.body.style.overflow = previousOverflow;
 		};
 	});

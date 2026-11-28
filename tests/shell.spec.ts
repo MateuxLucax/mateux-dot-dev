@@ -135,6 +135,22 @@ test.describe('Site shell', () => {
 		await expect(panel).toBeHidden();
 	});
 
+	test('reveals the start of a tall code block when focused', async ({ page }, testInfo) => {
+		test.skip(testInfo.project.name !== 'chromium-desktop', 'Runs at a fixed phone viewport');
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto('/blog/posts/automated-accessibility-flutter-linter');
+		const block = page.locator('pre[tabindex="0"]:visible').first();
+		await block.focus();
+		await expect
+			.poll(() =>
+				block.evaluate((node) => {
+					const bar = document.querySelector('.bar')!;
+					return node.getBoundingClientRect().top >= bar.getBoundingClientRect().bottom;
+				})
+			)
+			.toBe(true);
+	});
+
 	test('phone menu matches the reference rows, separators and panel', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto('/');
