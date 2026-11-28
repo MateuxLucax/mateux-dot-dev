@@ -282,7 +282,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 		betaPitch = Math.sin(0.28);
 		unit =
 			options.mode === 'exploded'
-				? Math.min(height / 18.5, width / 10)
+				? Math.min(height / 17.2, width / 10)
 				: launch
 					? Math.min(height / 15.5, width / 5.4)
 					: Math.min(height / 12, width / 4.4);
@@ -295,7 +295,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 				: launch
 					? height * 0.45 + 4 * alphaPitch * unit
 					: options.mode === 'exploded'
-						? height / 2 + 6.15 * Math.cos(0.28) * unit
+						? height / 2 + 5.9 * Math.cos(0.28) * unit
 						: height - 44 - 0.9 * Math.cos(0.28) * unit;
 	};
 
