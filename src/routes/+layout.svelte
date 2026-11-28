@@ -63,8 +63,7 @@
 	}
 
 	onMount(() => {
-		const revealFocused = (event: FocusEvent) => {
-			const target = event.target;
+		const revealTarget = (target: EventTarget | null) => {
 			if (!(target instanceof HTMLElement) || !target.closest('main')) return;
 			requestAnimationFrame(() => {
 				if (document.activeElement !== target) return;
@@ -75,8 +74,10 @@
 				if (top < bottom) window.scrollBy({ top: top - bottom - 8, behavior: 'instant' });
 			});
 		};
+		const revealFocused = (event: FocusEvent) => revealTarget(event.target);
 		window.addEventListener('keydown', handleKeydown);
 		document.addEventListener('focusin', revealFocused);
+		revealTarget(document.activeElement);
 		return () => {
 			window.removeEventListener('keydown', handleKeydown);
 			document.removeEventListener('focusin', revealFocused);
