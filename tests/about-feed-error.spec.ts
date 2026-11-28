@@ -155,9 +155,7 @@ test.describe('Feed page', () => {
 		await expect(page).toHaveTitle('Feed · Mateus Brandt');
 		await expect(page.getByRole('heading', { name: /Feed/ })).toBeVisible();
 		await expect(page.locator('.url-box code')).toHaveText('https://mateux.dev/blog/rss.xml');
-		await expect(page.locator('.note')).toHaveText(
-			`Atom · ${posts.length} posts · updated ${newestFirst[0].date}`
-		);
+		await expect(page.locator('.note')).toHaveText(`Updated ${newestFirst[0].date}`);
 		const items = page.locator('.feed-list > li');
 		await expect(items).toHaveCount(4);
 		for (const [index, post] of newestFirst.slice(0, 4).entries()) {
@@ -178,14 +176,14 @@ test.describe('Feed page', () => {
 	test('copies the address and announces the temporary copied state', async ({ page, context }) => {
 		await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 		await page.goto('/rss');
-		const button = page.getByRole('button', { name: 'COPY' });
+		const button = page.getByRole('button', { name: 'Copy' });
 		await button.click();
-		await expect(page.getByRole('button', { name: 'COPIED' })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Copied' })).toBeVisible();
 		expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
 			'https://mateux.dev/blog/rss.xml'
 		);
 		await expect(page.locator('[aria-live="polite"]')).toContainText('Copied');
-		await expect(page.getByRole('button', { name: 'COPY' })).toBeVisible({ timeout: 3000 });
+		await expect(page.getByRole('button', { name: 'Copy' })).toBeVisible({ timeout: 3000 });
 	});
 
 	test('marks RSS current and passes axe in light and dark themes', async ({ page, isMobile }) => {
