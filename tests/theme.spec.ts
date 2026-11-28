@@ -15,7 +15,7 @@ test.describe('Theme', () => {
 	});
 
 	test('prompt colors use terminal classes', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/typetest');
 		await expect(
 			page.locator('span.text-teal-600, span.dark\\:text-teal-300').first()
 		).toBeVisible();

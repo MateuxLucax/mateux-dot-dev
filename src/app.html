@@ -2,9 +2,11 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		<meta name="theme-color" content="#eff1f5" />
 		<script>
 			(() => {
 				const root = document.documentElement;
+				const themeColor = document.querySelector('meta[name="theme-color"]');
 				const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
 				const apply = () => {
 					let stored;
@@ -19,6 +21,10 @@
 							: systemTheme.matches
 								? 'dark'
 								: 'light';
+					themeColor?.setAttribute(
+						'content',
+						root.dataset.theme === 'dark' ? '#1e1e2e' : '#eff1f5'
+					);
 				};
 				apply();
 				systemTheme.addEventListener('change', () => {
@@ -34,11 +40,9 @@
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-		<meta name="theme-color" content="#eff1f5" media="(prefers-color-scheme: light)" />
-		<meta name="theme-color" content="#1e1e2e" media="(prefers-color-scheme: dark)" />
 		<meta
 			name="description"
-			content="This website is my personal space. I'm still working on it, but feel free to play around"
+			content="Software engineer in Brazil. I take things apart and write down how they work."
 		/>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link

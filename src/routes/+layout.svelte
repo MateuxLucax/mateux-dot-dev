@@ -311,7 +311,7 @@
 		display: flex;
 		flex-direction: column;
 		padding-top: 8px;
-		background: var(--paper);
+		background-color: var(--paper);
 	}
 
 	.mobile-links {
@@ -353,6 +353,11 @@
 		font-size: 11px;
 	}
 
+	footer.title-block {
+		position: relative;
+		z-index: 2;
+	}
+
 	.title-block > div {
 		padding: 6px 10px;
 		border-right: 1px solid var(--line);
@@ -367,6 +372,10 @@
 	}
 
 	#main {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
 		flex: 1;
 	}
 
