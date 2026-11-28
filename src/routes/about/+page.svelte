@@ -39,7 +39,7 @@
 			<a class="all" href="/blog">All writing →</a>
 		</section>
 		<aside class="side">
-			<figure class="photo" aria-hidden="true"><Rocket mode="exploded" /></figure>
+			<figure class="photo"><Rocket mode="exploded" /></figure>
 			<p>
 				Most of my day is backend systems, mostly Kotlin. On the side: Dart, Go, Svelte and Rust.
 			</p>

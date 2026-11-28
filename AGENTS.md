@@ -36,7 +36,7 @@ A personal website and blog with a drawing-sheet design, built with **SvelteKit*
 
 ```
 src/
-├── app.html                    # HTML template (has Google Analytics)
+├── app.html                    # HTML template and theme initialization
 ├── app.css                     # Tailwind entrypoint
 ├── app.d.ts                    # App-level types
 ├── lib/
@@ -239,19 +239,22 @@ bun run test:e2e:ui       # Debug with Playwright UI
 
 ### Accessibility
 
-- `@axe-core/playwright` scan runs on every page test in both light and dark modes.
-- Zero violations is the target.
+- `@axe-core/playwright` scans every page in light and dark themes at 390 and 1440 CSS pixels with the WCAG 2.2 AA tags, including contrast; zero violations is the target.
+- Automatically starting animation lasting over five seconds alongside content needs an icon-only pause/play button with an accessible label, pressed state, persistent preference, and a still frame under reduced motion.
 
 ### Performance
 
 - Web Vitals collected via Playwright `page.evaluate()` on Performance API.
 - Thresholds: FCP < 1.8s, TTFB < 600ms.
+- `node scripts/lighthouse.mjs /tmp/mateux-perf/final --assert` audits all pages with three runs in both themes and both mobile and desktop presets. The median must score 100 in each category (performance and accessibility only for 404), with zero CLS and TBT. CI sets `LIGHTHOUSE_RUNS=1` for a faster gate across the same matrix.
+- Cloudflare Pages headers omit CSP because the static SvelteKit output contains page-specific inline bootstrapping scripts; a safe policy requires generated per-page hashes rather than a shared permissive policy.
 
 ### CI/CD
 
 - `.github/workflows/test.yml` runs on every push/PR to any branch:
   - `check-and-build` job: lint, type-check, build
   - `e2e` job: build + `vite preview` + Playwright tests
+  - `lighthouse` job: build + single-run Lighthouse matrix against `vite preview`
 - Cloudflare Pages Git integration deploys on push to `main`.
 
 ### Branch Protection (Repository Rulesets)

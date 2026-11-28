@@ -15,6 +15,8 @@
 		| 'mail'
 		| 'menu'
 		| 'moon'
+		| 'pause'
+		| 'play'
 		| 'rocket'
 		| 'rss'
 		| 'search'
@@ -67,6 +69,10 @@
 		<path d="M4 7h16M4 12h16M4 17h16" />
 	{:else if name === 'moon'}
 		<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z" />
+	{:else if name === 'pause'}
+		<path d="M8 5v14M16 5v14" />
+	{:else if name === 'play'}
+		<path d="M7 4l12 8-12 8z" />
 	{:else if name === 'rocket'}
 		<path
 			d="M12 2.5c2.8 2.2 4 5.2 4 8.5V18H8v-7c0-3.3 1.2-6.3 4-8.5zM8 13l-3 3v4l3-2M16 13l3 3v4l-3-2M10 21h4"

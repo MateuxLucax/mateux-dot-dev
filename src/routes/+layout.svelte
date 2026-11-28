@@ -46,13 +46,41 @@
 		if (event.key === 'Escape' && menuOpen) {
 			event.preventDefault();
 			void setMenu(false, true);
+		} else if (event.key === 'Tab' && menuOpen) {
+			const controls = [
+				menuButton,
+				...document.querySelectorAll<HTMLAnchorElement>('#mobile-menu a')
+			];
+			const index = controls.indexOf(document.activeElement as HTMLButtonElement);
+			if (event.shiftKey && index <= 0) {
+				event.preventDefault();
+				controls[controls.length - 1]?.focus();
+			} else if (!event.shiftKey && (index === -1 || index === controls.length - 1)) {
+				event.preventDefault();
+				controls[0]?.focus();
+			}
 		}
 	}
 
 	onMount(() => {
+		const revealTarget = (target: EventTarget | null) => {
+			if (!(target instanceof HTMLElement) || !target.closest('main')) return;
+			requestAnimationFrame(() => {
+				if (document.activeElement !== target) return;
+				const bar = document.querySelector<HTMLElement>('.bar');
+				if (!bar) return;
+				const top = target.getBoundingClientRect().top;
+				const bottom = bar.getBoundingClientRect().bottom;
+				if (top < bottom) window.scrollBy({ top: top - bottom - 8, behavior: 'instant' });
+			});
+		};
+		const revealFocused = (event: FocusEvent) => revealTarget(event.target);
 		window.addEventListener('keydown', handleKeydown);
+		document.addEventListener('focusin', revealFocused);
+		revealTarget(document.activeElement);
 		return () => {
 			window.removeEventListener('keydown', handleKeydown);
+			document.removeEventListener('focusin', revealFocused);
 			document.body.style.overflow = previousOverflow;
 		};
 	});
@@ -110,7 +138,7 @@
 				</div>
 			</nav>
 		{/if}
-		<main id="main">{@render children?.()}</main>
+		<main id="main" tabindex="-1" inert={menuOpen}>{@render children?.()}</main>
 		{#if page.status !== 404}
 			<footer class="title-block">
 				<div><strong>MATEUX.DEV</strong></div>
@@ -129,6 +157,10 @@
 		min-height: 100%;
 		margin: 0;
 		background: var(--paper);
+	}
+
+	:global(html) {
+		scroll-padding-top: 6rem;
 	}
 
 	:global(body) {
@@ -280,7 +312,7 @@
 	}
 
 	.main-nav a[aria-current='page'] {
-		border-color: var(--sig);
+		border-color: var(--acc);
 		color: var(--acc);
 	}
 
