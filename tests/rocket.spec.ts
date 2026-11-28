@@ -3,6 +3,7 @@ import {
 	AMBIENT_LAUNCH_PERIOD_SECONDS,
 	AMBIENT_SCROLL_CYCLE,
 	getAmbientLaunchState,
+	getRevealHeight,
 	getRocketGeometry
 } from '../src/lib/components/rocket/engine';
 
@@ -141,6 +142,15 @@ test.describe('Home launch animation', () => {
 		const seam = fairing.filter((segment) => segment.accent);
 		expect(seam.length).toBeGreaterThan(10);
 		expect(Math.max(...seam.flatMap((segment) => [segment.a[1], segment.b[1]]))).toBe(tipY);
+	});
+
+	test('draws every segment, including the fairing cap, once fully revealed', () => {
+		const top = getRevealHeight(1);
+		const clipped = getRocketGeometry().filter(
+			(segment) => (segment.a[1] + segment.b[1]) / 2 > top
+		);
+		expect(clipped).toEqual([]);
+		expect(getRevealHeight(0)).toBeLessThan(getRevealHeight(0.5));
 	});
 
 	test('renders the same pixels one period later', async ({ page }) => {

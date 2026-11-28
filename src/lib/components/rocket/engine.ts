@@ -224,6 +224,14 @@ export function getRocketGeometry(): ReadonlyArray<
 	return GEOMETRY;
 }
 
+const GEOMETRY_BOTTOM = Math.min(...GEOMETRY.flatMap((segment) => [segment.a[1], segment.b[1]]));
+const GEOMETRY_TOP = Math.max(...GEOMETRY.flatMap((segment) => [segment.a[1], segment.b[1]]));
+
+/** The model-space height the reveal sweep has reached; at 1 it covers the whole rocket. */
+export function getRevealHeight(reveal: number): number {
+	return GEOMETRY_BOTTOM + reveal * (GEOMETRY_TOP - GEOMETRY_BOTTOM);
+}
+
 function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): RocketEngine {
 	const context = canvas.getContext('2d');
 	if (!context) throw new Error('Rocket canvas requires a 2D rendering context');
@@ -466,7 +474,7 @@ function createRocket(canvas: HTMLCanvasElement, options: RocketOptions): Rocket
 	};
 
 	const drawRocket = (scene: Scene, ambientTime?: number) => {
-		const revealY = -0.75 + scene.reveal * 10.4;
+		const revealY = getRevealHeight(scene.reveal);
 		const baseAlpha = context.globalAlpha;
 		for (let pass = 0; pass < 2; pass++) {
 			for (const segment of GEOMETRY) {
