@@ -50,7 +50,7 @@ test.describe('Blog Posts', () => {
 			});
 
 			test('has back link to blog', async ({ page }) => {
-				const backLink = page.locator('a[href="/blog"]');
+				const backLink = page.getByRole('link', { name: 'Back to posts' });
 				await expect(backLink).toBeVisible();
 				await expect(backLink).toContainText('Back to posts');
 			});
@@ -71,10 +71,12 @@ test.describe('Blog Posts', () => {
 					await assertPeleDiagrams(page, post.diagramCount);
 				});
 
-				test('Pele diagrams follow the color scheme', async ({ page }) => {
-					for (const scheme of ['light', 'dark'] as const) {
-						await page.emulateMedia({ colorScheme: scheme });
-						await assertPeleTheme(page, scheme);
+				test('Pele diagrams follow the selected theme', async ({ page }) => {
+					for (const theme of ['light', 'dark'] as const) {
+						await page.locator('html').evaluate((root, value) => {
+							root.dataset.theme = value;
+						}, theme);
+						await assertPeleTheme(page, theme);
 					}
 				});
 			}

@@ -1,10 +1,9 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Terminal Theme', () => {
-	test('global font is monospace class', async ({ page }) => {
+test.describe('Theme', () => {
+	test('initializes a document theme', async ({ page }) => {
 		await page.goto('/');
-		const main = page.locator('main.font-mono');
-		await expect(main).toBeVisible();
+		await expect(page.locator('html')).toHaveAttribute('data-theme', /^(light|dark)$/);
 	});
 
 	test('Shiki syntax blocks exist on post with code', async ({ page }) => {

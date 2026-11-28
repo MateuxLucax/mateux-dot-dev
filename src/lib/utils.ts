@@ -9,6 +9,8 @@ export function formatDate(date: string, dateStyle: DateStyle = 'medium') {
 
 export function isDarkMode() {
 	if (typeof window !== 'undefined') {
+		const theme = document.documentElement.dataset.theme;
+		if (theme === 'dark' || theme === 'light') return theme === 'dark';
 		return window.matchMedia('(prefers-color-scheme: dark)').matches;
 	}
 

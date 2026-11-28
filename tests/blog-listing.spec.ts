@@ -30,7 +30,7 @@ test.describe('Blog Listing', () => {
 	});
 
 	test('RSS link is present and valid', async ({ page }) => {
-		const rssLink = page.locator('a[href="/blog/rss.xml"]');
+		const rssLink = page.getByRole('link', { name: 'rss.xml', exact: true });
 		await expect(rssLink).toBeVisible();
 
 		const response = await page.request.get('/blog/rss.xml');
