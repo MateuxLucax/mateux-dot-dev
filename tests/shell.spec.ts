@@ -15,7 +15,7 @@ async function openNav(page: Page, isMobile: boolean) {
 
 test.describe('Site shell', () => {
 	test('wraps every page in the drawing sheet with a title block', async ({ page }) => {
-		for (const path of ['/', '/blog', `/blog/posts/${post.slug}`]) {
+		for (const path of ['/', '/blog', '/about', '/rss', `/blog/posts/${post.slug}`]) {
 			await page.goto(path);
 			const header = page.getByRole('banner');
 			await expect(header.getByRole('link', { name: 'mateux.dev' })).toHaveAttribute('href', '/');
@@ -89,6 +89,8 @@ test.describe('Site shell', () => {
 		const cases: [string, string][] = [
 			['/', 'Home'],
 			['/blog', 'Writing'],
+			['/about', 'About'],
+			['/rss', 'RSS'],
 			[`/blog/posts/${post.slug}`, 'Writing']
 		];
 		for (const [path, current] of cases) {
@@ -99,7 +101,7 @@ test.describe('Site shell', () => {
 				'page'
 			);
 			await expect(nav.locator('[aria-current]')).toHaveCount(1);
-			await expect(nav.getByRole('link', { name: 'RSS' })).toHaveAttribute('href', '/blog/rss.xml');
+			await expect(nav.getByRole('link', { name: 'RSS' })).toHaveAttribute('href', '/rss');
 		}
 	});
 
@@ -169,7 +171,7 @@ test.describe('Site shell', () => {
 		expect(styles.backgroundColor).toBe(styles.paperColor);
 		expect(styles.backgroundImage).toBe('none');
 		expect(styles.menuTitleBlockCells).toBe(1);
-		expect(styles.labels).toEqual(['Home', 'Writing', 'RSS']);
+		expect(styles.labels).toEqual(['Home', 'Writing', 'About', 'RSS']);
 		expect(styles.separatorWidths.every((width) => width === '1px')).toBe(true);
 		expect(styles.separatorColors.every((color) => color === styles.gridColor)).toBe(true);
 		expect(styles.activeTextColor).toBe(styles.accentColor);
